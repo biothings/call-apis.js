@@ -20,5 +20,9 @@
   "bugs": {
     "url": "https://github.com/kevinxin90/call-apis.js/issues"
   },
-  "homepage": "https://github.com/kevinxin90/call-apis.js#readme"
+  "homepage": "https://github.com/kevinxin90/call-apis.js#readme",
+  "devDependencies": {
+    "coveralls": "^3.1.0",
+    "jest": "^26.0.1"
+  }
 }
