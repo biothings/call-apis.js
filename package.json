@@ -1,0 +1,24 @@
+{
+  "name": "@biothings-explorer/call-apis",
+  "version": "1.0.0",
+  "description": "A nodejs module to make api calls for biothings explorer",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kevinxin90/call-apis.js.git"
+  },
+  "keywords": [
+    "api",
+    "biothings",
+    "explorer"
+  ],
+  "author": "jiwen xin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kevinxin90/call-apis.js/issues"
+  },
+  "homepage": "https://github.com/kevinxin90/call-apis.js#readme"
+}
