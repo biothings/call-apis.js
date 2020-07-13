@@ -1,6 +1,6 @@
 {
   "name": "@biothings-explorer/call-apis",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A nodejs module to make api calls for biothings explorer",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/kevinxin90/call-apis.js#readme",
   "dependencies": {
-    "@biothings-explorer/api-response-transform": "^1.0.0",
+    "@biothings-explorer/api-response-transform": "^1.0.4",
     "@biothings-explorer/id_resolver": "^1.0.0",
     "axios": "^0.19.2"
   }
