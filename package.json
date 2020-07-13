@@ -26,5 +26,9 @@
     "@biothings-explorer/api-response-transform": "^1.0.4",
     "@biothings-explorer/id_resolver": "^1.0.0",
     "axios": "^0.19.2"
+  },
+  "devDependencies": {
+    "coveralls": "^3.1.0",
+    "jest": "^26.1.0"
   }
 }
