@@ -98,7 +98,7 @@ describe("test query builder using API supporting batch queries", () => {
     });
 });
 
-describe("test query builder using API that don't support batch queries", () => {
+describe("test query builder using API that don't support batch queries and have path params", () => {
     let edge, qb;
 
     beforeEach(() => {
@@ -185,6 +185,88 @@ describe("test query builder using API that don't support batch queries", () => 
     test('test construct axios request config', () => {
         expect(qb.config).toHaveProperty("url", "https://api.monarchinitiative.org/api/bioentity/disease/DOID:678/genes");
         expect(qb.config.params).toHaveProperty("rows", 200);
+        expect(qb.config).toHaveProperty("data", undefined);
+        expect(qb.config).toHaveProperty("method", "get");
+    });
+})
+
+describe("test query builder using API that don't support batch queries and have query params", () => {
+    let edge, qb;
+
+    beforeEach(() => {
+        edge = {
+            "input": "CXCR3",
+            "query_operation": {
+                "params": {
+                    "genes": "{inputs[0]}"
+                },
+                "path": "/interactions.json",
+                "path_params": [],
+                "method": "get",
+                "server": "http://dgidb.genome.wustl.edu/api/v2",
+                "tags": [
+                    "drug",
+                    "gene",
+                    "annotation",
+                    "translator"
+                ],
+                "supportBatch": false
+            },
+            "association": {
+                "input_id": "SYMBOL",
+                "input_type": "Gene",
+                "output_id": "CHEMBL.COMPOUND",
+                "output_type": "ChemicalSubstance",
+                "predicate": "physically_interacts_with",
+                "api_name": "DGIdb API",
+                "smartapi": {
+                    "id": "e3edd325c76f2992a111b43a907a4870",
+                    "meta": {
+                        "ETag": "ed2cc061d10f35a20862b542ebc7b421d176bb58906ba2300b99e88017527f9d",
+                        "github_username": "newgene",
+                        "timestamp": "2020-04-29T00:02:09.170360",
+                        "uptime_status": "good",
+                        "uptime_ts": "2020-06-11T00:05:22.359624",
+                        "url": "https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/dgidb/openapi.yml"
+                    }
+                }
+            },
+            "response_mapping": {
+                "physically_interacts_with": {
+                    "CHEMBL.COMPOUND": "matchedTerms.interactions.drugChemblId",
+                    "name": "matchedTerms.interactions.drugName",
+                    "publication": "matchedTerms.interactions.pmids",
+                    "source": "matchedTerms.interactions.sources"
+                }
+            },
+            "id": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        };
+        qb = new query_builder(edge)
+    });
+
+    test("test get http method", () => {
+        expect(qb.method).toBe("get")
+    });
+
+    test("test get base url", () => {
+        expect(qb.url).toBe("http://dgidb.genome.wustl.edu/api/v2/interactions.json")
+    });
+
+    test("test construct input", () => {
+        expect(qb.input).toBe("CXCR3")
+    });
+
+    test('test construct params', () => {
+        expect(qb.params).toHaveProperty("genes", "CXCR3");
+    });
+
+    test('test construct request body', () => {
+        expect(qb.data).toBe(undefined)
+    });
+
+    test('test construct axios request config', () => {
+        expect(qb.config).toHaveProperty("url", "http://dgidb.genome.wustl.edu/api/v2/interactions.json");
+        expect(qb.config.params).toHaveProperty("genes", "CXCR3");
         expect(qb.config).toHaveProperty("data", undefined);
         expect(qb.config).toHaveProperty("method", "get");
     });
