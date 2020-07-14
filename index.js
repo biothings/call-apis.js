@@ -1,7 +1,7 @@
 const axios = require("axios");
 const qb = require("./query_builder");
 const tf = require("@biothings-explorer/api-response-transform");
-const resolver = require("@biothings-explorer/id_resolver");
+const resolver = require("biomedical_id_resolver");
 
 module.exports = class APIQueryDispathcer {
 
@@ -33,6 +33,9 @@ module.exports = class APIQueryDispathcer {
         await this.annotate();
     }
 
+    /**
+     * Merge the results into a single array from Promise.allSettled
+     */
     merge = () => {
         this.result = [];
         this.queryResult.map(res => {
@@ -42,8 +45,18 @@ module.exports = class APIQueryDispathcer {
         });
     }
 
+    /**
+     * Add equivalent ids to all output using biomedical-id-resolver service
+     */
     annotate = async () => {
-        let output_ids = this.result.map(item => item.$output);
+        let output_ids = {};
+        this.result.map(item => {
+            let output_type = item["$association"]["output_type"];
+            if (!(output_type in output_ids)) {
+                output_ids[output_type] = [];
+            }
+            output_ids[output_type].push(item["$output"]);
+        });
         let res = await resolver(output_ids);
         this.result.map(item => {
             if (item.$output in res) {
@@ -52,6 +65,7 @@ module.exports = class APIQueryDispathcer {
                     original: item.$output
                 };
                 item.$output = res[item.$output].id.identifier;
+                item.id = item.$output;
             }
         })
     }
