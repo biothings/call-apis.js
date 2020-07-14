@@ -3,8 +3,14 @@ const qb = require("./query_builder");
 const tf = require("@biothings-explorer/api-response-transform");
 const resolver = require("biomedical_id_resolver");
 
+/**
+ * Make API Queries based on input BTE Edges, collect and align the results into BioLink Model
+ */
 module.exports = class APIQueryDispathcer {
-
+    /**
+     * Construct inputs for APIQueryDispatcher
+     * @param {array} edges - an array of BTE edges with input added
+     */
     constructor(edges) {
         this.edges = edges;
     }
@@ -22,7 +28,8 @@ module.exports = class APIQueryDispathcer {
                 }))
                 .then(res => {
                     let tf_obj = new tf(res);
-                    return tf_obj.transform();
+                    let tf_res = tf_obj.transform();
+                    return tf_res
                 })
                 .catch(error => {
                     console.log(error);
@@ -67,7 +74,7 @@ module.exports = class APIQueryDispathcer {
                 item.$output = res[item.$output].id.identifier;
                 item.id = item.$output;
             }
-        })
+        });
     }
 
 }
