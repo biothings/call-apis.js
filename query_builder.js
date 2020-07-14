@@ -1,4 +1,8 @@
 module.exports = class QueryBuilder {
+    /**
+     * Constructor for Query Builder
+     * @param {object} edge - BTE Edge object with input field provided
+     */
     constructor(edge) {
         this.POST_HEADER = { "content-type": "application/x-www-form-urlencoded" };
         this.edge = edge;
@@ -8,6 +12,7 @@ module.exports = class QueryBuilder {
         };
         this.url = this.server + edge.query_operation.path;
         this.method = edge.query_operation.method;
+        this.supportBatch = edge.query_operation.supportBatch;
         this.input = edge.input;
         this.inputSeparator = edge.query_operation.inputSeparator;
         this.params = edge.query_operation.params;
@@ -21,7 +26,7 @@ module.exports = class QueryBuilder {
      * Construct input based on method and inputSeparator
      */
     constructInput = () => {
-        if (this.method === 'post') {
+        if (this.supportBatch === true) {
             this.input = this.input.join(this.inputSeparator);
         }
     }
