@@ -1,3 +1,6 @@
+/**
+ * Build API queries serving as input for Axios library based on BTE Edge info
+ */
 module.exports = class QueryBuilder {
     /**
      * Constructor for Query Builder
