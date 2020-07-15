@@ -28,8 +28,7 @@ module.exports = class APIQueryDispathcer {
                 }))
                 .then(res => {
                     let tf_obj = new tf(res);
-                    let tf_res = tf_obj.transform();
-                    return tf_res
+                    return tf_obj.transform();
                 })
                 .catch(error => {
                     console.log(error);
@@ -71,8 +70,10 @@ module.exports = class APIQueryDispathcer {
                     resolved: res[item.$output],
                     original: item.$output
                 };
-                item.$output = res[item.$output].id.identifier;
-                item.id = item.$output;
+                item.label = res[item.$output].id.label;
+                item.id = item.$output = res[item.$output].id.identifier;
+            } else {
+                item.label = item.id = item.$output;
             }
         });
     }
