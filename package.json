@@ -1,6 +1,6 @@
 {
   "name": "@biothings-explorer/call-apis",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A nodejs module to make api calls for biothings explorer",
   "main": "index.js",
   "scripts": {
