@@ -1,3 +1,5 @@
+const _ = require("lodash");
+
 /**
  * Build API queries serving as input for Axios library based on BTE Edge info
  */
@@ -18,7 +20,7 @@ module.exports = class QueryBuilder {
         this.supportBatch = edge.query_operation.supportBatch;
         this.input = edge.input;
         this.inputSeparator = edge.query_operation.inputSeparator;
-        this.params = edge.query_operation.params;
+        this.params = _.cloneDeep(edge.query_operation.params);
         this.constructInput();
         this.constructRequestBody();
         this.constructParams();
@@ -71,7 +73,8 @@ module.exports = class QueryBuilder {
             url: this.url,
             params: this.params,
             data: this.data,
-            method: this.method
+            method: this.method,
+            timeout: 5000
         }
     }
 }

@@ -31,7 +31,7 @@ module.exports = class APIQueryDispathcer {
                     return tf_obj.transform();
                 })
                 .catch(error => {
-                    console.log(error);
+                    //console.log(error);
                     return undefined;
                 });
         }));
