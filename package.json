@@ -25,7 +25,8 @@
   "dependencies": {
     "@biothings-explorer/api-response-transform": "^1.0.5",
     "axios": "^0.19.2",
-    "biomedical_id_resolver": "^1.0.6"
+    "biomedical_id_resolver": "^1.0.6",
+    "lodash": "^4.17.19"
   },
   "devDependencies": {
     "@biothings-explorer/smartapi-kg": "^1.1.6",
