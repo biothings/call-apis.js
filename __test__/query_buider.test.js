@@ -271,3 +271,40 @@ describe("test query builder using API that don't support batch queries and have
         expect(qb.config).toHaveProperty("method", "get");
     });
 })
+
+describe("test if query builder change the original op passed in", () => {
+    let edge, qb;
+
+    test("if params change after query is built", () => {
+        let edge = {
+            query_operation: {
+                params: { mondo: "{inputs[0]}" },
+                request_body: undefined,
+                path: '/disease/chemical_substance/{mondo}',
+                path_params: ['mondo'],
+                method: 'get',
+                server: 'https://automat.renci.org/hmdb',
+                tags: ['drug', 'gene', 'disease', 'automat', 'translator'],
+                supportBatch: false,
+                inputSeparator: undefined
+            },
+            association: {
+                input_id: 'MONDO',
+                input_type: 'Disease',
+                output_id: 'CHEMBL.COMPOUND',
+                output_type: 'ChemicalSubstance',
+                predicate: 'related_to',
+                source: 'hmdb',
+                api_name: 'Automat HMDB API',
+                smartapi: { id: 'df231f1efca0c3409e28dd5ca7228c1f', meta: [Object] }
+            },
+            response_mapping: { related_to: { 'CHEMBL.COMPOUND': 'associated_with.chembl' } },
+            id: '01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b',
+            tags: ['drug', 'gene', 'disease', 'automat', 'translator'],
+            input: ['MONDO:0005046']
+        };
+        expect(edge.query_operation.params).toHaveProperty("mondo", "{inputs[0]}")
+        qb = new query_builder(edge);
+        expect(edge.query_operation.params).toHaveProperty("mondo")
+    })
+})
