@@ -18,7 +18,7 @@ module.exports = class APIQueryDispathcer {
     /**
      * Make API calls and parse the response.
      */
-    query = async () => {
+    async query() {
         this.queryResult = await Promise.allSettled(this.edges.map(edge => {
             let qbo = new qb(edge);
             return axios(qbo.config)
@@ -28,10 +28,10 @@ module.exports = class APIQueryDispathcer {
                 }))
                 .then(res => {
                     let tf_obj = new tf(res);
-                    return tf_obj.transform();
+                    let transformed = tf_obj.transform();
+                    return transformed
                 })
                 .catch(error => {
-                    //console.log(error);
                     return undefined;
                 });
         }));
@@ -42,7 +42,7 @@ module.exports = class APIQueryDispathcer {
     /**
      * Merge the results into a single array from Promise.allSettled
      */
-    merge = () => {
+    merge() {
         this.result = [];
         this.queryResult.map(res => {
             if (!(res.value === undefined)) {
@@ -54,7 +54,7 @@ module.exports = class APIQueryDispathcer {
     /**
      * Add equivalent ids to all output using biomedical-id-resolver service
      */
-    annotate = async () => {
+    async annotate() {
         let output_ids = {};
         this.result.map(item => {
             let output_type = item["$association"]["output_type"];
