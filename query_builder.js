@@ -30,7 +30,7 @@ module.exports = class QueryBuilder {
     /**
      * Construct input based on method and inputSeparator
      */
-    constructInput = () => {
+    constructInput() {
         if (this.supportBatch === true) {
             this.input = this.input.join(this.inputSeparator);
         }
@@ -39,7 +39,7 @@ module.exports = class QueryBuilder {
     /**
      * Construct parameters for API calls
      */
-    constructParams = () => {
+    constructParams() {
         if (this.edge.query_operation.path_params) {
             this.edge.query_operation.path_params.map(param => {
                 let val = this.params[param];
@@ -57,7 +57,7 @@ module.exports = class QueryBuilder {
     /**
      * Construct request body for API calls
      */
-    constructRequestBody = () => {
+    constructRequestBody() {
         if (this.edge.query_operation.request_body !== undefined && "body" in this.edge.query_operation.request_body) {
             let body = this.edge.query_operation.request_body.body;
             this.data = Object.keys(body).reduce((accumulator, key) => accumulator + key + '=' + body[key].replace('{inputs[0]}', this.input) + '&', '');
@@ -68,7 +68,7 @@ module.exports = class QueryBuilder {
     /**
      * Construct the request config for Axios reqeust.
      */
-    constructAxiosRequestConfig = () => {
+    constructAxiosRequestConfig() {
         this.config = {
             url: this.url,
             params: this.params,
