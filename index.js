@@ -20,6 +20,9 @@ module.exports = class APIQueryDispathcer {
      */
     async query() {
         this.queryResult = await Promise.allSettled(this.edges.map(edge => {
+            if (edge === undefined) {
+                return undefined
+            }
             let qbo = new qb(edge);
             return axios(qbo.config)
                 .then(res => ({
