@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.9.1](https://github.com/mokkapps/changelog-generator-demo/compare/v1.9.0...v1.9.1) (2021-01-26)
+
+
+### Bug Fixes
+
+* :bug: fix bug related to publication extraction ([0b6b0f5](https://github.com/mokkapps/changelog-generator-demo/commits/0b6b0f5ab0981157b7837d9d602d3253be7a817b))
+
 ## [1.9.0](https://github.com/mokkapps/changelog-generator-demo/compare/v1.8.0...v1.9.0) (2021-01-26)
 
 
