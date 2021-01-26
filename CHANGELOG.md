@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.0](https://github.com/mokkapps/changelog-generator-demo/compare/v1.7.0...v1.8.0) (2021-01-26)
+
+
+### Features
+
+* :sparkles: include call apis error message in log ([64aa3b7](https://github.com/mokkapps/changelog-generator-demo/commits/64aa3b735b98815fc63a92bcf330815c2da6f555))
+
 ## [1.7.0](https://github.com/mokkapps/changelog-generator-demo/compare/v1.6.0...v1.7.0) (2021-01-26)
 
 
