@@ -46,7 +46,7 @@ module.exports = class APIQueryDispathcer {
                 })
                 .catch(error => {
                     debug(`Failed to make to following query: ${JSON.stringify(query.config)}`)
-                    this.logs.push(new LogEntry("ERROR", null, `call-apis: Failed to make to following query: ${JSON.stringify(query.config)}`));
+                    this.logs.push(new LogEntry("ERROR", null, `call-apis: Failed to make to following query: ${JSON.stringify(query.config)}. The error is ${error.toString()}`));
                     return undefined;
                 });
         }))
