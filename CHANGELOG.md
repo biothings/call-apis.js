@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/mokkapps/changelog-generator-demo/compare/v1.8.0...v1.9.0) (2021-01-26)
+
+
+### Features
+
+* :sparkles: add error message to debug ([e8edf19](https://github.com/mokkapps/changelog-generator-demo/commits/e8edf192425af0c293687891da98fdd5d282e2bd))
+* :sparkles: update api-transform module to include debug ([bb243cc](https://github.com/mokkapps/changelog-generator-demo/commits/bb243cc6d21055575933e2828c35c3b4d01a464c))
+
 ## [1.8.0](https://github.com/mokkapps/changelog-generator-demo/compare/v1.7.0...v1.8.0) (2021-01-26)
 
 
