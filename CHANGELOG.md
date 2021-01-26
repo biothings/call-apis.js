@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/mokkapps/changelog-generator-demo/compare/v1.6.0...v1.7.0) (2021-01-26)
+
+
+### Features
+
+* :sparkles: add logging for TRAPI interface ([c0fc605](https://github.com/mokkapps/changelog-generator-demo/commits/c0fc605a01fc4fdb232154a9f8900e1898b9c392))
+
 ## 1.6.0 (2021-01-25)
 
 
