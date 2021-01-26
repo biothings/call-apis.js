@@ -5,6 +5,8 @@ const tf = require("@biothings-explorer/api-response-transform");
 const resolver = require("biomedical_id_resolver");
 const { transform } = require("lodash");
 const debug = require("debug")("call-apis:query");
+const LogEntry = require("./log_entry");
+
 
 /**
  * Make API Queries based on input BTE Edges, collect and align the results into BioLink Model
@@ -16,10 +18,12 @@ module.exports = class APIQueryDispathcer {
      */
     constructor(edges) {
         this.edges = edges;
+        this.logs = [];
     }
 
     async _queryBucket(queries) {
         const res = await Promise.allSettled(queries.map(query => {
+            this.logs.push(new LogEntry("DEBUG", null, `call-apis: Making the following query ${JSON.stringify(query.config)}`).getLog())
             debug(`Making the following query ${JSON.stringify(query.config)}`)
             return axios(query.config)
                 .then(res => ({
@@ -28,18 +32,21 @@ module.exports = class APIQueryDispathcer {
                 }))
                 .then(res => {
                     if (query.needPagination(res.response)) {
+                        this.logs.push(new LogEntry("DEBUG", null, "call-apis: This query needs to be paginated"));
                         debug("This query needs to be paginated")
                         query.getNext();
                     }
                     debug(`Succesfully made the following query: ${JSON.stringify(query.config)}`)
+                    this.logs.push(new LogEntry("DEBUG", null, `call-apis: Succesfully made the following query: ${JSON.stringify(query.config)}`));
                     let tf_obj = new tf(res);
                     let transformed = tf_obj.transform();
-
                     debug(`After transformation, BTE is able to retrieve ${transformed.length} hits!`)
+                    this.logs.push(new LogEntry("DEBUG", null, `call-apis: After transformation, BTE is able to retrieve ${transformed.length} hits!`));
                     return transformed
                 })
                 .catch(error => {
                     debug(`Failed to make to following query: ${JSON.stringify(query.config)}`)
+                    this.logs.push(new LogEntry("ERROR", null, `call-apis: Failed to make to following query: ${JSON.stringify(query.config)}`));
                     return undefined;
                 });
         }))
@@ -67,7 +74,9 @@ module.exports = class APIQueryDispathcer {
 
     async query(resolveOutputIDs = true) {
         debug(`Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`)
+        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`));
         debug(`Number of BTE Edges received is ${this.edges.length}`);
+        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Number of BTE Edges received is ${this.edges.length}`));
         this.queryResult = [];
         const queries = this._constructQueries(this.edges);
         this._constructQueue(queries);
@@ -80,6 +89,7 @@ module.exports = class APIQueryDispathcer {
         this.merge();
         await this.annotate(resolveOutputIDs);
         debug("Query completes");
+        this.logs.push(new LogEntry("DEBUG", null, "call-apis: Query completes"));
     }
 
     // async query() {
@@ -120,6 +130,7 @@ module.exports = class APIQueryDispathcer {
             }
         });
         debug(`Total number of results returned for this query is ${this.result.length}`)
+        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Total number of results returned for this query is ${this.result.length}`));
     }
 
     /**
