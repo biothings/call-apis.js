@@ -28,8 +28,6 @@
   "homepage": "https://github.com/kevinxin90/call-apis.js#readme",
   "dependencies": {
     "@biothings-explorer/api-response-transform": "^1.4.1",
-    "@commitlint/cli": "^11.0.0",
-    "@commitlint/config-conventional": "^11.0.0",
     "axios": "^0.19.2",
     "biomedical_id_resolver": "^1.3.1",
     "debug": "^4.3.1",
@@ -37,7 +35,8 @@
     "lodash": "^4.17.20"
   },
   "devDependencies": {
-    "@biothings-explorer/smartapi-kg": "^1.9.0",
+    "@commitlint/cli": "^11.0.0",
+    "@commitlint/config-conventional": "^11.0.0",
     "coveralls": "^3.1.0",
     "jest": "^26.6.3",
     "standard-version": "^9.1.0"

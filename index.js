@@ -1,5 +1,5 @@
 const axios = require("axios");
-const qb = require("./query_builder");
+const qb = require("./src/query_builder");
 const tf = require("@biothings-explorer/api-response-transform");
 const resolver = require("biomedical_id_resolver");
 
@@ -30,6 +30,9 @@ module.exports = class APIQueryDispathcer {
                     edge: edge
                 }))
                 .then(res => {
+                    if (qbo.hasNext(res.response)) {
+                        qbo.getNext();
+                    }
                     let tf_obj = new tf(res);
                     let transformed = tf_obj.transform();
                     return transformed
