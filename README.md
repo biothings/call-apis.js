@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/kevinxin90/call-apis.js.svg?branch=master)](https://travis-ci.com/kevinxin90/call-apis.js)
+![Test Coveralls](https://github.com/kevinxin90/call-apis.js/workflows/Test%20Coveralls/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/kevinxin90/call-apis.js/badge.svg?branch=master)](https://coveralls.io/github/kevinxin90/call-apis.js?branch=master)
 <a href="https://github.com/kevinxin90/smartapi-kg.js#readme" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
