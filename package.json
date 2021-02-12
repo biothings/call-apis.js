@@ -29,7 +29,7 @@
   "homepage": "https://github.com/kevinxin90/call-apis.js#readme",
   "dependencies": {
     "@biothings-explorer/api-response-transform": "^1.4.1",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "biomedical_id_resolver": "^1.3.1",
     "debug": "^4.3.1",
     "husky": "^4.3.8",
