@@ -32,21 +32,24 @@ module.exports = class APIQueryDispathcer {
                 }))
                 .then(res => {
                     if (query.needPagination(res.response)) {
-                        this.logs.push(new LogEntry("DEBUG", null, "call-apis: This query needs to be paginated"));
+                        this.logs.push(new LogEntry("DEBUG", null, "call-apis: This query needs to be paginated").getLog());
                         debug("This query needs to be paginated")
                         query.getNext();
                     }
                     debug(`Succesfully made the following query: ${JSON.stringify(query.config)}`)
-                    this.logs.push(new LogEntry("DEBUG", null, `call-apis: Succesfully made the following query: ${JSON.stringify(query.config)}`));
+                    this.logs.push(new LogEntry("DEBUG", null, `call-apis: Succesfully made the following query: ${JSON.stringify(query.config)}`).getLog());
                     let tf_obj = new tf(res);
                     let transformed = tf_obj.transform();
                     debug(`After transformation, BTE is able to retrieve ${transformed.length} hits!`)
-                    this.logs.push(new LogEntry("DEBUG", null, `call-apis: After transformation, BTE is able to retrieve ${transformed.length} hits!`));
+                    this.logs.push(new LogEntry("DEBUG", null, `call-apis: After transformation, BTE is able to retrieve ${transformed.length} hits!`).getLog());
                     return transformed
                 })
                 .catch(error => {
-                    debug(`Failed to make to following query: ${JSON.stringify(query.config)}. The error is ${error.toString()}`)
-                    this.logs.push(new LogEntry("ERROR", null, `call-apis: Failed to make to following query: ${JSON.stringify(query.config)}. The error is ${error.toString()}`));
+                    debug(`Failed to make to following query: ${JSON.stringify(query.config)}. The error is ${error.toString()}`);
+                    if (error.response) {
+                        debug(`The request failed with the following error response: ${JSON.stringify(error.response.data)}`)
+                    }
+                    this.logs.push(new LogEntry("ERROR", null, `call-apis: Failed to make to following query: ${JSON.stringify(query.config)}. The error is ${error.toString()}`).getLog());
                     return undefined;
                 });
         }))
@@ -74,9 +77,9 @@ module.exports = class APIQueryDispathcer {
 
     async query(resolveOutputIDs = true) {
         debug(`Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`)
-        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`));
+        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`).getLog());
         debug(`Number of BTE Edges received is ${this.edges.length}`);
-        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Number of BTE Edges received is ${this.edges.length}`));
+        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Number of BTE Edges received is ${this.edges.length}`).getLog());
         this.queryResult = [];
         const queries = this._constructQueries(this.edges);
         this._constructQueue(queries);
@@ -86,10 +89,13 @@ module.exports = class APIQueryDispathcer {
             this.queryResult = [...this.queryResult, ...res];
             this._checkIfNext(bucket);
         }
+        debug("query completes.")
         this.merge();
+        debug("Start to use id resolver module to annotate output ids.")
         await this.annotate(resolveOutputIDs);
+        debug("id annotation completes");
         debug("Query completes");
-        this.logs.push(new LogEntry("DEBUG", null, "call-apis: Query completes"));
+        this.logs.push(new LogEntry("DEBUG", null, "call-apis: Query completes").getLog());
     }
 
     // async query() {
@@ -130,7 +136,7 @@ module.exports = class APIQueryDispathcer {
             }
         });
         debug(`Total number of results returned for this query is ${this.result.length}`)
-        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Total number of results returned for this query is ${this.result.length}`));
+        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Total number of results returned for this query is ${this.result.length}`).getLog());
     }
 
     /**
