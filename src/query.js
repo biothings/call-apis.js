@@ -75,6 +75,8 @@ module.exports = class APIQueryDispathcer {
     }
 
     async query(resolveOutputIDs = true) {
+        debug(`Input edge input resolved identifier: ${JSON.stringify(this.edges[0].input_resolved_identifiers)}`)
+        debug(`Input edge original input: ${JSON.stringify(this.edges[0].original_input)}`)
         debug(`Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`)
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`).getLog());
         debug(`Number of BTE Edges received is ${this.edges.length}`);
@@ -107,6 +109,7 @@ module.exports = class APIQueryDispathcer {
                 this.result = [...this.result, ...res.value];
             }
         });
+        debug(`Example result: ${JSON.stringify(this.result[0].$input)}`)
         debug(`Total number of results returned for this query is ${this.result.length}`)
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Total number of results returned for this query is ${this.result.length}`).getLog());
     }
