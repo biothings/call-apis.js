@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.10.0](https://github.com/kevinxin90/call-apis.js/compare/v1.9.1...v1.10.0) (2021-02-13)
+
+
+### Features
+
+* :sparkles: add timestamp for each log entry ([035748a](https://github.com/kevinxin90/call-apis.js/commit/035748a514da4e93f837753694509306d17419a4))
+
+
+### Bug Fixes
+
+* :bug: fix wrong url when autogenerating CHANGELOG ([b53b2ba](https://github.com/kevinxin90/call-apis.js/commit/b53b2ba63dd69eb30ddbf040ad1d915df18ec0f4))
+
 ### [1.9.1](https://github.com/kevinxin90/call-apis.js/compare/v1.9.0...v1.9.1) (2021-01-26)
 
 
