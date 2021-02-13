@@ -3,7 +3,6 @@ const qb = require("./query_builder");
 const queue = require("./query_queue");
 const tf = require("@biothings-explorer/api-response-transform");
 const resolver = require("biomedical_id_resolver");
-const { transform } = require("lodash");
 const debug = require("debug")("call-apis:query");
 const LogEntry = require("./log_entry");
 
@@ -98,33 +97,6 @@ module.exports = class APIQueryDispathcer {
         this.logs.push(new LogEntry("DEBUG", null, "call-apis: Query completes").getLog());
     }
 
-    // async query() {
-    //     this.queryResult = await Promise.allSettled(this.edges.map(edge => {
-    //         if (edge === undefined) {
-    //             return undefined
-    //         }
-    //         let qbo = new qb(edge);
-    //         return axios(qbo.config)
-    //             .then(res => ({
-    //                 response: res.data,
-    //                 edge: edge
-    //             }))
-    //             .then(res => {
-    //                 if (qbo.hasNext(res.response)) {
-    //                     qbo.getNext();
-    //                 }
-    //                 let tf_obj = new tf(res);
-    //                 let transformed = tf_obj.transform();
-    //                 return transformed
-    //             })
-    //             .catch(error => {
-    //                 return undefined;
-    //             });
-    //     }));
-    //     this.merge();
-    //     await this.annotate();
-    // }
-
     /**
      * Merge the results into a single array from Promise.allSettled
      */
@@ -147,25 +119,17 @@ module.exports = class APIQueryDispathcer {
         if (enable === true) {
             let output_ids = {};
             this.result.map(item => {
-                let output_type = item["$association"]["output_type"];
+                let output_type = item.$edge_metadata.output_type;
                 if (!(output_type in output_ids)) {
                     output_ids[output_type] = [];
                 }
-                output_ids[output_type].push(item["$output"]);
+                output_ids[output_type].push(item.$output.original);
             });
-            res = await resolver(output_ids);
+            const biomedical_resolver = new resolver();
+            res = await biomedical_resolver.resolve(output_ids);
         }
         this.result.map(item => {
-            if (item.$output in res) {
-                item.$output_id_mapping = {
-                    resolved: res[item.$output],
-                    original: item.$output
-                };
-                item.label = res[item.$output].id.label;
-                item.id = item.$output = res[item.$output].id.identifier;
-            } else {
-                item.label = item.id = item.$output;
-            }
+            item.$output.obj = res[item.$output.original];
         });
     }
 
