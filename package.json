@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/kevinxin90/call-apis.js#readme",
   "dependencies": {
-    "@biothings-explorer/api-response-transform": "^1.6.0",
+    "@biothings-explorer/api-response-transform": "^1.6.1",
     "axios": "^0.21.1",
     "biomedical_id_resolver": "^2.1.0",
     "debug": "^4.3.1",
