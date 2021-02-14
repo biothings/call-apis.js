@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.10.3](https://github.com/kevinxin90/call-apis.js/compare/v1.10.2...v1.10.3) (2021-02-14)
+
+
+### Bug Fixes
+
+* :bug: remove debug message that cause error ([6330a92](https://github.com/kevinxin90/call-apis.js/commit/6330a92f2a441a933ecdc0a1bf609aca40c22826))
+
 ### [1.10.2](https://github.com/kevinxin90/call-apis.js/compare/v1.10.1...v1.10.2) (2021-02-13)
 
 ### [1.10.1](https://github.com/kevinxin90/call-apis.js/compare/v1.10.0...v1.10.1) (2021-02-13)
