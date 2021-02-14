@@ -109,7 +109,6 @@ module.exports = class APIQueryDispathcer {
                 this.result = [...this.result, ...res.value];
             }
         });
-        debug(`Example result: ${JSON.stringify(this.result[0].$input)}`)
         debug(`Total number of results returned for this query is ${this.result.length}`)
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Total number of results returned for this query is ${this.result.length}`).getLog());
     }
