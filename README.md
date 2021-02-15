@@ -1,3 +1,5 @@
+# Welcome to @biothings-explorer/call-apis 👋
+
 ![Test Coveralls](https://github.com/kevinxin90/call-apis.js/workflows/Test%20Coveralls/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/kevinxin90/call-apis.js/badge.svg?branch=master)](https://coveralls.io/github/kevinxin90/call-apis.js?branch=master)
 <a href="https://github.com/kevinxin90/smartapi-kg.js#readme" target="_blank">
@@ -6,8 +8,6 @@
 <a href="https://www.npmjs.com/package/@biothings-explorer/call-apis" target="_blank">
     <img alt="Version" src="https://img.shields.io/npm/v/@biothings-explorer/call-apis.svg">
   </a>
-
-# Welcome to @biothings-explorer/call-apis 👋
 
 A nodejs module to make API calls in batch mode for BioThings Explorer
 
