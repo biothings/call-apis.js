@@ -34,4 +34,46 @@ describe("test query bucket class", () => {
             expect(res).toBe(false);
         });
     })
+
+    describe("test add function", () => {
+        test("test if query has not been in the bucket before", () => {
+            const bucket = new qb();
+            const query = {
+                getUrl() {
+                    return "hello";
+                }
+            }
+            bucket.add(query);
+            expect(bucket.cnt.hello).toEqual(1);
+            expect(bucket.bucket).toHaveLength(1);
+        })
+
+        test("test if query has not been in the bucket before", () => {
+            const bucket = new qb();
+            const query = {
+                getUrl() {
+                    return "hello";
+                }
+            }
+            const query1 = {
+                getUrl() {
+                    return "kitty"
+                }
+            }
+            bucket.add(query);
+            bucket.add(query);
+            bucket.add(query1);
+            expect(bucket.cnt.hello).toEqual(2);
+            expect(bucket.cnt.kitty).toEqual(1);
+            expect(bucket.bucket).toHaveLength(3);
+        })
+    })
+
+    describe("test getBucket function", () => {
+        test("test getBucket function", () => {
+            const bucket = new qb();
+            bucket.bucket = [1];
+            expect(bucket.getBucket()).toEqual([1]);
+        })
+    })
 })
