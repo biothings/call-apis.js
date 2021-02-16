@@ -1,5 +1,3 @@
-const _ = require("lodash");
-
 /**
  * Build API queries serving as input for Axios library based on BTE Edge info
  */
@@ -11,81 +9,81 @@ module.exports = class QueryBuilder {
     constructor(edge) {
         this.start = 0
         this.hasNext = false
-        this.POST_HEADER = { "content-type": "application/x-www-form-urlencoded" };
         this.edge = edge;
-        this.server = edge.query_operation.server;
-        if (edge.query_operation.server.endsWith('/')) {
-            this.server = this.server.substring(0, this.server.length - 1)
-        };
-        this.url = this.server + edge.query_operation.path;
-        this.method = edge.query_operation.method;
-        this.supportBatch = edge.query_operation.supportBatch;
-        this.input = edge.input;
-        this.inputSeparator = edge.query_operation.inputSeparator;
-        this.params = _.cloneDeep(edge.query_operation.params);
-        this.constructInput();
-        this.constructRequestBody();
-        this.constructParams();
-        this.constructAxiosRequestConfig();
     }
 
-    getUrl() {
-        return this.url
+    _getUrl(edge, input) {
+        let server = edge.query_operation.server;
+        if (server.endsWith('/')) {
+            server = server.substring(0, server.length - 1)
+        };
+        let path = edge.query_operation.path;
+        if (Array.isArray(edge.query_operation.path_params)) {
+            edge.query_operation.path_params.map(param => {
+                const val = edge.query_operation.params[param];
+                path = path.replace("{" + param + "}", val).replace("{inputs[0]}", input);
+            });
+        }
+        return server + path;
     }
 
     /**
      * Construct input based on method and inputSeparator
      */
-    constructInput() {
-        if (this.supportBatch === true) {
-            this.input = this.input.join(this.inputSeparator);
+    _getInput(edge) {
+        if (edge.query_operation.supportBatch === true) {
+            if (Array.isArray(edge.input)) {
+                return edge.input.join(edge.query_operation.inputSeparator);
+            }
         }
+        return edge.input;
     }
 
     /**
      * Construct parameters for API calls
      */
-    constructParams() {
-        if (this.edge.query_operation.path_params) {
-            this.edge.query_operation.path_params.map(param => {
-                let val = this.params[param];
-                this.url = this.url.replace("{" + param + "}", val).replace("{inputs[0]}", this.input);
-                delete this.params[param];
-            });
-        }
-        Object.keys(this.params).map(param => {
-            if (typeof this.params[param] === 'string') {
-                this.params[param] = this.params[param].replace("{inputs[0]}", this.input);
+    _getParams(edge, input) {
+        const params = {};
+        Object.keys(edge.query_operation.params).map(param => {
+            if (Array.isArray(edge.query_operation.path_params) && edge.query_operation.path_params.includes(param)) {
+                return;
+            }
+            if (typeof edge.query_operation.params[param] === 'string') {
+                params[param] = edge.query_operation.params[param].replace("{inputs[0]}", input);
+            } else {
+                params[param] = edge.query_operation.params[param];
             }
         });
+        return params;
     }
 
     /**
      * Construct request body for API calls
      */
-    constructRequestBody() {
-        if (this.edge.query_operation.request_body !== undefined && "body" in this.edge.query_operation.request_body) {
-            let body = this.edge.query_operation.request_body.body;
-            this.data = Object.keys(body).reduce((accumulator, key) => accumulator + key + '=' + body[key].replace('{inputs[0]}', this.input) + '&', '');
-            this.data = this.data.substring(0, this.data.length - 1)
+    _getRequestBody(edge, input) {
+        if (edge.query_operation.request_body !== undefined && "body" in edge.query_operation.request_body) {
+            let body = edge.query_operation.request_body.body;
+            const data = Object.keys(body).reduce((accumulator, key) => accumulator + key + '=' + body[key].toString().replace('{inputs[0]}', input) + '&', '');
+            return data.substring(0, data.length - 1)
         }
     }
 
     /**
      * Construct the request config for Axios reqeust.
      */
-    constructAxiosRequestConfig() {
-        this.config = {
-            url: this.url,
-            params: this.params,
-            data: this.data,
-            method: this.method,
+    getAxiosRequestConfig() {
+        const input = this._getInput(this.edge);
+        return {
+            url: this._getUrl(this.edge, input),
+            params: this._getParams(this.edge, input),
+            data: this._getRequestBody(this.edge, input),
+            method: this.edge.query_operation.method,
             timeout: 50000
         }
     }
 
     needPagination(apiResponse) {
-        if (this.method === "get" && this.edge.tags.includes("biothings")) {
+        if (this.edge.query_operation.method === "get" && this.edge.tags.includes("biothings")) {
             if (apiResponse.total > this.start + apiResponse.hits.length) {
                 this.hasNext = true;
                 return true
@@ -97,6 +95,8 @@ module.exports = class QueryBuilder {
 
     getNext() {
         this.start += 1000;
-        this.params['from'] = this.start;
+        const config = this.getAxiosRequestConfig(this.edge);
+        config.params.from = this.start;
+        return config;
     }
 }
