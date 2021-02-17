@@ -12,6 +12,10 @@ module.exports = class QueryBuilder {
         this.edge = edge;
     }
 
+    getUrl() {
+        return this.edge.query_operation.server + this.edge.query_operation.path;
+    }
+
     _getUrl(edge, input) {
         let server = edge.query_operation.server;
         if (server.endsWith('/')) {
@@ -71,7 +75,7 @@ module.exports = class QueryBuilder {
     /**
      * Construct the request config for Axios reqeust.
      */
-    getAxiosRequestConfig() {
+    constructAxiosRequestConfig() {
         const input = this._getInput(this.edge);
         return {
             url: this._getUrl(this.edge, input),
@@ -95,8 +99,15 @@ module.exports = class QueryBuilder {
 
     getNext() {
         this.start += 1000;
-        const config = this.getAxiosRequestConfig(this.edge);
+        const config = this.constructAxiosRequestConfig(this.edge);
         config.params.from = this.start;
         return config;
+    }
+
+    getConfig() {
+        if (this.hasNext === false) {
+            return this.constructAxiosRequestConfig(this.edge);
+        }
+        return this.getNext();
     }
 }

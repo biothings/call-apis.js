@@ -232,8 +232,8 @@ describe("test query builder class", () => {
         })
     })
 
-    describe("test getAxiosRequestConfig function", () => {
-        test("test getAxiosRequestConfig function", () => {
+    describe("test constructAxiosRequestConfig function", () => {
+        test("test constructAxiosRequestConfig function", () => {
             const edge = {
                 input: "1017",
                 query_operation: {
@@ -248,7 +248,7 @@ describe("test query builder class", () => {
                 }
             }
             const builder = new qb(edge);
-            const res = builder.getAxiosRequestConfig();
+            const res = builder.constructAxiosRequestConfig();
             expect(res.timeout).toEqual(50000);
             expect(res.url).toEqual("https://google.com/1017/query");
             expect(res.params).not.toHaveProperty("geneid");
