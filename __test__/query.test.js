@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 
+const { default: axios } = require("axios");
 const q = require("../src/query");
 const resolved_ids = {
     "NCBIGene:1017": 'k',
@@ -13,6 +14,14 @@ jest.mock('biomedical_id_resolver', () => {
         return { resolve: () => resolved_ids };
     });
 });
+jest.mock('@biothings-explorer/api-response-transform', () => {
+    // Works and lets you check for constructor calls:
+    return jest.fn().mockImplementation((res) => {
+        return { transform: () => [{ v: true }] };
+    });
+});
+
+jest.mock('axios');
 
 describe("Test query class", () => {
     describe("Test _merge function", () => {
@@ -163,6 +172,37 @@ describe("Test query class", () => {
             const caller = new q([]);
             const annotatedResult = await caller._annotate(res, false);
             expect(annotatedResult).toEqual(res);
+        })
+    })
+
+    describe("test _queryBucket function", () => {
+        test("test _queryBucket function", async () => {
+            const queries = [
+                {
+                    getConfig() {
+                        return {};
+                    },
+                    needPagination(res) {
+                        return false;
+                    }
+                }
+            ];
+            const mockRes = {
+                data: {
+                    gene: 1017
+                }
+            }
+            axios.mockResolvedValue(mockRes);
+            const caller = new q([]);
+            caller.queue = {
+                dequeue() {
+                    return true;
+                }
+            };
+            const res = await caller._queryBucket(queries);
+            expect(res).toHaveLength(1);
+            expect(res[0]).toHaveProperty('status', 'fulfilled');
+            expect(res[0]).toHaveProperty('value', [{ v: true }])
         })
     })
 })
