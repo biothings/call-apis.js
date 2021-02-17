@@ -24,7 +24,7 @@ module.exports = class APIQueryDispathcer {
         const res = await Promise.allSettled(queries.map(query => {
             this.logs.push(new LogEntry("DEBUG", null, `call-apis: Making the following query ${JSON.stringify(query.config)}`).getLog())
             debug(`Making the following query ${JSON.stringify(query.config)}`)
-            return axios(query.config)
+            return axios(query.getConfig())
                 .then(res => ({
                     response: res.data,
                     edge: query.edge
@@ -33,9 +33,8 @@ module.exports = class APIQueryDispathcer {
                     if (query.needPagination(res.response)) {
                         this.logs.push(new LogEntry("DEBUG", null, "call-apis: This query needs to be paginated").getLog());
                         debug("This query needs to be paginated")
-                        query.getNext();
                     }
-                    debug(`Succesfully made the following query: ${JSON.stringify(query.config)}`)
+                    debug(`Succesfully made the following query: ${JSON.stringify(query.getConfig())}`)
                     this.logs.push(new LogEntry("DEBUG", null, `call-apis: Succesfully made the following query: ${JSON.stringify(query.config)}`).getLog());
                     let tf_obj = new tf(res);
                     let transformed = tf_obj.transform();
@@ -65,8 +64,9 @@ module.exports = class APIQueryDispathcer {
     }
 
     _constructQueries(edges) {
-        return edges.map(edge => new qb(edge));
-
+        return edges.map(edge => {
+            return new qb(edge);
+        });
     }
 
     _constructQueue(queries) {
@@ -75,64 +75,70 @@ module.exports = class APIQueryDispathcer {
     }
 
     async query(resolveOutputIDs = true) {
-        debug(`Input edge input resolved identifier: ${JSON.stringify(this.edges[0].input_resolved_identifiers)}`)
-        debug(`Input edge original input: ${JSON.stringify(this.edges[0].original_input)}`)
         debug(`Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`)
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`).getLog());
         debug(`Number of BTE Edges received is ${this.edges.length}`);
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Number of BTE Edges received is ${this.edges.length}`).getLog());
-        this.queryResult = [];
+        let queryResult = [];
         const queries = this._constructQueries(this.edges);
         this._constructQueue(queries);
         while (this.queue.queue.length > 0) {
             const bucket = this.queue.queue[0].getBucket();
             let res = await this._queryBucket(bucket);
-            this.queryResult = [...this.queryResult, ...res];
+            queryResult = [...queryResult, ...res];
             this._checkIfNext(bucket);
         }
         debug("query completes.")
-        this.merge();
+        const mergedResult = this._merge(queryResult);
         debug("Start to use id resolver module to annotate output ids.")
-        await this.annotate(resolveOutputIDs);
+        const annotatedResult = await this._annotate(mergedResult, resolveOutputIDs);
         debug("id annotation completes");
         debug("Query completes");
         this.logs.push(new LogEntry("DEBUG", null, "call-apis: Query completes").getLog());
+        return annotatedResult;
     }
 
     /**
      * Merge the results into a single array from Promise.allSettled
      */
-    merge() {
-        this.result = [];
-        this.queryResult.map(res => {
-            if (!(res.value === undefined)) {
-                this.result = [...this.result, ...res.value];
+    _merge(queryResult) {
+        let result = [];
+        queryResult.map(res => {
+            if (res.status === "fulfilled" && !(res.value === undefined)) {
+                result = [...result, ...res.value];
             }
         });
-        debug(`Total number of results returned for this query is ${this.result.length}`)
-        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Total number of results returned for this query is ${this.result.length}`).getLog());
+        debug(`Total number of results returned for this query is ${result.length}`)
+        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Total number of results returned for this query is ${result.length}`).getLog());
+        return result;
+    }
+
+    _groupOutputIDsBySemanticType(result) {
+        const output_ids = {};
+        result.map(item => {
+            const output_type = item.$edge_metadata.output_type;
+            if (!(output_type in output_ids)) {
+                output_ids[output_type] = [];
+            }
+            output_ids[output_type].push(item.$output.original);
+        })
+        return output_ids;
     }
 
     /**
      * Add equivalent ids to all output using biomedical-id-resolver service
      */
-    async annotate(enable = true) {
-        let res = {};
-        if (enable === true) {
-            let output_ids = {};
-            this.result.map(item => {
-                let output_type = item.$edge_metadata.output_type;
-                if (!(output_type in output_ids)) {
-                    output_ids[output_type] = [];
-                }
-                output_ids[output_type].push(item.$output.original);
-            });
-            const biomedical_resolver = new resolver();
-            res = await biomedical_resolver.resolve(output_ids);
+    async _annotate(result, enable = true) {
+        if (enable === false) {
+            return result;
         }
-        this.result.map(item => {
+        const grpedIDs = this._groupOutputIDsBySemanticType(result);
+        const biomedical_resolver = new resolver();
+        const res = await biomedical_resolver.resolve(grpedIDs);
+        result.map(item => {
             item.$output.obj = res[item.$output.original];
         });
+        return result;
     }
 
 }
