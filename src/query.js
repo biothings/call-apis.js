@@ -36,8 +36,8 @@ module.exports = class APIQueryDispathcer {
                     }
                     debug(`Succesfully made the following query: ${JSON.stringify(query.getConfig())}`)
                     this.logs.push(new LogEntry("DEBUG", null, `call-apis: Succesfully made the following query: ${JSON.stringify(query.config)}`).getLog());
-                    let tf_obj = new tf(res);
-                    let transformed = tf_obj.transform();
+                    const tf_obj = new tf(res);
+                    const transformed = tf_obj.transform();
                     debug(`After transformation, BTE is able to retrieve ${transformed.length} hits!`)
                     this.logs.push(new LogEntry("DEBUG", null, `call-apis: After transformation, BTE is able to retrieve ${transformed.length} hits!`).getLog());
                     return transformed
