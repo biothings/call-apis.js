@@ -21,6 +21,16 @@ jest.mock('@biothings-explorer/api-response-transform', () => {
     });
 });
 
+jest.mock('../src/query_queue', () => {
+    // Works and lets you check for constructor calls:
+    return jest.fn().mockImplementation((res) => {
+        return {
+            addQuery: () => { },
+            constructQueue: () => { }
+        };
+    });
+});
+
 jest.mock('axios');
 
 describe("Test query class", () => {
