@@ -1,0 +1,59 @@
+{
+    "input": "1017",
+    "query_operation": {
+        "params": {
+            "fields": "go.BP"
+        },
+        "request_body": {
+            "body": {
+                "q": "{inputs[0]}",
+                "scopes": "entrezgene"
+            },
+            "header": "application/x-www-form-urlencoded"
+        },
+        "supportBatch": true,
+        "inputSeparator": ",",
+        "method": "post",
+        "pathParams": [],
+        "server": "https://mygene.info/v3",
+        "path": "/query",
+        "tags": [
+            "gene",
+            "annotation",
+            "query",
+            "translator",
+            "biothings"
+        ]
+    },
+    "association": {
+        "input_id": "NCBIGene",
+        "input_type": "Gene",
+        "output_id": "GO",
+        "output_type": "BiologicalProcess",
+        "predicate": "functional_association",
+        "source": "entrez",
+        "api_name": "MyGene.info API",
+        "smartapi": {},
+        "x-translator": {
+            "component": "KP",
+            "team": [
+                "Service Provider"
+            ]
+        }
+    },
+    "response_mapping": {
+        "functional_association": {
+            "evidence": "go.BP.evidence",
+            "GO": "go.BP.id",
+            "pubmed": "go.BP.pubmed",
+            "term": "go.BP.term"
+        }
+    },
+    "tags": [
+        "gene",
+        "annotation",
+        "query",
+        "translator",
+        "biothings"
+    ]
+}
