@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.10.4](https://github.com/kevinxin90/call-apis.js/compare/v1.10.3...v1.10.4) (2021-02-17)
+
+
+### Bug Fixes
+
+* :bug: fix wrong axios config ([5e29c99](https://github.com/kevinxin90/call-apis.js/commit/5e29c99114accb4c399d873d1b52965c6051668f))
+
 ### [1.10.3](https://github.com/kevinxin90/call-apis.js/compare/v1.10.2...v1.10.3) (2021-02-14)
 
 
