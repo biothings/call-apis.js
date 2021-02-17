@@ -22,8 +22,8 @@ module.exports = class APIQueryDispathcer {
 
     async _queryBucket(queries) {
         const res = await Promise.allSettled(queries.map(query => {
-            this.logs.push(new LogEntry("DEBUG", null, `call-apis: Making the following query ${JSON.stringify(query.config)}`).getLog())
-            debug(`Making the following query ${JSON.stringify(query.config)}`)
+            this.logs.push(new LogEntry("DEBUG", null, `call-apis: Making the following query ${JSON.stringify(query.getConfig())}`).getLog())
+            debug(`Making the following query ${JSON.stringify(query.getConfig())}`)
             return axios(query.getConfig())
                 .then(res => ({
                     response: res.data,
