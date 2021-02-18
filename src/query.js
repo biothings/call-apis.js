@@ -127,12 +127,15 @@ module.exports = class APIQueryDispathcer {
      * Add equivalent ids to all output using biomedical-id-resolver service
      */
     async _annotate(result, enable = true) {
-        if (enable === false) {
-            return result;
-        }
         const grpedIDs = this._groupOutputIDsBySemanticType(result);
-        const biomedical_resolver = new resolver();
-        const res = await biomedical_resolver.resolve(grpedIDs);
+        let res;
+        if (enable === false) {
+            const biomedical_id_resolver = new resolver();
+            res = biomedical_id_resolver.generateInvalidBioentities(grpedIDs);
+        } else {
+            const biomedical_resolver = new resolver();
+            res = await biomedical_resolver.resolve(grpedIDs);
+        }
         result.map(item => {
             item.$output.obj = res[item.$output.original];
         });
