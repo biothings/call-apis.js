@@ -1,0 +1,58 @@
+{
+    "input": "MONDO:0005252",
+    "query_operation": {
+        "params": {
+            "fields": "subject,association",
+            "q": "object.MONDO:\"{inputs[0]}\" AND subject.type:ChemicalSubstance",
+            "size": 1000
+        },
+        "supportBatch": false,
+        "method": "get",
+        "pathParams": [],
+        "server": "https://biothings.ncats.io/text_mining_co_occurrence_kp",
+        "path": "/query",
+        "tags": [
+            "gene",
+            "chemical",
+            "association",
+            "annotation",
+            "query",
+            "translator",
+            "biothings",
+            "biothings_graph"
+        ]
+    },
+    "association": {
+        "input_id": "MONDO",
+        "input_type": "Disease",
+        "output_id": "CHEBI",
+        "output_type": "ChemicalSubstance",
+        "predicate": "related_to",
+        "source": "Text Mining KP",
+        "api_name": "Text Mining CO-OCCURRENCE API",
+        "smartapi": {},
+        "x-translator": {
+            "component": "KP",
+            "team": [
+                "Text Mining Provider",
+                "Service Provider"
+            ]
+        }
+    },
+    "response_mapping": {
+        "related_to": {
+            "CHEBI": "hits.subject.CHEBI",
+            "ngd": "hits.association.ngd"
+        }
+    },
+    "tags": [
+        "gene",
+        "chemical",
+        "association",
+        "annotation",
+        "query",
+        "translator",
+        "biothings",
+        "biothings_graph"
+    ]
+}

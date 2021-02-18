@@ -16,4 +16,18 @@ describe("Integration test", () => {
             expect(res).toHaveLength(27);
         })
     })
+
+    describe("Integration test using text mining co-occurrence KP for disease to chemical association", () => {
+        let edge;
+
+        beforeEach(() => {
+            const edge_path = path.resolve(__dirname, '../data/cooccurrence_example_edge.json');
+            edge = JSON.parse(fs.readFileSync(edge_path));
+        })
+        test("check response", async () => {
+            const query = new q([edge]);
+            const res = await query.query(false);
+            expect(res).toHaveLength(3762);
+        })
+    })
 })
