@@ -8,10 +8,17 @@ const resolved_ids = {
     "NCBIGene:1017": 'k',
     "CHEBI:1234": 'L'
 }
+const resolved_invalid_ids = {
+    "NCBIGene:1017": 'kkkk',
+    "CHEBI:1234": 'LLL'
+}
 jest.mock('biomedical_id_resolver', () => {
     // Works and lets you check for constructor calls:
     return jest.fn().mockImplementation(() => {
-        return { resolve: () => resolved_ids };
+        return {
+            resolve: () => resolved_ids,
+            generateInvalidBioentities: () => resolved_invalid_ids
+        };
     });
 });
 jest.mock('@biothings-explorer/api-response-transform', () => {
