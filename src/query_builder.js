@@ -77,13 +77,15 @@ module.exports = class QueryBuilder {
      */
     constructAxiosRequestConfig() {
         const input = this._getInput(this.edge);
-        return {
+        const config = {
             url: this._getUrl(this.edge, input),
             params: this._getParams(this.edge, input),
             data: this._getRequestBody(this.edge, input),
             method: this.edge.query_operation.method,
             timeout: 50000
         }
+        this.config = config;
+        return config;
     }
 
     needPagination(apiResponse) {
@@ -101,6 +103,7 @@ module.exports = class QueryBuilder {
         this.start += 1000;
         const config = this.constructAxiosRequestConfig(this.edge);
         config.params.from = this.start;
+        this.config = config;
         return config;
     }
 

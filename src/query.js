@@ -22,8 +22,6 @@ module.exports = class APIQueryDispathcer {
 
     async _queryBucket(queries) {
         const res = await Promise.allSettled(queries.map(query => {
-            this.logs.push(new LogEntry("DEBUG", null, `call-apis: Making the following query ${JSON.stringify(query.getConfig())}`).getLog())
-            debug(`Making the following query ${JSON.stringify(query.getConfig())}`)
             return axios(query.getConfig())
                 .then(res => ({
                     response: res.data,
@@ -34,7 +32,7 @@ module.exports = class APIQueryDispathcer {
                         this.logs.push(new LogEntry("DEBUG", null, "call-apis: This query needs to be paginated").getLog());
                         debug("This query needs to be paginated")
                     }
-                    debug(`Succesfully made the following query: ${JSON.stringify(query.getConfig())}`)
+                    debug(`Succesfully made the following query: ${JSON.stringify(query.config)}`)
                     this.logs.push(new LogEntry("DEBUG", null, `call-apis: Succesfully made the following query: ${JSON.stringify(query.config)}`).getLog());
                     const tf_obj = new tf(res);
                     const transformed = tf_obj.transform();
