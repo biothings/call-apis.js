@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.11.0](https://github.com/kevinxin90/call-apis.js/compare/v1.10.5...v1.11.0) (2021-02-18)
+
+
+### Features
+
+* :sparkles: generate invalidBioEntities if enable ID resolution set to false ([87ce0ab](https://github.com/kevinxin90/call-apis.js/commit/87ce0ab634a5ea75785c5a4b5b038233150fda3a))
+
 ### [1.10.5](https://github.com/kevinxin90/call-apis.js/compare/v1.10.4...v1.10.5) (2021-02-18)
 
 
