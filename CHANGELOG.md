@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.10.5](https://github.com/kevinxin90/call-apis.js/compare/v1.10.4...v1.10.5) (2021-02-18)
+
+
+### Bug Fixes
+
+* :bug: fix issue that getConfig is called multiple times ([5f0f697](https://github.com/kevinxin90/call-apis.js/commit/5f0f697f17c3b367ef6905ea00eb81ad1c99e340))
+
 ### [1.10.4](https://github.com/kevinxin90/call-apis.js/compare/v1.10.3...v1.10.4) (2021-02-17)
 
 
