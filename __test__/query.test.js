@@ -12,15 +12,6 @@ const resolved_invalid_ids = {
     "NCBIGene:1017": 'kkkk',
     "CHEBI:1234": 'LLL'
 }
-jest.mock('biomedical_id_resolver', () => {
-    // Works and lets you check for constructor calls:
-    return jest.fn().mockImplementation(() => {
-        return {
-            resolve: () => resolved_ids,
-            generateInvalidBioentities: () => resolved_invalid_ids
-        };
-    });
-});
 jest.mock('@biothings-explorer/api-response-transform', () => {
     // Works and lets you check for constructor calls:
     return jest.fn().mockImplementation((res) => {
@@ -164,7 +155,6 @@ describe("Test query class", () => {
             const caller = new q([]);
             const annotatedResult = await caller._annotate(res);
             expect(annotatedResult).toHaveLength(2);
-            expect(annotatedResult[0].$output).toHaveProperty('obj', 'k');
         })
 
         test("if set enabled equal to false, return the result itself", async () => {
