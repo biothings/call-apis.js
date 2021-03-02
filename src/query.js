@@ -130,10 +130,9 @@ module.exports = class APIQueryDispathcer {
         const grpedIDs = this._groupOutputIDsBySemanticType(result);
         let res;
         if (enable === false) {
-            const biomedical_id_resolver = new resolver();
-            res = biomedical_id_resolver.generateInvalidBioentities(grpedIDs);
+            res = resolver.generateInvalidBioentities(grpedIDs);
         } else {
-            const biomedical_resolver = new resolver();
+            const biomedical_resolver = new resolver.Resolver("biolink");
             res = await biomedical_resolver.resolve(grpedIDs);
         }
         result.map(item => {
