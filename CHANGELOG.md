@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.12.0](https://github.com/kevinxin90/call-apis.js/compare/v1.11.1...v1.12.0) (2021-03-02)
+
+
+### Features
+
+* :sparkles: support traversing biolink hierarchy when resolving ids ([204bf3e](https://github.com/kevinxin90/call-apis.js/commit/204bf3e7489282935397e6261b58bacfc39afd70))
+
 ### [1.11.1](https://github.com/kevinxin90/call-apis.js/compare/v1.11.0...v1.11.1) (2021-02-22)
 
 ## [1.11.0](https://github.com/kevinxin90/call-apis.js/compare/v1.10.5...v1.11.0) (2021-02-18)
