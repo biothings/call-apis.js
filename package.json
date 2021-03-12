@@ -1,6 +1,6 @@
 {
   "name": "@biothings-explorer/call-apis",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "description": "A nodejs module to make api calls for biothings explorer",
   "main": "src/query.js",
   "scripts": {
@@ -30,7 +30,7 @@
   "dependencies": {
     "@biothings-explorer/api-response-transform": "^1.8.0",
     "axios": "^0.21.1",
-    "biomedical_id_resolver": "^3.1.1",
+    "biomedical_id_resolver": "^3.2.1",
     "debug": "^4.3.1",
     "husky": "^4.3.8"
   },
