@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.14.0](https://github.com/kevinxin90/call-apis.js/compare/v1.13.0...v1.14.0) (2021-03-18)
+
+
+### Features
+
+* :sparkles: add num_of_participants property for pathway ([5800427](https://github.com/kevinxin90/call-apis.js/commit/580042787b6623528784cabe973d7082b2080862))
+
 ## [1.13.0](https://github.com/kevinxin90/call-apis.js/compare/v1.12.1...v1.13.0) (2021-03-18)
 
 
