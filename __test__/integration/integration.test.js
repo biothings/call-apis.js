@@ -1,6 +1,7 @@
 const q = require("../../src/query");
 const fs = require("fs");
 const path = require("path");
+const axios = require("axios");
 
 describe("Integration test", () => {
     describe("Integration test using mygene.info gene to biological process association", () => {
@@ -43,6 +44,24 @@ describe("Integration test", () => {
             const res = await query.query(false);
             expect(res).toHaveLength(0);
             expect(query.logs[query.logs.length - 3]).toHaveProperty('level', 'ERROR');
+        })
+    })
+
+    describe("Integration test using mydisease superclass_of", () => {
+        let edges;
+
+        beforeEach(() => {
+            const kg = require("@biothings-explorer/smartapi-kg");
+            const meta_kg = new kg.default();
+            meta_kg.constructMetaKGSync();
+            edges = meta_kg.filter({ api_name: "MyDisease.info API", predicate: "superclass_of" });
+            edges.map(op => op.input = ["MONDO:0002494"])
+        })
+        test("check response", async () => {
+            const query = new q(edges);
+            const res = await query.query(false);
+            const mydisease_res = await axios.get("http://mydisease.info/v1/disease/MONDO:0002494?fields=mondo.descendants&dotfield=true");
+            expect(res.length).toEqual(mydisease_res.data["mondo.descendants"].length)
         })
     })
 })
