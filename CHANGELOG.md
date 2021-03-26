@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.1](https://github.com/kevinxin90/call-apis.js/compare/v1.16.0...v1.16.1) (2021-03-26)
+
+
+### Bug Fixes
+
+* :bug: not deepcopy edge_metadata ([59bd6b7](https://github.com/kevinxin90/call-apis.js/commit/59bd6b77b6787df3fcac8f9c70d2c5578e2de51a))
+
 ## [1.16.0](https://github.com/kevinxin90/call-apis.js/compare/v1.15.3...v1.16.0) (2021-03-26)
 
 ### [1.15.3](https://github.com/kevinxin90/call-apis.js/compare/v1.15.2...v1.15.3) (2021-03-26)
