@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-const qb = require("../src/query_builder");
+const qb = require("../src/builder/query_builder");
 
 describe("test query builder class", () => {
 
