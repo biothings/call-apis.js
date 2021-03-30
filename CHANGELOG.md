@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.17.0](https://github.com/kevinxin90/call-apis.js/compare/v1.16.2...v1.17.0) (2021-03-30)
+
+
+### Features
+
+* :sparkles: supporting calling and retrieving trapi api ([590d329](https://github.com/kevinxin90/call-apis.js/commit/590d3294d0be6eb8698ab0c709ca6f84ce5c7b16))
+
 ### [1.16.2](https://github.com/kevinxin90/call-apis.js/compare/v1.16.1...v1.16.2) (2021-03-29)
 
 ### [1.16.1](https://github.com/kevinxin90/call-apis.js/compare/v1.16.0...v1.16.1) (2021-03-26)
