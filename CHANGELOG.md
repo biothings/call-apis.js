@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.17.1](https://github.com/kevinxin90/call-apis.js/compare/v1.17.0...v1.17.1) (2021-03-30)
+
+
+### Bug Fixes
+
+* :bug: fix issue when handling reversed trapi response ([4561f58](https://github.com/kevinxin90/call-apis.js/commit/4561f58cf5bc0833c10517a1c6d40ca997bf5ef6))
+* :bug: fix issue when looking for bte-trapi tag ([78b23c3](https://github.com/kevinxin90/call-apis.js/commit/78b23c3d24c3dee7161d462a97f682705db0fc2f))
+
 ## [1.17.0](https://github.com/kevinxin90/call-apis.js/compare/v1.16.2...v1.17.0) (2021-03-30)
 
 
