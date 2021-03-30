@@ -76,7 +76,10 @@ module.exports = class TRAPIQueryBuilder {
             url: this._getUrl(this.edge, input),
             data: this._getRequestBody(this.edge, input),
             method: this.edge.query_operation.method,
-            timeout: 50000
+            timeout: 50000,
+            headers: {
+                'Content-Type': 'application/json'
+            },
         }
         this.config = config;
         return config;
