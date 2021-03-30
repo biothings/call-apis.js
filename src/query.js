@@ -1,5 +1,5 @@
 const axios = require("axios");
-const qb = require("./query_builder");
+const qb = require("./builder/builde_factory");
 const queue = require("./query_queue");
 const tf = require("@biothings-explorer/api-response-transform");
 const resolver = require("biomedical_id_resolver");
@@ -63,7 +63,7 @@ module.exports = class APIQueryDispathcer {
 
     _constructQueries(edges) {
         return edges.map(edge => {
-            return new qb(edge);
+            return qb(edge);
         });
     }
 
