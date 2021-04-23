@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.18.0](https://github.com/kevinxin90/call-apis.js/compare/v1.17.1...v1.18.0) (2021-04-23)
+
+
+### Features
+
+* :sparkles: set API timeout limit to be 3s for all TRAPI APIs ([e790fd9](https://github.com/kevinxin90/call-apis.js/commit/e790fd9a256f5a31d3de7276b1675df755479241))
+* :sparkles: support biocarta pathway id ([467503c](https://github.com/kevinxin90/call-apis.js/commit/467503cf6d938dd3e9cd3977b6f56efeefe8e345))
+
 ### [1.17.1](https://github.com/kevinxin90/call-apis.js/compare/v1.17.0...v1.17.1) (2021-03-30)
 
 
