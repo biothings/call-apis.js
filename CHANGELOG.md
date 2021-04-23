@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.19.0](https://github.com/kevinxin90/call-apis.js/compare/v1.18.0...v1.19.0) (2021-04-23)
+
+
+### Bug Fixes
+
+* :bug: fix issue caused by special character in output ([d690c68](https://github.com/kevinxin90/call-apis.js/commit/d690c68c47e7c64f502765483e59ce9f33ecf1cb))
+
 ## [1.18.0](https://github.com/kevinxin90/call-apis.js/compare/v1.17.1...v1.18.0) (2021-04-23)
 
 
