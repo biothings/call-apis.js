@@ -30,7 +30,7 @@
   "dependencies": {
     "@biothings-explorer/api-response-transform": "^1.10.1",
     "axios": "^0.21.1",
-    "biomedical_id_resolver": "^3.6.0",
+    "biomedical_id_resolver": "^3.7.0",
     "debug": "^4.3.1",
     "husky": "^4.3.8"
   },
