@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.20.0](https://github.com/kevinxin90/call-apis.js/compare/v1.19.0...v1.20.0) (2021-04-27)
+
+
+### Bug Fixes
+
+* :bug: change NCBIGENE to NCBIGene, add RHEA ([fa212ff](https://github.com/kevinxin90/call-apis.js/commit/fa212ff5d8bebc1cc1a338f02c83fa98e1afa461))
+
 ## [1.19.0](https://github.com/kevinxin90/call-apis.js/compare/v1.18.0...v1.19.0) (2021-04-23)
 
 
