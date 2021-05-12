@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.22.0](https://github.com/kevinxin90/call-apis.js/compare/v1.21.0...v1.22.0) (2021-05-12)
+
+
+### Features
+
+* trapi 1.1.0 msg update ([627d54d](https://github.com/kevinxin90/call-apis.js/commit/627d54d469ff8c353a2749a71c6fd9dc2dade33f))
+
 ## [1.21.0](https://github.com/kevinxin90/call-apis.js/compare/v1.20.0...v1.21.0) (2021-05-04)
 
 ## [1.20.0](https://github.com/kevinxin90/call-apis.js/compare/v1.19.0...v1.20.0) (2021-04-27)
