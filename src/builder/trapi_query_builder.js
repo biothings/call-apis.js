@@ -47,18 +47,18 @@ module.exports = class TRAPIQueryBuilder {
                 "query_graph": {
                     "nodes": {
                         "n0": {
-                            "id": input,
-                            "category": "biolink:" + edge.association.input_type
+                            "ids": input,
+                            "categories": "biolink:" + edge.association.input_type
                         },
                         "n1": {
-                            "category": "biolink:" + edge.association.output_type
+                            "categories": "biolink:" + edge.association.output_type
                         }
                     },
                     "edges": {
                         "e01": {
                             "subject": "n0",
                             "object": "n1",
-                            "predicate": "biolink:" + edge.association.predicate
+                            "predicates": "biolink:" + edge.association.predicate
                         }
                     }
                 }
