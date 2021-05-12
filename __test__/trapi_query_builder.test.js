@@ -24,10 +24,10 @@ describe("test trapi query builder class", () => {
             const res = builder.getConfig();
             expect(res).toHaveProperty('url', 'https://google.com/query');
             expect(res).toHaveProperty('timeout', 3000);
-            expect(res.data.message.query_graph.nodes.n0.id).toEqual(['123', '456']);
-            expect(res.data.message.query_graph.nodes.n0.category).toEqual('biolink:Pathway');
-            expect(res.data.message.query_graph.nodes.n1.category).toEqual('biolink:Gene');
-            expect(res.data.message.query_graph.edges.e01.predicate).toEqual('biolink:related_to');
+            expect(res.data.message.query_graph.nodes.n0.ids).toEqual(['123', '456']);
+            expect(res.data.message.query_graph.nodes.n0.categories).toEqual('biolink:Pathway');
+            expect(res.data.message.query_graph.nodes.n1.categories).toEqual('biolink:Gene');
+            expect(res.data.message.query_graph.edges.e01.predicates).toEqual('biolink:related_to');
         })
     })
 })
