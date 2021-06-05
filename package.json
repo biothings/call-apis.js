@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kevinxin90/call-apis.js.git"
+    "url": "git+https://github.com/biothings/call-apis.js.git"
   },
   "keywords": [
     "api",
@@ -24,9 +24,9 @@
   "author": "jiwen xin",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/kevinxin90/call-apis.js/issues"
+    "url": "https://github.com/biothings/call-apis.js/issues"
   },
-  "homepage": "https://github.com/kevinxin90/call-apis.js#readme",
+  "homepage": "https://github.com/biothings/call-apis.js#readme",
   "dependencies": {
     "@biothings-explorer/api-response-transform": "^1.11.0",
     "axios": "^0.21.1",
