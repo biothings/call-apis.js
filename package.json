@@ -36,7 +36,7 @@
     "husky": "^4.3.8"
   },
   "devDependencies": {
-    "@biothings-explorer/smartapi-kg": "^3.2.0",
+    "@biothings-explorer/smartapi-kg": "^3.8.1",
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
     "coveralls": "^3.1.0",
