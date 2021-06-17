@@ -114,11 +114,13 @@ module.exports = class APIQueryDispathcer {
     _groupOutputIDsBySemanticType(result) {
         const output_ids = {};
         result.map(item => {
-            const output_type = item.$edge_metadata.output_type;
-            if (!(output_type in output_ids)) {
-                output_ids[output_type] = [];
+            if (item && item.$edge_metadata) {
+                const output_type = item.$edge_metadata.output_type;
+                if (!(output_type in output_ids)) {
+                    output_ids[output_type] = [];
+                }
+                output_ids[output_type].push(item.$output.original);
             }
-            output_ids[output_type].push(item.$output.original);
         })
         return output_ids;
     }
