@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.23.2](https://github.com/biothings/call-apis.js/compare/v1.23.1...v1.23.2) (2021-06-17)
+
+
+### Bug Fixes
+
+* check  field exists before accessing it ([9b8252f](https://github.com/biothings/call-apis.js/commit/9b8252f6296c4167c83abbbba4a6196cee6e31ec))
+
 ### [1.23.1](https://github.com/kevinxin90/call-apis.js/compare/v1.23.0...v1.23.1) (2021-06-04)
 
 
