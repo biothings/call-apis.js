@@ -138,7 +138,9 @@ module.exports = class APIQueryDispathcer {
             res = await biomedical_resolver.resolve(grpedIDs);
         }
         result.map(item => {
-            item.$output.obj = res[item.$output.original];
+            if (item && item !== undefined) {
+                item.$output.obj = res[item.$output.original];
+            }
         });
         return result;
     }
