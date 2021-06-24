@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.23.3](https://github.com/biothings/call-apis.js/compare/v1.23.2...v1.23.3) (2021-06-24)
+
+
+### Bug Fixes
+
+* :bug: ignore undefined items in array ([6b64d09](https://github.com/biothings/call-apis.js/commit/6b64d09a52ab8f4ad469844f977a3d1507d12ccd))
+
 ### [1.23.2](https://github.com/biothings/call-apis.js/compare/v1.23.1...v1.23.2) (2021-06-17)
 
 
