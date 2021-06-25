@@ -5,8 +5,8 @@
   "main": "src/query.js",
   "scripts": {
     "build": "echo 'no build needed'",
-    "test": "jest",
-    "test-cov": "jest --coverage",
+    "test": "jest --env=node",
+    "test-cov": "jest --coverage --env=node",
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "release": "standard-version",
     "release:minor": "standard-version --release-as minor",
