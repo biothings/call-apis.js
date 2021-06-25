@@ -1,6 +1,6 @@
 const default_builder = require("./query_builder");
 const trapi_builder = require("./trapi_query_builder");
-const debug = require("debug")("call-apis:query");
+const debug = require("debug")("bte:call-apis:query");
 
 
 const builder_factory = (edge) => {

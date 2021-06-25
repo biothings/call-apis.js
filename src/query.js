@@ -3,7 +3,7 @@ const qb = require("./builder/builde_factory");
 const queue = require("./query_queue");
 const tf = require("@biothings-explorer/api-response-transform");
 const resolver = require("biomedical_id_resolver");
-const debug = require("debug")("call-apis:query");
+const debug = require("debug")("bte:call-apis:query");
 const LogEntry = require("./log_entry");
 
 
