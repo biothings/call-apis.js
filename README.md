@@ -1,8 +1,8 @@
 # Welcome to @biothings-explorer/call-apis 👋
 
-![Test Coveralls](https://github.com/kevinxin90/call-apis.js/workflows/Test%20Coveralls/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/kevinxin90/call-apis.js/badge.svg?branch=master)](https://coveralls.io/github/kevinxin90/call-apis.js?branch=master)
-<a href="https://github.com/kevinxin90/smartapi-kg.js#readme" target="_blank">
+![Test Coveralls](https://github.com/biothings/call-apis.js/workflows/Test%20Coveralls/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/biothings/call-apis.js/badge.svg)](https://coveralls.io/github/biothings/call-apis.js)
+<a href="https://github.com/biothings/call-apis.js#readme" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
 <a href="https://www.npmjs.com/package/@biothings-explorer/call-apis" target="_blank">
@@ -11,7 +11,7 @@
 
 A nodejs module to make API calls in batch mode for BioThings Explorer
 
-### 🏠 [Homepage](https://github.com/kevinxin90/call-apis.js)
+### 🏠 [Homepage](https://github.com/biothings/call-apis.js)
 
 ## Install
 
@@ -35,14 +35,14 @@ npm run test
 
 ## Author
 
-👤 **Jiwen Xin**
+👤 **BioThings team**
 
-* Website: http://github.com/kevinxin90
-* Github: [@kevinxin90](https://github.com/kevinxin90)
+* Website: https://biothings.io
+* Github: [@biothings](https://github.com/biothings)
 
 ## 🤝 Contributing
 
-Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/kevinxin90/call-apis.js/issues).
+Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/biothings/call-apis.js/issues).
 
 ## Show your support
 
@@ -50,5 +50,5 @@ Give a ⭐️ if this project helped you!
 
 ## 📝 License
 
-Copyright © 2020 [Jiwen Xin](https://github.com/kevinxin90).<br />
-This project is [ISC](https://github.com/kevinxin90/call-apis.js/blob/master/LICENSE) licensed.
+Copyright © 2021 [BioThings Team](https://github.com/biothings).<br />
+This project is [ISC](https://github.com/biothings/call-apis.js/blob/main/LICENSE) licensed.
