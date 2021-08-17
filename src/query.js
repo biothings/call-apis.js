@@ -3,7 +3,6 @@ const qb = require("./builder/builde_factory");
 const queue = require("./query_queue");
 const tf = require("@biothings-explorer/api-response-transform");
 const resolver = require("biomedical_id_resolver");
-const resolve = require('biomedical-id-resolver-sri');
 const debug = require("debug")("bte:call-apis:query");
 const LogEntry = require("./log_entry");
 
@@ -137,7 +136,7 @@ module.exports = class APIQueryDispathcer {
         } else {
             // const biomedical_resolver = new resolver.Resolver("biolink");
             // res = await biomedical_resolver.resolve(grpedIDs);
-            res = await resolve(grpedIDs);
+            res = await resolver.resolveSRI(grpedIDs);
         }
         result.map(item => {
             if (item && item !== undefined) {

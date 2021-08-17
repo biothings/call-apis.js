@@ -32,7 +32,6 @@
     "@biothings-explorer/api-response-transform": "^1.11.0",
     "axios": "^0.21.1",
     "biomedical_id_resolver": "^3.9.1",
-    "biomedical-id-resolver-sri": "^0.1.0",
     "debug": "^4.3.1",
     "husky": "^4.3.8"
   },
