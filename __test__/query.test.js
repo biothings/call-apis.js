@@ -29,7 +29,7 @@ jest.mock('../src/query_queue', () => {
     });
 });
 
-jest.mock('axios');
+// jest.mock('axios');
 
 describe("Test query class", () => {
     describe("Test _merge function", () => {
