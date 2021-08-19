@@ -26,7 +26,7 @@
         "input_id": "MONDO",
         "input_type": "Disease",
         "output_id": "CHEBI",
-        "output_type": "ChemicalSubstance",
+        "output_type": "SmallMolecule",
         "predicate": "related_to",
         "source": "Text Mining KP",
         "api_name": "Text Mining CO-OCCURRENCE API",
