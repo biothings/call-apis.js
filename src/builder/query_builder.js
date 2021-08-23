@@ -1,6 +1,8 @@
 /**
  * Build API queries serving as input for Axios library based on BTE Edge info
  */
+const mustache = require('mustache');
+const templateFuncs = require('./template_funcs');
 module.exports = class QueryBuilder {
     /**
      * Constructor for Query Builder
@@ -23,10 +25,18 @@ module.exports = class QueryBuilder {
         };
         let path = edge.query_operation.path;
         if (Array.isArray(edge.query_operation.path_params)) {
-            edge.query_operation.path_params.map(param => {
-                const val = edge.query_operation.params[param];
-                path = path.replace("{" + param + "}", val).replace("{inputs[0]}", input);
-            });
+            if (typeof input === "object" && !Array.isArray(input)) {
+                edge.query_operation.path_params.map(param => {
+                    const view = {...templateFuncs, ...input.params[param]};
+                    const val = edge.query_operation.params[param];
+                    path = mustache.render(path.replace("{" + param + "}", val), view);
+                });
+            } else {
+                edge.query_operation.path_params.map(param => {
+                    const val = edge.query_operation.params[param];
+                    path = path.replace("{" + param + "}", val).replace("{inputs[0]}", input);
+                });
+            }
         }
         return server + path;
     }
@@ -53,7 +63,14 @@ module.exports = class QueryBuilder {
                 return;
             }
             if (typeof edge.query_operation.params[param] === 'string') {
-                params[param] = edge.query_operation.params[param].replace("{inputs[0]}", input);
+                if (typeof input === 'object' && !Array.isArray(input)) {
+                    // combine input view and template funcs as mustache view and render
+                    const view = {...templateFuncs, ...input.params[param]};
+                    params[param] = mustache.render(edge.query_operation.params[param], view);
+                }
+                else {
+                    params[param] = edge.query_operation.params[param].replace("{inputs[0]}", input);
+                }
             } else {
                 params[param] = edge.query_operation.params[param];
             }
@@ -67,8 +84,22 @@ module.exports = class QueryBuilder {
     _getRequestBody(edge, input) {
         if (edge.query_operation.request_body !== undefined && "body" in edge.query_operation.request_body) {
             let body = edge.query_operation.request_body.body;
-            const data = Object.keys(body).reduce((accumulator, key) => accumulator + key + '=' + body[key].toString().replace('{inputs[0]}', input) + '&', '');
-            return data.substring(0, data.length - 1)
+            let data;
+            if (typeof input === "object" && !Array.isArray(input)) {
+                data = Object.keys(body).reduce(
+                    (accumulator, key) => {
+                        const view = { ...templateFuncs, ...input.params[key] };
+                        return accumulator + key + "=" + mustache.render(body[key].toString(), view) + "&"
+                    },
+                    "",
+                );
+            } else {
+                data = Object.keys(body).reduce(
+                    (accumulator, key) => accumulator + key + "=" + body[key].toString().replace("{inputs[0]}", input) + "&",
+                    "",
+                );
+            }
+            return data.substring(0, data.length - 1);
         }
     }
 
