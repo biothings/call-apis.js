@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.24.0](https://github.com/biothings/call-apis.js/compare/v1.23.3...v1.24.0) (2021-08-19)
+
 ### [1.23.3](https://github.com/biothings/call-apis.js/compare/v1.23.2...v1.23.3) (2021-06-24)
 
 
