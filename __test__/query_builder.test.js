@@ -3,6 +3,8 @@
  */
 
 const qb = require("../src/builder/query_builder");
+const path = require("path");
+const fs = require ("fs");
 
 describe("test query builder class", () => {
 
@@ -63,6 +65,15 @@ describe("test query builder class", () => {
             const builder = new qb(edge);
             const res = builder._getUrl(edge, 'hello');
             expect(res).toBe("https://google.com/hello/json/query")
+        })
+
+        test("if _getUrl mustache templates are filled", () => {
+            const edge_path = path.resolve(__dirname, "data/multi_input_edge.json");
+            edge = JSON.parse(fs.readFileSync(edge_path));
+
+            const builder = new qb(edge);
+            const res = builder._getUrl(edge, edge.input);
+            expect(res).toEqual("https://biothings.ncats.io/text_mining_co_occurrence_kp/querytest");
         })
     })
 
@@ -175,6 +186,19 @@ describe("test query builder class", () => {
             const res = builder._getParams(edge, '1017');
             expect(res.output).toEqual(1);
         })
+
+        test("if _getParams mustache templates are filled", () => {
+            const edge_path = path.resolve(__dirname, "data/multi_input_edge.json");
+            edge = JSON.parse(fs.readFileSync(edge_path));
+
+            const builder = new qb(edge);
+            const res = builder._getParams(edge, edge.input);
+            expect(res).toEqual({
+              fields: "subject,association,",
+              q: 'object.MONDO:"MONDO:0005252" AND subject.type:SmallMolecule',
+              size: 1000,
+            });
+        })
     })
 
     describe("test _getRequestBody function", () => {
@@ -230,6 +254,15 @@ describe("test query builder class", () => {
             const res = builder._getRequestBody(edge, "1017");
             expect(res).toEqual("geneid=hello&output=1017")
         })
+
+        test("if mustache _getRequestBody templates are filled", () => {
+            const edge_path = path.resolve(__dirname, "data/multi_input_edge.json");
+            edge = JSON.parse(fs.readFileSync(edge_path));
+
+            const builder = new qb(edge);
+            const res = builder._getRequestBody(edge, edge.input);
+            expect(res).toEqual("q=MONDO:0005252&fields=subject,association,");
+        });
     })
 
     describe("test constructAxiosRequestConfig function", () => {

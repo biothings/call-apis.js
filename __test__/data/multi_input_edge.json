@@ -1,0 +1,79 @@
+{
+  "input": {
+    "params": {
+      "q": {"id": "MONDO:0005252"},
+      "fields": {"fields": ["subject", "association"]},
+      "path": {"specialpath": "/querytest"}
+    },
+    "body": {
+      "q": {"id": "MONDO:0005252"},
+      "fields": {"fields": ["subject", "association"]}
+    }
+  },
+  "query_operation": {
+    "path_params": [
+      "path"
+    ],
+    "params": {
+      "fields": "{{#fields}}{{.}},{{/fields}}",
+      "q": "object.MONDO:\"{{id}}\" AND subject.type:SmallMolecule",
+      "size": 1000,
+      "path": "{{{specialpath}}}"
+    },
+    "request_body": {
+      "body": {
+        "q": "{{id}}",
+        "fields": "{{#fields}}{{.}},{{/fields}}"
+      },
+      "header": "application/x-www-form-urlencoded"
+    },
+    "supportBatch": false,
+    "method": "get",
+    "pathParams": [],
+    "server": "https://biothings.ncats.io/text_mining_co_occurrence_kp",
+    "path": "{path}",
+    "tags": [
+      "gene",
+      "chemical",
+      "association",
+      "annotation",
+      "query",
+      "translator",
+      "biothings",
+      "biothings_graph"
+    ]
+  },
+  "association": {
+    "input_id": "MONDO",
+    "input_type": "Disease",
+    "output_id": "CHEBI",
+    "output_type": "SmallMolecule",
+    "predicate": "related_to",
+    "source": "Text Mining KP",
+    "api_name": "Text Mining CO-OCCURRENCE API",
+    "smartapi": {},
+    "x-translator": {
+      "component": "KP",
+      "team": [
+        "Text Mining Provider",
+        "Service Provider"
+      ]
+    }
+  },
+  "response_mapping": {
+    "related_to": {
+      "CHEBI": "hits.subject.CHEBI",
+      "ngd": "hits.association.ngd"
+    }
+  },
+  "tags": [
+    "gene",
+    "chemical",
+    "association",
+    "annotation",
+    "query",
+    "translator",
+    "biothings",
+    "biothings_graph"
+  ]
+}
