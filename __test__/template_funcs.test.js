@@ -68,4 +68,34 @@ describe("test templateFuncs", () => {
     res = run(has, "NEWFIX", "-");
     expect(res).toEqual("NEWFIX-PREFIX:" + hasnot);
   });
+
+  test("array usage", () => {
+    const has = ["PREFIX:id0", "PREFIX:id1", "PREFIX:id2"];
+    const hasnot = "usefulid";
+    let res;
+    let run = (str, delim) => {
+      prefix = typeof prefix === "undefined" ? undefined : `"${prefix}"`;
+      delim = typeof delim === "undefined" ? undefined : `"${delim}"`;
+      return nunjucks.renderString(`{{ test | rmPrefix(${prefix}, ${delim}) | join(",") }}`, { test: str });
+    };
+    res = run(has);
+    expect(res).toEqual("id0,id1,id2");
+    run = (str, prefix, delim) => {
+      prefix = typeof prefix === "undefined" ? undefined : `"${prefix}"`;
+      delim = typeof delim === "undefined" ? undefined : `"${delim}"`;
+      return nunjucks.renderString(`{{ test | addPrefix(${prefix}, ${delim}) | join(",") }}`, { test: str });
+    };
+    res = run(has, "test", ":");
+    expect(res).toEqual('test:PREFIX:id0,test:PREFIX:id1,test:PREFIX:id2');
+    run = (str, prefix, delim) => {
+      prefix = typeof prefix === "undefined" ? undefined : `"${prefix}"`;
+      delim = typeof delim === "undefined" ? undefined : `"${delim}"`;
+      return nunjucks.renderString(`{{ test | replPrefix(${prefix}, ${delim}) | join(",") }}`, { test: str });
+    };
+    res = run(has, "test");
+    expect(res).toEqual("test:id0,test:id1,test:id2");
+    run = run = (str, begin, end) => nunjucks.renderString(`{{ test | substr(${begin}, ${end}) }}`, { test: str });
+    res = run(has, -3);
+    expect(res).toEqual("id0,id1,id2");
+  })
 });
