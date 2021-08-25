@@ -1,8 +1,10 @@
 /**
  * Build API queries serving as input for Axios library based on BTE Edge info
  */
-const mustache = require("mustache");
-const templateFuncs = require("./template_funcs");
+const nunjucks = require("nunjucks");
+const nunjucksConfig = require("./nunjucks_config");
+const env = nunjucks.configure({ autoescape: false });
+nunjucksConfig(env);
 module.exports = class TRAPIQueryBuilder {
     /**
      * Constructor for Query Builder
@@ -27,9 +29,8 @@ module.exports = class TRAPIQueryBuilder {
         if (Array.isArray(edge.query_operation.path_params)) {
             if (typeof input === "object" && !Array.isArray(input)) {
               edge.query_operation.path_params.map(param => {
-                const view = { ...templateFuncs, ...input.params[param] };
                 const val = edge.query_operation.params[param];
-                path = mustache.render(path.replace("{" + param + "}", val), view);
+                path = nunjucks.renderString(path.replace("{" + param + "}", val), input);
               });
             } else {
               edge.query_operation.path_params.map(param => {
@@ -54,20 +55,19 @@ module.exports = class TRAPIQueryBuilder {
     _getRequestBody(edge, input) {
         let qg;
         if (typeof input === "object" && !Array.isArray(input)) {
-            const view = { ...templateFuncs, ...input['body'] };
             qg = {
                 "message": {
                     "query_graph": {
                         "nodes": {
                             "n0": {
-                                "ids": Array.isArray(input.body.ids) ? input.body.ids.map(id => mustache.render(id, view)) : [mustache.render(input.body.ids, view)],
+                                "ids": Array.isArray(input.ids) ? input.ids.map(id => nunjucks.renderString(id, input)) : [nunjucks.renderString(input.ids, input)],
                                 "categories": Array.isArray(edge.association.input_type)
-                                    ? edge.association.input_type.map(type => mustache.render("biolink:" + type, view))
+                                    ? edge.association.input_type.map(type => nunjucks.renderString("biolink:" + type, input))
                                     : ["biolink:" + edge.association.input_type]
                             },
                             "n1": {
                                 "categories": Array.isArray(edge.association.output_type)
-                                    ? edge.association.output_type.map(type => mustache.render("biolink:" + type, view))
+                                    ? edge.association.output_type.map(type => nunjucks.renderString("biolink:" + type, input))
                                     : ["biolink:" + edge.association.output_type]
                             }
                         },
@@ -76,7 +76,7 @@ module.exports = class TRAPIQueryBuilder {
                                 "subject": "n0",
                                 "object": "n1",
                                 "predicates": Array.isArray(edge.association.predicate)
-                                    ? edge.association.predicate.map(pred => mustache.render("biolink:" + pred, view))
+                                    ? edge.association.predicate.map(pred => nunjucks.renderString("biolink:" + pred, input))
                                     : ["biolink:" + edge.association.predicate]
                             }
                         }

@@ -31,43 +31,41 @@ describe("test trapi query builder class", () => {
         })
     })
 
-    describe("test mustache support", () => {
-        test("if _getUrl mustache templates are filled", () => {
+    describe("test nunjucks support", () => {
+        test("if _getUrl nunjucks templates are filled", () => {
             const edge = {
                 query_operation: {
                     server: "https://google.com/",
                     path: "{path}",
                     path_params: ["path"],
-                    params: {path: "{{{specialpath}}}"}
+                    params: {path: "{{ specialpath }}"}
                 },
                 association: {
                     input_type: "Pathway",
                     output_type: "Gene",
                     predicate: "related_to",
                 },
-                input: {params: {path: {specialpath: "/querytest"}}},
+                input: {specialpath: "/querytest"},
             };
             const builder = new qb(edge);
             const res = builder._getUrl(edge, edge.input);
             expect(res).toEqual("https://google.com/querytest");
         })
 
-        test("if _getBody mustache templates are filled", () => {
+        test("if _getBody nunjucks templates are filled", () => {
             const edge = {
                 query_operation: {
                     server: "https://google.com/",
                     path: "/query"
                 },
                 association: {
-                    input_type: ['Pathway', 'SomethingElse', '{{SpecialInput}}'],
+                    input_type: ['Pathway', 'SomethingElse', '{{ SpecialInput }}'],
                     output_type: 'Gene',
                     predicate: 'related_to'
                 },
                 input: {
-                    body: {
-                        ids: ['123', '456'],
-                        SpecialInput: "TestSuccess"
-                    }
+                    ids: ['123', '456'],
+                    SpecialInput: "TestSuccess"
                 }
             }
             const builder = new qb(edge);

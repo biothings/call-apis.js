@@ -1,29 +1,26 @@
 {
   "input": {
-    "params": {
-      "q": {"id": "MONDO:0005252"},
-      "fields": {"fields": ["subject", "association"]},
-      "path": {"specialpath": "/querytest"}
-    },
-    "body": {
-      "q": {"id": "MONDO:0005252"},
-      "fields": {"fields": ["subject", "association"]}
-    }
+    "id": "MONDO:0005252",
+    "fields": [
+      "subject",
+      "association"
+    ],
+    "specialpath": "/querytest"
   },
   "query_operation": {
     "path_params": [
       "path"
     ],
     "params": {
-      "fields": "{{#fields}}{{.}},{{/fields}}",
-      "q": "object.MONDO:\"{{id}}\" AND subject.type:SmallMolecule",
+      "fields": "{{ fields | join(',') }}",
+      "q": "object.MONDO:\"{{ id }}\" AND subject.type:SmallMolecule",
       "size": 1000,
-      "path": "{{{specialpath}}}"
+      "path": "{{ specialpath }}"
     },
     "request_body": {
       "body": {
-        "q": "{{id}}",
-        "fields": "{{#fields}}{{.}},{{/fields}}"
+        "q": "{{ id }}",
+        "fields": "{{ fields | join(',') }}"
       },
       "header": "application/x-www-form-urlencoded"
     },

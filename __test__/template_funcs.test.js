@@ -1,38 +1,51 @@
-const tf = require("../src/builder/template_funcs");
-const mustache = require('mustache');
-
-runner_factory = func => s => func()(s, r => r);
+const nunjucks = require("nunjucks");
+const nunjucksConfig = require("../src/builder/nunjucks_config");
+const env = nunjucks.configure({ autoescape: false });
+nunjucksConfig(env);
 
 describe("test templateFuncs", () => {
-  test("slice behavior", () => {
+
+  test("substr behavior", () => {
     const str = "abcdefghi";
-    const runSlice = runner_factory(tf.slice);
+    const run = (str, begin, end) => nunjucks.renderString(`{{ test | substr(${begin}, ${end}) }}`, {test: str});
     let res;
-    res = runSlice(str);
+    res = run(str);
     expect(res).toEqual(str);
-    res = runSlice(str + ";");
-    expect(res).toEqual(str);
-    res = runSlice(str + ";;");
-    expect(res).toEqual(str);
-    res = runSlice(str + ";1");
+    res = run(str, 1);
     expect(res).toEqual(str.slice(1));
-    res = runSlice(str + ";1;");
-    expect(res).toEqual(str.slice(1));
-    res = runSlice(str + ";;3");
-    expect(res).toEqual(str.slice(0, 3));
-    res = runSlice(str + ";3;6");
+    res = run(str, 3, 6);
     expect(res).toEqual(str.slice(3, 6));
-    res = runSlice(str + ";;-3");
+    res = run(str, 0, -3);
     expect(res).toEqual(str.slice(0, -3));
+  });
+
+  test("addPrefix behavior", () => {
+    const has = "PREFIX:usefulid";
+    const hasnot = "usefulid";
+    const run = (str, prefix, delim) => {
+      prefix = typeof prefix === 'undefined' ? undefined : `"${prefix}"`;
+      delim = typeof delim === 'undefined' ? undefined : `"${delim}"`;
+      return nunjucks.renderString(`{{ test | addPrefix(${prefix}, ${delim}) }}`, {test: str})
+    };
+    let res;
+    res = run(hasnot, "PREFIX");
+    expect(res).toEqual(has);
+    res = run(hasnot, "PREFIX", "-");
+    expect(res).toEqual("PREFIX-" + hasnot);
   });
 
   test("rmPrefix behavior", () => {
     const has = "PREFIX:usefulid";
     const hasnot = "usefulid";
-    const run = runner_factory(tf.rmPrefix);
+    const run = (str, delim) => {
+      delim = typeof delim === 'undefined' ? undefined : `"${delim}"`;
+      return nunjucks.renderString(`{{ test | rmPrefix(${delim}) }}`, {test: str})
+    };
     let res;
     res = run(has);
     expect(res).toEqual(hasnot);
+    res = run(has, "-");
+    expect(res).toEqual(has);
     res = run(hasnot);
     expect(res).toEqual(hasnot);
   });
@@ -40,33 +53,19 @@ describe("test templateFuncs", () => {
   test("replPrefix behavior", () => {
     const has = "PREFIX:usefulid";
     const hasnot = "usefulid";
-    const run = runner_factory(tf.replPrefix);
+    const run = (str, prefix, delim) => {
+      prefix = typeof prefix === 'undefined' ? undefined : `"${prefix}"`;
+      delim = typeof delim === 'undefined' ? undefined : `"${delim}"`;
+      return nunjucks.renderString(`{{ test | replPrefix(${prefix}, ${delim}) }}`, {test: str})
+    };
     let res;
-    res = run(has + ";NEWFIX");
+    res = run(has, "NEWFIX");
     expect(res).toEqual("NEWFIX:" + hasnot);
-    res = run(hasnot + ";NEWFIX");
-    expect(res).toEqual("NEWFIX:" + hasnot)
+    res = run(hasnot, "NEWFIX");
+    expect(res).toEqual("NEWFIX:" + hasnot);
     res = run(has);
-    expect(res).toEqual(has);
-  })
-
-  test("basic applied usage", () => {
-    const view = {
-      ids: [123, 456, 789],
-      ...tf
-    }
-    let template = "{{#ids}}{{#slice}}{{.}};0;2{{/slice}},{{/ids}}";
-    let res = mustache.render(template, view);
-    expect(res).toEqual("12,45,78,");
-
-    view.ids = ["MONDO:test1", "MONDO:test2", "MONDO:test3"];
-    template = "{{#ids}}{{#rmPrefix}}{{.}}{{/rmPrefix}},{{/ids}}"
-    res = mustache.render(template, view);
-    expect(res).toEqual("test1,test2,test3,")
-
-    template = "{{#ids}}{{#replPrefix}}{{.}};UMLS{{/replPrefix}},{{/ids}}";
-    res = mustache.render(template, view);
-    expect(res).toEqual("UMLS:test1,UMLS:test2,UMLS:test3,");
-
-  })
+    expect(res).toEqual(hasnot);
+    res = run(has, "NEWFIX", "-");
+    expect(res).toEqual("NEWFIX-PREFIX:" + hasnot);
+  });
 });
