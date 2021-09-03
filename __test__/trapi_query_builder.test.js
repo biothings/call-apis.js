@@ -30,4 +30,68 @@ describe("test trapi query builder class", () => {
             expect(res.data.message.query_graph.edges.e01.predicates).toContain('biolink:related_to');
         })
     })
+
+    describe("test nunjucks support", () => {
+        test("if _getUrl nunjucks templates are filled", () => {
+            const edge = {
+                query_operation: {
+                    server: "https://google.com/",
+                    path: "{path}",
+                    path_params: ["path"],
+                    params: {path: "{{ specialpath }}"}
+                },
+                association: {
+                    input_type: "Pathway",
+                    output_type: "Gene",
+                    predicate: "related_to",
+                },
+                input: {specialpath: "/querytest"},
+            };
+            const builder = new qb(edge);
+            const res = builder._getUrl(edge, edge.input);
+            expect(res).toEqual("https://google.com/querytest");
+        })
+
+        test("if _getBody nunjucks templates are filled", () => {
+            const edge = {
+                query_operation: {
+                    server: "https://google.com/",
+                    path: "/query"
+                },
+                association: {
+                    input_type: ['Pathway', 'SomethingElse', '{{ SpecialInput }}'],
+                    output_type: 'Gene',
+                    predicate: 'related_to'
+                },
+                input: {
+                    ids: ['123', '456'],
+                    SpecialInput: "TestSuccess"
+                }
+            }
+            const builder = new qb(edge);
+            const res = builder._getRequestBody(edge, edge.input);
+            expect(res).toEqual({
+                message: {
+                    query_graph: {
+                    nodes: {
+                        n0: {
+                        ids: ['123', '456'],
+                        categories: ['biolink:Pathway', 'biolink:SomethingElse', 'biolink:TestSuccess'],
+                        },
+                        n1: {
+                        categories: ['biolink:Gene'],
+                        },
+                    },
+                    edges: {
+                        e01: {
+                        subject: "n0",
+                        object: "n1",
+                        predicates: ['biolink:related_to'],
+                        },
+                    },
+                    },
+                },
+            });
+        })
+    })
 })

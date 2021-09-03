@@ -1,6 +1,10 @@
 /**
  * Build API queries serving as input for Axios library based on BTE Edge info
  */
+const nunjucks = require("nunjucks");
+const nunjucksConfig = require("./nunjucks_config");
+const env = nunjucks.configure({ autoescape: false });
+nunjucksConfig(env);
 module.exports = class TRAPIQueryBuilder {
     /**
      * Constructor for Query Builder
@@ -23,10 +27,17 @@ module.exports = class TRAPIQueryBuilder {
         };
         let path = edge.query_operation.path;
         if (Array.isArray(edge.query_operation.path_params)) {
-            edge.query_operation.path_params.map(param => {
+            if (typeof input === "object" && !Array.isArray(input)) {
+              edge.query_operation.path_params.map(param => {
+                const val = edge.query_operation.params[param];
+                path = nunjucks.renderString(path.replace("{" + param + "}", val), input);
+              });
+            } else {
+              edge.query_operation.path_params.map(param => {
                 const val = edge.query_operation.params[param];
                 path = path.replace("{" + param + "}", val).replace("{inputs[0]}", input);
-            });
+              });
+            }
         }
         return server + path;
     }
@@ -42,23 +53,55 @@ module.exports = class TRAPIQueryBuilder {
      * Construct TRAPI request body
      */
     _getRequestBody(edge, input) {
-        const qg = {
-            "message": {
-                "query_graph": {
-                    "nodes": {
-                        "n0": {
-                            "ids": Array.isArray(input) ? input : [input],
-                            "categories": ["biolink:" + edge.association.input_type]
+        let qg;
+        if (typeof input === "object" && !Array.isArray(input)) {
+            qg = {
+                "message": {
+                    "query_graph": {
+                        "nodes": {
+                            "n0": {
+                                "ids": Array.isArray(input.ids) ? input.ids.map(id => nunjucks.renderString(id, input)) : [nunjucks.renderString(input.ids, input)],
+                                "categories": Array.isArray(edge.association.input_type)
+                                    ? edge.association.input_type.map(type => nunjucks.renderString("biolink:" + type, input))
+                                    : ["biolink:" + edge.association.input_type]
+                            },
+                            "n1": {
+                                "categories": Array.isArray(edge.association.output_type)
+                                    ? edge.association.output_type.map(type => nunjucks.renderString("biolink:" + type, input))
+                                    : ["biolink:" + edge.association.output_type]
+                            }
                         },
-                        "n1": {
-                            "categories": ["biolink:" + edge.association.output_type]
+                        "edges": {
+                            "e01": {
+                                "subject": "n0",
+                                "object": "n1",
+                                "predicates": Array.isArray(edge.association.predicate)
+                                    ? edge.association.predicate.map(pred => nunjucks.renderString("biolink:" + pred, input))
+                                    : ["biolink:" + edge.association.predicate]
+                            }
                         }
-                    },
-                    "edges": {
-                        "e01": {
-                            "subject": "n0",
-                            "object": "n1",
-                            "predicates": ["biolink:" + edge.association.predicate]
+                    }
+                }
+            }
+        } else {
+            qg = {
+                "message": {
+                    "query_graph": {
+                        "nodes": {
+                            "n0": {
+                                "ids": Array.isArray(input) ? input : [input],
+                                "categories": ["biolink:" + edge.association.input_type]
+                            },
+                            "n1": {
+                                "categories": ["biolink:" + edge.association.output_type]
+                            }
+                        },
+                        "edges": {
+                            "e01": {
+                                "subject": "n0",
+                                "object": "n1",
+                                "predicates": ["biolink:" + edge.association.predicate]
+                            }
                         }
                     }
                 }
