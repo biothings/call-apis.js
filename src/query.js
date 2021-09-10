@@ -134,8 +134,9 @@ module.exports = class APIQueryDispathcer {
         if (enable === false) {
             res = resolver.generateInvalidBioentities(grpedIDs);
         } else {
-            const biomedical_resolver = new resolver.Resolver("biolink");
-            res = await biomedical_resolver.resolve(grpedIDs);
+            // const biomedical_resolver = new resolver.Resolver("biolink");
+            // res = await biomedical_resolver.resolve(grpedIDs);
+            res = await resolver.resolveSRI(grpedIDs);
         }
         result.map(item => {
             if (item && item !== undefined) {
