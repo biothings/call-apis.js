@@ -68,14 +68,13 @@ module.exports = class TemplateQueryBuilder {
     if (edge.query_operation.request_body !== undefined && "body" in edge.query_operation.request_body) {
       let body = edge.query_operation.request_body.body;
       let data;
-      // TODO figure out how this might need to be copied/renamed
-      if (edge.query_operation.body_type === "string") {
+      if (edge.query_operation.requestBodyType === "object") { // TODO figure out way to signal further parse into object
+        data = Object.fromEntries(Object.entries(body).map(([key, val]) => [key, nunjucks.renderString(val, input)]));
+      } else {
         data = Object.keys(body).reduce((accumulator, key) => {
           return accumulator + key + "=" + nunjucks.renderString(body[key].toString(), input) + "&";
         }, "");
         data = data.substring(0, data.length - 1);
-      } else {
-        data = Object.fromEntries(Object.entries(body).map(([key, val]) => [key, nunjucks.renderString(val, input)]));
       }
       return data;
     }
