@@ -80,45 +80,45 @@ module.exports = class QueryBuilder {
             }
         }
 
-        /**
-        * Construct the request config for Axios reqeust.
-        */
-        constructAxiosRequestConfig() {
-            const input = this._getInput(this.edge);
-            const config = {
-                url: this._getUrl(this.edge, input),
-                params: this._getParams(this.edge, input),
-                data: this._getRequestBody(this.edge, input),
-                method: this.edge.query_operation.method,
-                timeout: 50000,
-            };
-            this.config = config;
-            return config;
-        }
+    /**
+    * Construct the request config for Axios reqeust.
+    */
+    constructAxiosRequestConfig() {
+        const input = this._getInput(this.edge);
+        const config = {
+            url: this._getUrl(this.edge, input),
+            params: this._getParams(this.edge, input),
+            data: this._getRequestBody(this.edge, input),
+            method: this.edge.query_operation.method,
+            timeout: 50000,
+        };
+        this.config = config;
+        return config;
+    }
 
-        needPagination(apiResponse) {
-            if (this.edge.query_operation.method === "get" && this.edge.tags.includes("biothings")) {
-                if (apiResponse.total > this.start + apiResponse.hits.length) {
-                    this.hasNext = true;
-                    return true;
-                }
+    needPagination(apiResponse) {
+        if (this.edge.query_operation.method === "get" && this.edge.tags.includes("biothings")) {
+            if (apiResponse.total > this.start + apiResponse.hits.length) {
+                this.hasNext = true;
+                return true;
             }
-            this.hasNext = false;
-            return false;
         }
+        this.hasNext = false;
+        return false;
+    }
 
-        getNext() {
-            this.start += 1000;
-            const config = this.constructAxiosRequestConfig(this.edge);
-            config.params.from = this.start;
-            this.config = config;
-            return config;
-        }
+    getNext() {
+        this.start += 1000;
+        const config = this.constructAxiosRequestConfig(this.edge);
+        config.params.from = this.start;
+        this.config = config;
+        return config;
+    }
 
-        getConfig() {
-            if (this.hasNext === false) {
-                return this.constructAxiosRequestConfig(this.edge);
-            }
-            return this.getNext();
+    getConfig() {
+        if (this.hasNext === false) {
+            return this.constructAxiosRequestConfig(this.edge);
         }
-    };
+        return this.getNext();
+    }
+};
