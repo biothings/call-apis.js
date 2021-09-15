@@ -27,17 +27,10 @@ module.exports = class QueryBuilder {
     }
     let path = edge.query_operation.path;
     if (Array.isArray(edge.query_operation.path_params)) {
-      if (typeof input === "object" && !Array.isArray(input)) {
-        edge.query_operation.path_params.map(param => {
-          const val = edge.query_operation.params[param];
-          path = nunjucks.renderString(path.replace("{" + param + "}", val), input);
-        });
-      } else {
         edge.query_operation.path_params.map(param => {
           const val = edge.query_operation.params[param];
           path = path.replace("{" + param + "}", val).replace("{inputs[0]}", input);
         });
-      }
     }
     return server + path;
   }
@@ -64,11 +57,7 @@ module.exports = class QueryBuilder {
         return;
       }
       if (typeof edge.query_operation.params[param] === "string") {
-        if (typeof input === "object" && !Array.isArray(input)) {
-          params[param] = nunjucks.renderString(edge.query_operation.params[param], input);
-        } else {
           params[param] = edge.query_operation.params[param].replace("{inputs[0]}", input);
-        }
       } else {
         params[param] = edge.query_operation.params[param];
       }
@@ -83,16 +72,10 @@ module.exports = class QueryBuilder {
     if (edge.query_operation.request_body !== undefined && "body" in edge.query_operation.request_body) {
       let body = edge.query_operation.request_body.body;
       let data;
-      if (typeof input === "object" && !Array.isArray(input)) {
-        data = Object.keys(body).reduce((accumulator, key) => {
-          return accumulator + key + "=" + nunjucks.renderString(body[key].toString(), input) + "&";
-        }, "");
-      } else {
         data = Object.keys(body).reduce(
           (accumulator, key) => accumulator + key + "=" + body[key].toString().replace("{inputs[0]}", input) + "&",
           "",
         );
-      }
       return data.substring(0, data.length - 1);
     }
   }
