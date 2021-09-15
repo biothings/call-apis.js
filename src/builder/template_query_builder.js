@@ -68,8 +68,8 @@ module.exports = class TemplateQueryBuilder {
     if (edge.query_operation.request_body !== undefined && "body" in edge.query_operation.request_body) {
       let body = edge.query_operation.request_body.body;
       let data;
-      if (edge.query_operation.requestBodyType === "object") { // TODO figure out way to signal further parse into object
-        data = Object.fromEntries(Object.entries(body).map(([key, val]) => [key, nunjucks.renderString(val, input)]));
+      if (edge.query_operation.requestBodyType === "object") {
+        data = JSON.parse(nunjucks.renderString(body, input));
       } else {
         data = Object.keys(body).reduce((accumulator, key) => {
           return accumulator + key + "=" + nunjucks.renderString(body[key].toString(), input) + "&";

@@ -25,6 +25,13 @@ mappableStringTemplateFuncs.rmPrefix = (input, delim) => {
 mappableStringTemplateFuncs.replPrefix = (input, prefix, delim) => {
   return mappableStringTemplateFuncs.addPrefix(mappableStringTemplateFuncs.rmPrefix(input, delim), prefix, delim);
 };
+mappableStringTemplateFuncs.wrap = (input, start, end) => {
+  if (typeof start === "undefined") {
+    return input;
+  }
+  end = end || start;
+  return String(start) + String(input) + String(end);
+};
 
 arrayOnlyTemplateFuncs.joinSafe = (input, delim) => {
   return Array.isArray(input) ? input.join(delim) : input;
@@ -48,6 +55,6 @@ module.exports = env => {
     env.addFilter(key, mapIfNeeded(mappableStringTemplateFuncs[key]));
   });
   Object.keys(arrayOnlyTemplateFuncs).forEach(key => {
-    env.addFilter(key, arrayOnlyTemplateFuncs[key])
-  })
+    env.addFilter(key, arrayOnlyTemplateFuncs[key]);
+  });
 };
