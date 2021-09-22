@@ -115,26 +115,31 @@ module.exports = class QueryBuilder {
 
     needPagination(apiResponse) {
         if (this.edge.query_operation.method === "get" && this.edge.tags.includes("biothings")) {
-        if (apiResponse.total > this.start + apiResponse.hits.length) {
-            this.hasNext = true;
-            return true;
-        }
+            if (apiResponse.total > this.start + apiResponse.hits.length) {
+                if (this.start + apiResponse.hits.length < 10000) {
+                    this.hasNext = true;
+                    return true;
+                }
+            }
         }
         this.hasNext = false;
         return false;
     }
 
     getNext() {
-        this.start += 1000;
+        this.start = Math.min(this.start + 1000, 9999);
         const config = this.constructAxiosRequestConfig(this.edge);
         config.params.from = this.start;
+        if (config.params.size + this.start > 10000) {
+            config.params.size = 10000 - this.start;
+        }
         this.config = config;
         return config;
     }
 
     getConfig() {
         if (this.hasNext === false) {
-        return this.constructAxiosRequestConfig(this.edge);
+            return this.constructAxiosRequestConfig(this.edge);
         }
         return this.getNext();
     }
