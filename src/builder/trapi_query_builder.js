@@ -81,7 +81,8 @@ module.exports = class TRAPIQueryBuilder {
                             }
                         }
                     }
-                }
+                },
+                "submitter": "infores:bte"
             }
         } else {
             qg = {
@@ -104,7 +105,8 @@ module.exports = class TRAPIQueryBuilder {
                             }
                         }
                     }
-                }
+                },
+                "submitter": "infores:bte"
             }
         }
         return qg;
