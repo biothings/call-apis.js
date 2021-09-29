@@ -47,6 +47,9 @@ module.exports = class APIQueryDispathcer {
                     debug("This query needs to be paginated");
                 }
                 const log_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
+                if (log_msg.length > 1000) {
+                    log_msg = log_msg.substring(0, 1000) + "...";
+                }
                 debug(log_msg);
                 this.logs.push(
                     new LogEntry(
