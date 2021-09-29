@@ -27,6 +27,7 @@ module.exports = class APIQueryDispathcer {
     }
 
     async _queryBucket(queries) {
+        const dryrun_only = process.env.DRYRUN === 'true';   //TODO: allow dryrun to be specified from the query parameter
         const res = await Promise.allSettled(queries.map(async query => {
             try {
                 const query_config = query.getConfig();
@@ -37,7 +38,7 @@ module.exports = class APIQueryDispathcer {
                     debug("delay 1s for RTX KG2 KP...");
                     await delay_here(1);
                 }
-                const queryResponse = await axios(query_config);
+                const queryResponse = dryrun_only ? {data: []} : await axios(query_config);
                 const res = {
                     response: queryResponse.data,
                     edge: query.edge,
