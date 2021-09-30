@@ -29,7 +29,6 @@ module.exports = class TemplateQueryBuilder {
     if (Array.isArray(edge.query_operation.path_params)) {
       edge.query_operation.path_params.map(param => {
         const val = edge.query_operation.params[param];
-        // not sure why we're overriding this each time
         path = nunjucks.renderString(path.replace("{" + param + "}", val), input);
       });
     }
