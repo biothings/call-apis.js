@@ -46,7 +46,7 @@ module.exports = class TRAPIQueryBuilder {
      * Construct TRAPI request body
      */
     _getRequestBody(edge, input) {
-        qg = {
+        const qg = {
             "message": {
                 "query_graph": {
                     "nodes": {
