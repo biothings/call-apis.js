@@ -108,9 +108,12 @@ module.exports = class QueryBuilder {
     }
 
     getNext() {
-        this.start += 1000;
+        this.start = Math.min(this.start + 1000, 9999);
         const config = this.constructAxiosRequestConfig(this.edge);
         config.params.from = this.start;
+        if (config.params.size + this.start > 10000) {
+            config.params.size = 10000 - this.start;
+        }
         this.config = config;
         return config;
     }
