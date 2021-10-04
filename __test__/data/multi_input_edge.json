@@ -1,12 +1,21 @@
 {
+  "useTemplating": true,
   "input": {
     "id": "MONDO:0005252",
     "fields": [
       "subject",
       "association"
-    ],
-    "specialpath": "/querytest"
+    ]
   },
+  "templateInputs": {
+    "specialpath": "/querytest",
+    "id": "MONDO:0005252",
+    "fields": [
+      "subject",
+      "association"
+    ]
+  },
+  "queryInputs": ["abc", "def"],
   "query_operation": {
     "path_params": [
       "path"
