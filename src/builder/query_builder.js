@@ -99,13 +99,15 @@ module.exports = class QueryBuilder {
     needPagination(apiResponse) {
         if (this.edge.query_operation.method === "get" && this.edge.tags.includes("biothings")) {
             if (apiResponse.total > this.start + apiResponse.hits.length) {
-                this.hasNext = true;
-                return true;
+                if (this.start + apiResponse.hits.length < 10000) {
+                    this.hasNext = true;
+                    return true;
+                }
             }
         }
         this.hasNext = false;
         return false;
-    }
+  }
 
     getNext() {
         this.start = Math.min(this.start + 1000, 9999);
