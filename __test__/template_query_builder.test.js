@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-const qb = require("../src/builder/query_builder");
+const qb = require("../src/builder/template_query_builder");
 const path = require("path");
 const fs = require ("fs");
 
@@ -57,14 +57,28 @@ describe("test query builder class", () => {
                     path: "/{geneid}/{output}/query",
                     path_params: ["geneid", "output"],
                     params: {
-                        geneid: "{inputs[0]}",
+                        geneid: "{{queryInputs}}",
                         output: "json"
                     }
                 }
             }
             const builder = new qb(edge);
-            const res = builder._getUrl(edge, 'hello');
+            const res = builder._getUrl(edge, {queryInputs: 'hello'});
             expect(res).toBe("https://google.com/hello/json/query")
+        })
+
+        test("if _getUrl nunjucks templates are filled", () => {
+            const edge_path = path.resolve(__dirname, "data/multi_input_edge.json");
+            edge = JSON.parse(fs.readFileSync(edge_path));
+
+            const builder = new qb(edge);
+            const res = builder._getUrl(edge, {
+                specialpath: "/querytest",
+                id: "MONDO:0005252",
+                fields: ["subject", "association"],
+                queryInputs: ["abc", "def"],
+            });
+            expect(res).toEqual("https://biothings.ncats.io/text_mining_co_occurrence_kp/querytest");
         })
     })
 
@@ -90,7 +104,7 @@ describe("test query builder class", () => {
             }
             const builder = new qb(edge);
             const res = builder._getInput(edge);
-            expect(res).toEqual("kevin,xin");
+            expect(res).toEqual(["kevin", "xin"]);
         })
 
         test("Test if API does not supports batch, and one input provided", () => {
@@ -114,13 +128,13 @@ describe("test query builder class", () => {
                     server: "https://google.com",
                     path: "/{geneid}/query",
                     params: {
-                        geneid: "{inputs[0]}",
+                        geneid: "{{queryInputs}}",
                         output: "json"
                     }
                 }
             }
             const builder = new qb(edge);
-            const res = builder._getParams(edge, '1017');
+            const res = builder._getParams(edge, {queryInputs: '1017'});
             expect(res).toHaveProperty("geneid");
             expect(res.geneid).toEqual('1017');
         })
@@ -151,12 +165,12 @@ describe("test query builder class", () => {
                     path_params: ["geneid"],
                     params: {
                         geneid: "hello",
-                        output: "{inputs[0]}"
+                        output: "{{queryInputs}}"
                     }
                 }
             }
             const builder = new qb(edge);
-            const res = builder._getParams(edge, '1017');
+            const res = builder._getParams(edge, {queryInputs: '1017'});
             expect(res).not.toHaveProperty("geneid");
             expect(res.output).toEqual('1017');
         })
@@ -178,6 +192,23 @@ describe("test query builder class", () => {
             expect(res.output).toEqual(1);
         })
 
+        test("if _getParams nunjucks templates are filled", () => {
+            const edge_path = path.resolve(__dirname, "data/multi_input_edge.json");
+            edge = JSON.parse(fs.readFileSync(edge_path));
+
+            const builder = new qb(edge);
+            const res = builder._getParams(edge, {
+              specialpath: "/querytest",
+              id: "MONDO:0005252",
+              fields: ["subject", "association"],
+              queryInputs: ["abc", "def"],
+            });
+            expect(res).toEqual({
+              fields: "subject,association",
+              q: 'object.MONDO:"MONDO:0005252" AND subject.type:SmallMolecule',
+              size: 1000,
+            });
+        })
     })
 
     describe("test _getRequestBody function", () => {
@@ -224,28 +255,41 @@ describe("test query builder class", () => {
                     request_body: {
                         body: {
                             geneid: "hello",
-                            output: "{inputs[0]}"
+                            output: "{{queryInputs}}"
                         }
                     }
                 }
             }
             const builder = new qb(edge);
-            const res = builder._getRequestBody(edge, "1017");
+            const res = builder._getRequestBody(edge, {queryInputs: "1017"});
             expect(res).toEqual("geneid=hello&output=1017")
         })
 
+        test("if nunjucks _getRequestBody templates are filled", () => {
+            const edge_path = path.resolve(__dirname, "data/multi_input_edge.json");
+            edge = JSON.parse(fs.readFileSync(edge_path));
+
+            const builder = new qb(edge);
+            const res = builder._getRequestBody(edge, {
+              specialpath: "/querytest",
+              id: "MONDO:0005252",
+              fields: ["subject", "association"],
+              queryInputs: ["abc", "def"],
+            });
+            expect(res).toEqual("q=MONDO:0005252&fields=subject,association");
+        });
     })
 
     describe("test constructAxiosRequestConfig function", () => {
         test("test constructAxiosRequestConfig function", () => {
             const edge = {
-                input: "1017",
+                input: {queryInputs: ["1017"]},
                 query_operation: {
                     server: "https://google.com",
                     path: "/{geneid}/query",
                     path_params: ["geneid"],
                     params: {
-                        geneid: "{inputs[0]}",
+                        geneid: "{{queryInputs}}",
                         output: "json"
                     },
                     method: "get"

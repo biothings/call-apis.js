@@ -7,6 +7,12 @@ const debug = require("debug")("bte:call-apis:query");
 const LogEntry = require("./log_entry");
 
 
+async function delay_here(sec) {
+    return new Promise(resolve => {
+        setTimeout(() => { resolve('') }, sec*1000);
+    })
+}
+
 /**
  * Make API Queries based on input BTE Edges, collect and align the results into BioLink Model
  */
@@ -21,23 +27,36 @@ module.exports = class APIQueryDispathcer {
     }
 
     async _queryBucket(queries) {
+        const dryrun_only = process.env.DRYRUN === 'true';   //TODO: allow dryrun to be specified from the query parameter
         const res = await Promise.allSettled(queries.map(async query => {
             try {
-                const queryResponse = await axios(query.getConfig());
+                const query_config = query.getConfig();
+                debug(query_config);
+                if (query_config.url.includes("arax.ncats.io")) {
+                    //delay 1s specifically for RTX KG2 at https://arax.ncats.io/api/rtxkg2/v1.2
+                    // https://smart-api.info/registry?q=acca268be3645a24556b81cc15ce0e9a
+                    debug("delay 1s for RTX KG2 KP...");
+                    await delay_here(1);
+                }
+                const queryResponse = dryrun_only ? {data: []} : await axios(query_config);
                 const res = {
-                response: queryResponse.data,
-                edge: query.edge,
+                    response: queryResponse.data,
+                    edge: query.edge,
                 };
                 if (query.needPagination(res.response)) {
                     this.logs.push(new LogEntry("DEBUG", null, "call-apis: This query needs to be paginated").getLog());
                     debug("This query needs to be paginated");
                 }
-                debug(`Succesfully made the following query: ${JSON.stringify(query.config)}`);
+                const log_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
+                if (log_msg.length > 1000) {
+                    log_msg = log_msg.substring(0, 1000) + "...";
+                }
+                debug(log_msg);
                 this.logs.push(
                     new LogEntry(
                         "DEBUG",
                         null,
-                        `call-apis: Succesfully made the following query: ${JSON.stringify(query.config)}`,
+                        `call-apis: ${log_msg}`,
                     ).getLog(),
                 );
                 const tf_obj = new tf.Transformer(res);

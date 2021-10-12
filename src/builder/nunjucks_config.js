@@ -4,34 +4,46 @@
  * Functions need only work on single-string inputs -- they are automatically
  * mapped if being applied to an array of inputs.
  */
-const templateFuncs = {}; // storage for all funcs, when defining new add here
+const mappableStringTemplateFuncs = {}; // defined on str, can be mapped to array
+const arrayOnlyTemplateFuncs = {}; // defined on array
 
-templateFuncs.substr = (input, begin, end) => {
+mappableStringTemplateFuncs.substr = (input, begin, end) => {
   begin = begin || 0;
   end = end || input.length;
   return input.slice(begin, end);
 };
-templateFuncs.addPrefix = (input, prefix, delim) => {
+mappableStringTemplateFuncs.addPrefix = (input, prefix, delim) => {
   prefix = prefix || "";
   delim = delim || ":";
   return prefix.length !== 0 ? prefix + delim + input : input;
 };
-templateFuncs.rmPrefix = (input, delim) => {
+mappableStringTemplateFuncs.rmPrefix = (input, delim) => {
   delim = delim || ":";
   split = input.split(delim);
   return split.length < 2 ? input : split[1];
 };
-templateFuncs.replPrefix = (input, prefix, delim) => {
-  return templateFuncs.addPrefix(templateFuncs.rmPrefix(input, delim), prefix, delim);
+mappableStringTemplateFuncs.replPrefix = (input, prefix, delim) => {
+  return mappableStringTemplateFuncs.addPrefix(mappableStringTemplateFuncs.rmPrefix(input, delim), prefix, delim);
+};
+mappableStringTemplateFuncs.wrap = (input, start, end) => {
+  if (typeof start === "undefined") {
+    return input;
+  }
+  end = end || start;
+  return String(start) + String(input) + String(end);
 };
 
-const mapIfNeeded = (func) => {
+arrayOnlyTemplateFuncs.joinSafe = (input, delim) => {
+  return Array.isArray(input) ? input.join(delim) : input;
+};
+
+const mapIfNeeded = func => {
   return (...args) => {
-    const input = args.shift()
+    const input = args.shift();
     if (typeof input === "undefined") {
       return undefined;
     } else if (Array.isArray(input)) {
-      return input.map((item) => func(item, ...args));
+      return input.map(item => func(item, ...args));
     } else {
       return func(input, ...args);
     }
@@ -39,7 +51,10 @@ const mapIfNeeded = (func) => {
 };
 
 module.exports = env => {
-  Object.keys(templateFuncs).forEach(key => {
-    env.addFilter(key, mapIfNeeded(templateFuncs[key]));
+  Object.keys(mappableStringTemplateFuncs).forEach(key => {
+    env.addFilter(key, mapIfNeeded(mappableStringTemplateFuncs[key]));
+  });
+  Object.keys(arrayOnlyTemplateFuncs).forEach(key => {
+    env.addFilter(key, arrayOnlyTemplateFuncs[key]);
   });
 };
