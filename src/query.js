@@ -24,6 +24,8 @@ module.exports = class APIQueryDispathcer {
     constructor(edges) {
         this.edges = edges;
         this.logs = [];
+        this.biolink = new biolink.BioLink();
+        this.biolink.loadSync();
     }
 
     async _queryBucket(queries) {
@@ -195,20 +197,33 @@ module.exports = class APIQueryDispathcer {
     }
 
     /**
-     * Add equivalent ids to all output using biomedical-id-resolver service
+     * Add equivalent ids to all entities using biomedical-id-resolver service
      */
     async _annotate(result, enable = true) {
         const groupedIDs = this._groupIDsBySemanticType(result);
         let res;
+        let attributes;
         if (enable === false) {
             res = resolver.generateInvalidBioentities(groupedIDs);
+            attributes = await resolver.getAttributes(groupedIDs);
         } else {
             res = await resolver.resolveSRI(groupedIDs);
+            attributes = await resolver.getAttributes(groupedIDs);
+            debug(`Attributes retrieved ${JSON.stringify(attributes)}`);
         }
         result.map(item => {
             if (item && item !== undefined) {
                 item.$output.obj = res[item.$output.original];
                 item.$input.obj = res[item.$input.original];
+            }
+            //add attributes
+            if (attributes && Object.hasOwnProperty.call(attributes, item.$input.original)) {
+                debug(`(I) Attributes added to ${item.$input.original}`);
+                item.$input.obj[0]['attributes'] = attributes[item.$input.original]
+            }
+            if (attributes && Object.hasOwnProperty.call(attributes, item.$output.original)) {
+                debug(`(O) Attributes added to ${item.$output.original}`);
+                item.$output.obj[0]['attributes'] = attributes[item.$output.original]
             }
         });
         return result;
