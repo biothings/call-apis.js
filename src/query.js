@@ -24,8 +24,6 @@ module.exports = class APIQueryDispathcer {
     constructor(edges) {
         this.edges = edges;
         this.logs = [];
-        this.biolink = new biolink.BioLink();
-        this.biolink.loadSync();
     }
 
     async _queryBucket(queries) {
@@ -218,11 +216,9 @@ module.exports = class APIQueryDispathcer {
             }
             //add attributes
             if (attributes && Object.hasOwnProperty.call(attributes, item.$input.original)) {
-                debug(`(I) Attributes added to ${item.$input.original}`);
                 item.$input.obj[0]['attributes'] = attributes[item.$input.original]
             }
             if (attributes && Object.hasOwnProperty.call(attributes, item.$output.original)) {
-                debug(`(O) Attributes added to ${item.$output.original}`);
                 item.$output.obj[0]['attributes'] = attributes[item.$output.original]
             }
         });
