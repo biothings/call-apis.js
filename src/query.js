@@ -215,10 +215,10 @@ module.exports = class APIQueryDispathcer {
                 item.$input.obj = res[item.$input.original];
             }
             //add attributes
-            if (attributes && Object.hasOwnProperty.call(attributes, item.$input.original)) {
+            if (attributes && item && Object.hasOwnProperty.call(attributes, item.$input.original)) {
                 item.$input.obj[0]['attributes'] = attributes[item.$input.original]
             }
-            if (attributes && Object.hasOwnProperty.call(attributes, item.$output.original)) {
+            if (attributes && item && Object.hasOwnProperty.call(attributes, item.$output.original)) {
                 item.$output.obj[0]['attributes'] = attributes[item.$output.original]
             }
         });
