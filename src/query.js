@@ -159,30 +159,67 @@ module.exports = class APIQueryDispathcer {
             if (item && item.$edge_metadata) {
                 const output_type = item.$edge_metadata.output_type;
                 if (!(output_type in output_ids)) {
-                    output_ids[output_type] = [];
+                    output_ids[output_type] = new Set();
                 }
-                output_ids[output_type].push(item.$output.original);
+                output_ids[output_type].add(item.$output.original);
             }
-        })
+        });
+        for (const key in output_ids) {
+            output_ids[key] = [...output_ids[key]];
+        }
         return output_ids;
     }
 
+    _groupIDsBySemanticType(result) {
+        const ids = {};
+        result.map(item => {
+            if (item && item.$edge_metadata) {
+                //INPUTS
+                const input_type = item.$edge_metadata.input_type;
+                if (!(input_type in ids)) {
+                    ids[input_type] = new Set();
+                }
+                ids[input_type].add(item.$input.original);
+                // OUTPUTS
+                const output_type = item.$edge_metadata.output_type;
+                if (!(output_type in ids)) {
+                    ids[output_type] = new Set();
+                }
+                ids[output_type].add(item.$output.original);
+            }
+        });
+        for (const key in ids) {
+            ids[key] = [...ids[key]];
+        }
+        return ids;
+    }
+
     /**
-     * Add equivalent ids to all output using biomedical-id-resolver service
+     * Add equivalent ids to all entities using biomedical-id-resolver service
      */
     async _annotate(result, enable = true) {
-        const grpedIDs = this._groupOutputIDsBySemanticType(result);
+        const groupedIDs = this._groupIDsBySemanticType(result);
         let res;
+        let attributes;
         if (enable === false) {
-            res = resolver.generateInvalidBioentities(grpedIDs);
+            res = resolver.generateInvalidBioentities(groupedIDs);
+            attributes = await resolver.getAttributes(groupedIDs);
         } else {
-            // const biomedical_resolver = new resolver.Resolver("biolink");
-            // res = await biomedical_resolver.resolve(grpedIDs);
-            res = await resolver.resolveSRI(grpedIDs);
+            res = await resolver.resolveSRI(groupedIDs);
+            attributes = await resolver.getAttributes(groupedIDs);
+            // debug(`Attributes retrieved ${JSON.stringify(attributes)}`);
         }
         result.map(item => {
             if (item && item !== undefined) {
                 item.$output.obj = res[item.$output.original];
+                item.$input.obj = res[item.$input.original];
+            }
+            //add attributes
+            if (attributes && item && Object.hasOwnProperty.call(attributes, item.$input.original)) {
+                item.$input.obj[0]['attributes'] = attributes[item.$input.original]
+            }
+            if (attributes && item && Object.hasOwnProperty.call(attributes, item.$output.original)) {
+                item.$output.obj[0]['attributes'] = attributes[item.$output.original]
             }
         });
         return result;
