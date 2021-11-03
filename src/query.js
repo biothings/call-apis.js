@@ -207,7 +207,7 @@ module.exports = class APIQueryDispathcer {
         } else {
             res = await resolver.resolveSRI(groupedIDs);
             attributes = await resolver.getAttributes(groupedIDs);
-            debug(`Attributes retrieved ${JSON.stringify(attributes)}`);
+            // debug(`Attributes retrieved ${JSON.stringify(attributes)}`);
         }
         result.map(item => {
             if (item && item !== undefined) {
