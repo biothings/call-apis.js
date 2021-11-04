@@ -5,6 +5,7 @@ const tf = require("@biothings-explorer/api-response-transform");
 const resolver = require("biomedical_id_resolver");
 const debug = require("debug")("bte:call-apis:query");
 const LogEntry = require("./log_entry");
+const { ResolvableBioEntity } = require("biomedical_id_resolver/built/bioentity/valid_bioentity");
 
 
 async function delay_here(sec) {
@@ -216,10 +217,14 @@ module.exports = class APIQueryDispathcer {
             }
             //add attributes
             if (attributes && item && Object.hasOwnProperty.call(attributes, item.$input.original)) {
-                item.$input.obj[0]['attributes'] = attributes[item.$input.original]
+                if (item instanceof ResolvableBioEntity) {
+                    item.$input.obj[0]['attributes'] = attributes[item.$input.original]
+                }
             }
             if (attributes && item && Object.hasOwnProperty.call(attributes, item.$output.original)) {
-                item.$output.obj[0]['attributes'] = attributes[item.$output.original]
+                if (item instanceof ResolvableBioEntity){
+                    item.$output.obj[0]['attributes'] = attributes[item.$output.original]
+                }
             }
         });
         return result;
