@@ -190,7 +190,9 @@ module.exports = class APIQueryDispathcer {
             }
         });
         for (const key in ids) {
-            ids[key] = [...ids[key]];
+            //remove undefined ids
+            let good_ids = [...ids[key]].filter(id => id !== undefined);
+            ids[key] = good_ids;
         }
         return ids;
     }
@@ -204,11 +206,9 @@ module.exports = class APIQueryDispathcer {
         let attributes;
         if (enable === false) {
             res = resolver.generateInvalidBioentities(groupedIDs);
-            attributes = await resolver.getAttributes(groupedIDs);
         } else {
             res = await resolver.resolveSRI(groupedIDs);
             attributes = await resolver.getAttributes(groupedIDs);
-            // debug(`Attributes retrieved ${JSON.stringify(attributes)}`);
         }
         result.map(item => {
             if (item && item !== undefined) {
