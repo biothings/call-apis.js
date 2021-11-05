@@ -137,15 +137,23 @@ describe("Test query class", () => {
             const res = [
                 {
                     $edge_metadata: {
-                        output_type: "Gene"
+                        input_type: "Gene",
+                        output_type: "SmallMolecule"
+                    },
+                    $input: {
+                        original: "NCBIGene:1017"
                     },
                     $output: {
-                        original: "NCBIGene:1017"
+                        original: "CHEBI:1234"
                     }
                 },
                 {
                     $edge_metadata: {
+                        input_type: "Gene",
                         output_type: "SmallMolecule"
+                    },
+                    $input: {
+                        original: "NCBIGene:1017"
                     },
                     $output: {
                         original: "CHEBI:1234"
@@ -161,20 +169,28 @@ describe("Test query class", () => {
             const res = [
                 {
                     $edge_metadata: {
-                        output_type: "Gene"
-                    },
-                    $output: {
-                        original: "NCBIGene:1017"
-                    }
-                },
-                {
-                    $edge_metadata: {
+                        input_type: "Gene",
                         output_type: "SmallMolecule"
+                    },
+                    $input: {
+                        original: "NCBIGene:1017"
                     },
                     $output: {
                         original: "CHEBI:1234"
                     }
-                }
+                },
+                {
+                    $edge_metadata: {
+                        input_type: "Gene",
+                        output_type: "SmallMolecule"
+                    },
+                    $input: {
+                        original: "NCBIGene:1017"
+                    },
+                    $output: {
+                        original: "CHEBI:1234"
+                    }
+                },
             ];
             const caller = new q([]);
             const annotatedResult = await caller._annotate(res, false);
