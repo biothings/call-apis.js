@@ -6,7 +6,7 @@ const resolver = require("biomedical_id_resolver");
 const debug = require("debug")("bte:call-apis:query");
 const LogEntry = require("./log_entry");
 const { ResolvableBioEntity } = require("biomedical_id_resolver/built/bioentity/valid_bioentity");
-
+const config = require("./config");
 
 async function delay_here(sec) {
     return new Promise(resolve => {
@@ -115,7 +115,7 @@ module.exports = class APIQueryDispathcer {
         this.queue.constructQueue(queries);
     }
 
-    async query(resolveOutputIDs = true) {
+    async query(resolveOutputIDs = true, maxResultsPerEdge = config.MAX_RESULTS_PER_EDGE) {
         debug(`Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`)
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`).getLog());
         debug(`Number of BTE Edges received is ${this.edges.length}`);
@@ -127,10 +127,30 @@ module.exports = class APIQueryDispathcer {
             const bucket = this.queue.queue[0].getBucket();
             let res = await this._queryBucket(bucket);
             queryResult = [...queryResult, ...res];
+
+            let total = 0;
+            for (let o of queryResult) {
+                total += (o.value?.length || 0);
+            }
+            debug(`TOTAL RESULTS: ${total}`);
+
+            if (maxResultsPerEdge >= 0 && total > maxResultsPerEdge) {
+                this.queue.queue = [];
+                debug(`Ending query early, ${total} exceeds ${maxResultsPerEdge} limit per edge.`);
+                this.logs.push(
+                    new LogEntry(
+                        "DEBUG",
+                        null,
+                        `call-apis: Ending query early, got ${total} results already (>${maxResultsPerEdge})`,
+                    ).getLog(),
+                );
+                break;
+            }
+
             this._checkIfNext(bucket);
         }
         debug("query completes.")
-        const mergedResult = this._merge(queryResult);
+        const mergedResult = this._merge(queryResult, maxResultsPerEdge);
         debug("Start to use id resolver module to annotate output ids.")
         const annotatedResult = await this._annotate(mergedResult, resolveOutputIDs);
         debug("id annotation completes");
@@ -142,14 +162,18 @@ module.exports = class APIQueryDispathcer {
     /**
      * Merge the results into a single array from Promise.allSettled
      */
-    _merge(queryResult) {
+    _merge(queryResult, maxResults) {
         let result = [];
         queryResult.map(res => {
             if (res.status === "fulfilled" && !(res.value === undefined)) {
                 result = [...result, ...res.value];
             }
         });
-        debug(`Total number of results returned for this query is ${result.length}`)
+        if (maxResults > 0) {
+            debug(`Cutting down results from ${result.length} to ${maxResults}`);
+            result = result.slice(0, maxResults);
+        }
+        debug(`Total number of results returned for this query is ${result.length}`);
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Total number of results returned for this query is ${result.length}`).getLog());
         return result;
     }
