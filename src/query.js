@@ -32,6 +32,10 @@ module.exports = class APIQueryDispathcer {
         const res = await Promise.allSettled(queries.map(async query => {
             try {
                 const query_config = query.getConfig();
+                const userAgent = `BTE/${process.env.NODE_ENV === 'production' ? 'prod' : 'dev'} Node/${process.version} ${process.platform}`
+                query_config.headers = query_config.headers
+                    ? { ...query_config.headers, "User-Agent": userAgent }
+                    : { "User-Agent": userAgent }
                 debug(query_config);
                 if (query_config.url.includes("arax.ncats.io")) {
                     //delay 1s specifically for RTX KG2 at https://arax.ncats.io/api/rtxkg2/v1.2
