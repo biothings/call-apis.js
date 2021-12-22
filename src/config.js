@@ -1,1 +1,1 @@
-exports.MAX_RESULTS_PER_EDGE = 1000;
+exports.MAX_RESULTS_PER_EDGE = -1;
