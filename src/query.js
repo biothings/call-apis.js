@@ -30,8 +30,31 @@ module.exports = class APIQueryDispathcer {
     async _queryBucket(queries) {
         const dryrun_only = process.env.DRYRUN === 'true';   //TODO: allow dryrun to be specified from the query parameter
         const res = await Promise.allSettled(queries.map(async query => {
+            let query_config, n_inputs, query_info, edge_operation;
             try {
-                const query_config = query.getConfig();
+                query_config = query.getConfig();
+                n_inputs = Array.isArray(query.edge.input) ? query.edge.input.length : 1;
+                query_info = {
+                    edge_id: query.edge.reasoner_edge.qEdge.id,
+                    url: query_config.url,
+                    subject: query.edge.association.input_type,
+                    object: query.edge.association.output_type,
+                    predicate: query.edge.association.predicate,
+                    ids: n_inputs
+                }
+                edge_operation = `${query.edge.association.input_type} > ${query.edge.association.predicate} > ${query.edge.association.output_type}`
+            } catch (error) {
+                debug('Query configuration error, query skipped');
+                this.logs.push(
+                    new LogEntry(
+                        "ERROR",
+                        null,
+                        `${error.toString()} while configuring query. Query dump: ${query.toString()}`
+                    )
+                )
+                return undefined;
+            }
+            try {
                 const userAgent = `BTE/${process.env.NODE_ENV === 'production' ? 'prod' : 'dev'} Node/${process.version} ${process.platform}`
                 query_config.headers = query_config.headers
                     ? { ...query_config.headers, "User-Agent": userAgent }
@@ -52,20 +75,26 @@ module.exports = class APIQueryDispathcer {
                     this.logs.push(new LogEntry("DEBUG", null, "call-apis: This query needs to be paginated").getLog());
                     debug("This query needs to be paginated");
                 }
-                let log_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
-                if (log_msg.length > 1000) {
-                    log_msg = log_msg.substring(0, 1000) + "...";
-                }
+                // const console_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
+                const log_msg =  `call-apis: Successful ${query_config.method.toUpperCase()} ${query_config.url} (${n_inputs} ID${n_inputs > 1 ? 's' : ''}): ${edge_operation}`
+                // if (log_msg.length > 1000) {
+                //     log_msg = log_msg.substring(0, 1000) + "...";
+                // }
+                const tf_obj = new tf.Transformer(res);
+                const transformed = await tf_obj.transform();
                 debug(log_msg);
                 this.logs.push(
                     new LogEntry(
                         "DEBUG",
                         null,
-                        `call-apis: ${log_msg}`,
+                        log_msg,
+                        {
+                            type: "query",
+                            hits: transformed.length,
+                            ...query_info,
+                        }
                     ).getLog(),
                 );
-                const tf_obj = new tf.Transformer(res);
-                const transformed = await tf_obj.transform();
                 debug(`After transformation, BTE is able to retrieve ${transformed.length} hits!`);
                 this.logs.push(
                     new LogEntry(
@@ -81,18 +110,30 @@ module.exports = class APIQueryDispathcer {
                         query.config,
                     )}. The error is ${error.toString()}`,
                 );
-                if (error.response) {
-                     debug(`The request failed with the following error response: ${JSON.stringify(error.response.data)}`);
-                }
+
+                const log_msg =  `call-apis: Failed ${query_config.method.toUpperCase()} ${query_config.url} (${n_inputs} ID${n_inputs > 1 ? 's' : ''}): ${edge_operation}: (${error.toString()})`
                 this.logs.push(
                     new LogEntry(
                         "ERROR",
                         null,
-                        `call-apis: Failed to make to following query: ${JSON.stringify(
-                        query.config,
-                        )}. The error is ${error.toString()}`,
+                        log_msg,
+                        {
+                            type: "query",
+                            error: error.toString(),
+                            ...query_info,
+                        }
                     ).getLog(),
                 );
+                if (error.response) {
+                    debug(`The request failed with the following error response: ${JSON.stringify(error.response.data)}`);
+                    this.logs.push(
+                        new LogEntry(
+                            "DEBUG",
+                            null,
+                            `Error response for above failure: ${JSON.stringify(error.response.data)}`
+                        ).getLog()
+                    );
+               }
                 return undefined;
             }
         }));
@@ -154,7 +195,13 @@ module.exports = class APIQueryDispathcer {
             }
         });
         debug(`Total number of results returned for this query is ${result.length}`)
-        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Total number of results returned for this query is ${result.length}`).getLog());
+        this.logs.push(
+          new LogEntry(
+            "DEBUG",
+            null,
+            `call-apis: Total number of results returned for this query is ${result.length}`,
+          ).getLog(),
+        );
         return result;
     }
 
