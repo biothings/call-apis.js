@@ -50,7 +50,7 @@ module.exports = class APIQueryDispathcer {
                         "ERROR",
                         null,
                         `${error.toString()} while configuring query. Query dump: ${query.toString()}`
-                    )
+                    ).getLog()
                 )
                 return undefined;
             }
