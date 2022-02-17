@@ -29,10 +29,15 @@ module.exports = class APIQueryDispathcer {
 
     async _queryBucket(queries) {
         const dryrun_only = process.env.DRYRUN === 'true';   //TODO: allow dryrun to be specified from the query parameter
+        const unavailableAPIs = {};
         const res = await Promise.allSettled(queries.map(async query => {
             let query_config, n_inputs, query_info, edge_operation;
             try {
                 query_config = query.getConfig();
+                if (unavailableAPIs[query_config.url]) {
+                    unavailableAPIs[query_config.url] += 1;
+                    return undefined;
+                }
                 n_inputs = Array.isArray(query.edge.input) ? query.edge.input.length : 1;
                 query_info = {
                     edge_id: query.edge.reasoner_edge.qEdge.id,
@@ -105,6 +110,11 @@ module.exports = class APIQueryDispathcer {
                 );
                 return transformed;
             } catch (error) {
+                if ((error.response && error.response.status >= 502) || error.code === 'ECONNABORTED') {
+                    const errorMessage = `${query_config.url} appears to be unavailable. Queries to it will be skipped.`;
+                    debug(errorMessage);
+                    unavailableAPIs[query_config.url] = 1;
+                }
                 debug(
                     `Failed to make to following query: ${JSON.stringify(
                         query.config,
@@ -137,6 +147,17 @@ module.exports = class APIQueryDispathcer {
                 return undefined;
             }
         }));
+        Object.entries(unavailableAPIs).forEach((api, skippedQueries) => {
+            const skipMessage = `${skippedQueries} queries to ${api} were skipped as the API was unavailable.`;
+            debug(skipMessage);
+            this.logs.push(
+                new LogEntry(
+                    "WARNING",
+                    null,
+                    skipMessage
+                )
+            );
+        });
         this.queue.dequeue()
         return res;
     }
