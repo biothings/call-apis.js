@@ -27,9 +27,8 @@ module.exports = class APIQueryDispathcer {
         this.logs = [];
     }
 
-    async _queryBucket(queries) {
+    async _queryBucket(queries, unavailableAPIs = {}) {
         const dryrun_only = process.env.DRYRUN === 'true';   //TODO: allow dryrun to be specified from the query parameter
-        const unavailableAPIs = {};
         const res = await Promise.allSettled(queries.map(async query => {
             let query_config, n_inputs, query_info, edge_operation;
             try {
@@ -147,17 +146,6 @@ module.exports = class APIQueryDispathcer {
                 return undefined;
             }
         }));
-        Object.entries(unavailableAPIs).forEach((api, skippedQueries) => {
-            const skipMessage = `${skippedQueries} queries to ${api} were skipped as the API was unavailable.`;
-            debug(skipMessage);
-            this.logs.push(
-                new LogEntry(
-                    "WARNING",
-                    null,
-                    skipMessage
-                )
-            );
-        });
         this.queue.dequeue()
         return res;
     }
@@ -181,7 +169,7 @@ module.exports = class APIQueryDispathcer {
         this.queue.constructQueue(queries);
     }
 
-    async query(resolveOutputIDs = true) {
+    async query(resolveOutputIDs = true, unavailableAPIs = {}) {
         debug(`Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`)
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`).getLog());
         debug(`Number of BTE Edges received is ${this.edges.length}`);
@@ -191,7 +179,7 @@ module.exports = class APIQueryDispathcer {
         this._constructQueue(queries);
         while (this.queue.queue.length > 0) {
             const bucket = this.queue.queue[0].getBucket();
-            let res = await this._queryBucket(bucket);
+            let res = await this._queryBucket(bucket, unavailableAPIs);
             queryResult = [...queryResult, ...res];
             this._checkIfNext(bucket);
         }
