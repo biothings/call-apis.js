@@ -22,6 +22,11 @@ module.exports = class TemplateQueryBuilder {
 
   _getUrl(edge, input) {
     let server = edge.query_operation.server;
+    if (server.includes('biothings.ncats.io')) {
+      server.replace('biothings.ncats.io', 'biothings.ci.transltr.io');
+    } else if (server.includes('pending.biothings.io')) {
+      server.replace('pending.biothings.io', 'biothings.ci.transltr.io');
+    }
     if (server.endsWith("/")) {
       server = server.substring(0, server.length - 1);
     }
