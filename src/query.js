@@ -80,7 +80,7 @@ module.exports = class APIQueryDispatcher {
                     debug("This query needs to be paginated");
                 }
                 // const console_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
-                const log_msg =  `call-apis: Successful ${query_config.method.toUpperCase()} ${query.edge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? 's' : ''}): ${edge_operation}`
+                const log_msg =  `call-apis: Successful ${query_config.method.toUpperCase()} ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? 's' : ''}): ${edge_operation}`
                 // if (log_msg.length > 1000) {
                 //     log_msg = log_msg.substring(0, 1000) + "...";
                 // }
@@ -110,9 +110,9 @@ module.exports = class APIQueryDispatcher {
                 return transformedRecords;
             } catch (error) {
                 if ((error.response && error.response.status >= 502) || error.code === 'ECONNABORTED') {
-                    const errorMessage = `${query.edge.query_operation.server} appears to be unavailable. Queries to it will be skipped.`;
+                    const errorMessage = `${query.APIEdge.query_operation.server} appears to be unavailable. Queries to it will be skipped.`;
                     debug(errorMessage);
-                    unavailableAPIs[query.edge.query_operation.server] = 1;
+                    unavailableAPIs[query.APIEdge.query_operation.server] = 1;
                 }
                 debug(
                     `Failed to make to following query: ${JSON.stringify(
@@ -120,7 +120,7 @@ module.exports = class APIQueryDispatcher {
                     )}. The error is ${error.toString()}`,
                 );
 
-                const log_msg =  `call-apis: Failed ${query_config.method.toUpperCase()} ${query.edge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? 's' : ''}): ${edge_operation}: (${error.toString()})`
+                const log_msg =  `call-apis: Failed ${query_config.method.toUpperCase()} ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? 's' : ''}): ${edge_operation}: (${error.toString()})`
                 this.logs.push(
                     new LogEntry(
                         "ERROR",
