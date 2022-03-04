@@ -58,7 +58,7 @@ module.exports = class TRAPIQueryBuilder {
                             "categories": ["biolink:" + APIEdge.association.output_type]
                         }
                     },
-                    "APIEdges": {
+                    "edges": {
                         "e01": {
                             "subject": "n0",
                             "object": "n1",
