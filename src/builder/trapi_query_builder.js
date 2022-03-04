@@ -8,27 +8,27 @@ nunjucksConfig(env);
 module.exports = class TRAPIQueryBuilder {
     /**
      * Constructor for Query Builder
-     * @param {object} edge - BTE Edge object with input field provided
+     * @param {object} APIEdge - BTE Edge object with input field provided
      */
-    constructor(edge) {
+    constructor(APIEdge) {
         this.start = 0
         this.hasNext = false
-        this.edge = edge;
+        this.APIEdge = APIEdge;
     }
 
     getUrl() {
-        return this.edge.query_operation.server + this.edge.query_operation.path;
+        return this.APIEdge.query_operation.server + this.APIEdge.query_operation.path;
     }
 
-    _getUrl(edge, input) {
-        let server = edge.query_operation.server;
+    _getUrl(APIEdge, input) {
+        let server = APIEdge.query_operation.server;
         if (server.endsWith('/')) {
             server = server.substring(0, server.length - 1)
         };
-        let path = edge.query_operation.path;
-        if (Array.isArray(edge.query_operation.path_params)) {
-              edge.query_operation.path_params.map(param => {
-                const val = edge.query_operation.params[param];
+        let path = APIEdge.query_operation.path;
+        if (Array.isArray(APIEdge.query_operation.path_params)) {
+              APIEdge.query_operation.path_params.map(param => {
+                const val = APIEdge.query_operation.params[param];
                 path = path.replace("{" + param + "}", val).replace("{inputs[0]}", input);
               });
         }
@@ -38,31 +38,31 @@ module.exports = class TRAPIQueryBuilder {
     /**
      * Construct input based on method and inputSeparator
      */
-    _getInput(edge) {
-        return edge.input;
+    _getInput(APIEdge) {
+        return APIEdge.input;
     }
 
     /**
      * Construct TRAPI request body
      */
-    _getRequestBody(edge, input) {
+    _getRequestBody(APIEdge, input) {
         const qg = {
             "message": {
                 "query_graph": {
                     "nodes": {
                         "n0": {
                             "ids": Array.isArray(input) ? input : [input],
-                            "categories": ["biolink:" + edge.association.input_type]
+                            "categories": ["biolink:" + APIEdge.association.input_type]
                         },
                         "n1": {
-                            "categories": ["biolink:" + edge.association.output_type]
+                            "categories": ["biolink:" + APIEdge.association.output_type]
                         }
                     },
-                    "edges": {
+                    "APIEdges": {
                         "e01": {
                             "subject": "n0",
                             "object": "n1",
-                            "predicates": ["biolink:" + edge.association.predicate]
+                            "predicates": ["biolink:" + APIEdge.association.predicate]
                         }
                     }
                 }
@@ -76,11 +76,11 @@ module.exports = class TRAPIQueryBuilder {
      * Construct the request config for Axios reqeust.
      */
     constructAxiosRequestConfig() {
-        const input = this._getInput(this.edge);
+        const input = this._getInput(this.APIEdge);
         const config = {
-            url: this._getUrl(this.edge, input),
-            data: this._getRequestBody(this.edge, input),
-            method: this.edge.query_operation.method,
+            url: this._getUrl(this.APIEdge, input),
+            data: this._getRequestBody(this.APIEdge, input),
+            method: this.APIEdge.query_operation.method,
             timeout: 50000,
             headers: {
                 'Content-Type': 'application/json'
@@ -96,13 +96,13 @@ module.exports = class TRAPIQueryBuilder {
     }
 
     getNext() {
-        const config = this.constructAxiosRequestConfig(this.edge);
+        const config = this.constructAxiosRequestConfig(this.APIEdge);
         return config;
     }
 
     getConfig() {
         if (this.hasNext === false) {
-            return this.constructAxiosRequestConfig(this.edge);
+            return this.constructAxiosRequestConfig(this.APIEdge);
         }
         return this.getNext();
     }
