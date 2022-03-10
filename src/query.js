@@ -28,7 +28,7 @@ module.exports = class APIQueryDispatcher {
     }
 
     async _queryBucket(queries, unavailableAPIs = {}) {
-        const dryrun_only = process.env.DRYRUN === 'true';   //TODO: allow dryrun to be specified from the query parameter
+        const dryrun_only = process.env.DRYRUN === 'true';
         const res = await Promise.allSettled(queries.map(async query => {
             let query_config, n_inputs, query_info, edge_operation;
             try {
@@ -39,7 +39,7 @@ module.exports = class APIQueryDispatcher {
                 }
                 n_inputs = Array.isArray(query.APIEdge.input) ? query.APIEdge.input.length : 1;
                 query_info = {
-                    edge_id: query.APIEdge.reasoner_edge.qEdge.id,
+                    qEdgeID: query.APIEdge.reasoner_edge.qEdge.id,
                     url: query_config.url,
                     subject: query.APIEdge.association.input_type,
                     object: query.APIEdge.association.output_type,
