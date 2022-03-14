@@ -95,7 +95,7 @@ module.exports = class APIQueryDispatcher {
                   query.APIEdge.query_operation.server
                 } (${n_inputs} ID${n_inputs > 1 ? "s" : ""}): ${edge_operation} (obtained ${
                   transformedRecords.length
-                } record${transformedRecords.length === 1 ? "s" : ""}, took ${timeElapsed}${timeUnits})`;
+                } record${transformedRecords.length === 1 ? "" : "s"}, took ${timeElapsed}${timeUnits})`;
                 // if (log_msg.length > 1000) {
                 //     log_msg = log_msg.substring(0, 1000) + "...";
                 // }
