@@ -70,22 +70,35 @@ module.exports = class APIQueryDispatcher {
                     debug("delay 1s for RTX KG2 KP...");
                     await delay_here(1);
                 }
+                const startTime = performance.now();
                 const queryResponse = dryrun_only ? {data: []} : await axios(query_config);
+                debug('query success, transforming hits->records...');
+                const finishTime = performance.now();
+                const timeElapsed = Math.round(
+                    finishTime - startTime > 1000
+                        ? (finishTime - startTime) / 1000
+                        : finishTime - startTime
+                );
+                const timeUnits = finishTime - startTime > 1000 ? "s" : "ms";
                 const unTransformedHits = {
                     response: queryResponse.data,
                     edge: query.APIEdge,
                 };
+                const tf_obj = new tf.Transformer(unTransformedHits);
+                const transformedRecords = await tf_obj.transform();
                 if (query.needPagination(unTransformedHits.response)) {
                     this.logs.push(new LogEntry("DEBUG", null, "call-apis: This query needs to be paginated").getLog());
                     debug("This query needs to be paginated");
                 }
                 // const console_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
-                const log_msg =  `call-apis: Successful ${query_config.method.toUpperCase()} ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? 's' : ''}): ${edge_operation}`
+                const log_msg = `call-apis: Successful ${query_config.method.toUpperCase()} ${
+                  query.APIEdge.query_operation.server
+                } (${n_inputs} ID${n_inputs > 1 ? "s" : ""}): ${edge_operation} (obtained ${
+                  transformedRecords.length
+                } record${transformedRecords.length === 1 ? "s" : ""}, took ${timeElapsed}${timeUnits})`;
                 // if (log_msg.length > 1000) {
                 //     log_msg = log_msg.substring(0, 1000) + "...";
                 // }
-                const tf_obj = new tf.Transformer(unTransformedHits);
-                const transformedRecords = await tf_obj.transform();
                 debug(log_msg);
                 this.logs.push(
                     new LogEntry(
@@ -97,14 +110,6 @@ module.exports = class APIQueryDispatcher {
                             hits: transformedRecords.length,
                             ...query_info,
                         }
-                    ).getLog(),
-                );
-                debug(`After transformation, BTE is able to retrieve ${transformedRecords.length} records!`);
-                this.logs.push(
-                    new LogEntry(
-                        "DEBUG",
-                        null,
-                        `call-apis: After transformation, BTE is able to retrieve ${transformedRecords.length} records!`,
                     ).getLog(),
                 );
                 return transformedRecords;
@@ -177,19 +182,27 @@ module.exports = class APIQueryDispatcher {
         let queryRecords = [];
         const queries = this._constructQueries(this.APIEdges);
         this._constructQueue(queries);
+        const startTime = performance.now();
         while (this.queue.queue.length > 0) {
             const bucket = this.queue.queue[0].getBucket();
             let newHits = await this._queryBucket(bucket, unavailableAPIs);
             queryRecords = [...queryRecords, ...newHits];
             this._checkIfNext(bucket);
         }
+        const finishTime = performance.now();
+        const timeElapsed = Math.round(
+            finishTime - startTime > 1000
+                ? (finishTime - startTime) / 1000
+                : finishTime - startTime
+        );
+        const timeUnits = finishTime - startTime > 1000 ? "s" : "ms";
         debug("query completes.")
         const mergedRecords = this._merge(queryRecords);
         debug("Start to use id resolver module to annotate output ids.")
         const annotatedRecords = await this._annotate(mergedRecords, resolveOutputIDs);
         debug("id annotation completes");
-        debug("Query completes");
-        this.logs.push(new LogEntry("DEBUG", null, "call-apis: Query completes").getLog());
+        debug(`qEdge queries complete in ${timeElapsed}${timeUnits}`);
+        this.logs.push(new LogEntry("DEBUG", null, `call-apis: qEdge queries complete in ${timeElapsed}${timeUnits}`).getLog());
         return annotatedRecords;
     }
 
