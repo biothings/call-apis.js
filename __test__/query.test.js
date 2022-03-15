@@ -85,7 +85,7 @@ describe("Test query class", () => {
             const caller = new q([]);
             caller._merge([success1, success2, success1, fail, fail]);
             expect(caller.logs).toHaveLength(1);
-            expect(caller.logs[0]).toHaveProperty("message", "call-apis: Total number of results returned for this query is 3")
+            expect(caller.logs[0]).toHaveProperty("message", "call-apis: Total number of records returned for this query is 3")
         })
     })
 

@@ -8,20 +8,20 @@ nunjucksConfig(env);
 module.exports = class TemplateQueryBuilder {
   /**
    * Constructor for Query Builder
-   * @param {object} edge - BTE Edge object with input field provided
+   * @param {object} APIEdge - BTE Edge object with input field provided
    */
-  constructor(edge) {
+  constructor(APIEdge) {
     this.start = 0;
     this.hasNext = false;
-    this.edge = edge;
+    this.APIEdge = APIEdge;
   }
 
   getUrl() {
-    return this.edge.query_operation.server + this.edge.query_operation.path;
+    return this.APIEdge.query_operation.server + this.APIEdge.query_operation.path;
   }
 
-  _getUrl(edge, input) {
-    let server = edge.query_operation.server;
+  _getUrl(APIEdge, input) {
+    let server = APIEdge.query_operation.server;
     if (server.includes('biothings.ncats.io')) {
       server.replace('biothings.ncats.io', 'biothings.ci.transltr.io');
     } else if (server.includes('pending.biothings.io')) {
@@ -30,10 +30,10 @@ module.exports = class TemplateQueryBuilder {
     if (server.endsWith("/")) {
       server = server.substring(0, server.length - 1);
     }
-    let path = edge.query_operation.path;
-    if (Array.isArray(edge.query_operation.path_params)) {
-      edge.query_operation.path_params.map(param => {
-        const val = edge.query_operation.params[param];
+    let path = APIEdge.query_operation.path;
+    if (Array.isArray(APIEdge.query_operation.path_params)) {
+      APIEdge.query_operation.path_params.map(param => {
+        const val = APIEdge.query_operation.params[param];
         path = nunjucks.renderString(path.replace("{" + param + "}", val), input);
       });
     }
@@ -43,23 +43,23 @@ module.exports = class TemplateQueryBuilder {
   /**
    * Construct input based on method and inputSeparator
    */
-  _getInput(edge) {
-    return edge.input;
+  _getInput(APIEdge) {
+    return APIEdge.input;
   }
 
   /**
    * Construct parameters for API calls
    */
-  _getParams(edge, input) {
+  _getParams(APIEdge, input) {
     const params = {};
-    Object.keys(edge.query_operation.params).map(param => {
-      if (Array.isArray(edge.query_operation.path_params) && edge.query_operation.path_params.includes(param)) {
+    Object.keys(APIEdge.query_operation.params).map(param => {
+      if (Array.isArray(APIEdge.query_operation.path_params) && APIEdge.query_operation.path_params.includes(param)) {
         return;
       }
-      if (typeof edge.query_operation.params[param] === "string") {
-        params[param] = nunjucks.renderString(edge.query_operation.params[param], input);
+      if (typeof APIEdge.query_operation.params[param] === "string") {
+        params[param] = nunjucks.renderString(APIEdge.query_operation.params[param], input);
       } else {
-        params[param] = edge.query_operation.params[param];
+        params[param] = APIEdge.query_operation.params[param];
       }
     });
     return params;
@@ -68,11 +68,11 @@ module.exports = class TemplateQueryBuilder {
   /**
    * Construct request body for API calls
    */
-  _getRequestBody(edge, input) {
-    if (edge.query_operation.request_body !== undefined && "body" in edge.query_operation.request_body) {
-      let body = edge.query_operation.request_body.body;
+  _getRequestBody(APIEdge, input) {
+    if (APIEdge.query_operation.request_body !== undefined && "body" in APIEdge.query_operation.request_body) {
+      let body = APIEdge.query_operation.request_body.body;
       let data;
-      if (edge.query_operation.requestBodyType === "object") {
+      if (APIEdge.query_operation.requestBodyType === "object") {
         data = JSON.parse(nunjucks.renderString(body, input));
       } else {
         data = Object.keys(body).reduce((accumulator, key) => {
@@ -88,12 +88,12 @@ module.exports = class TemplateQueryBuilder {
    * Construct the request config for Axios reqeust.
    */
   constructAxiosRequestConfig() {
-    const input = this._getInput(this.edge);
+    const input = this._getInput(this.APIEdge);
     const config = {
-      url: this._getUrl(this.edge, input),
-      params: this._getParams(this.edge, input),
-      data: this._getRequestBody(this.edge, input),
-      method: this.edge.query_operation.method,
+      url: this._getUrl(this.APIEdge, input),
+      params: this._getParams(this.APIEdge, input),
+      data: this._getRequestBody(this.APIEdge, input),
+      method: this.APIEdge.query_operation.method,
       timeout: 50000,
     };
     this.config = config;
@@ -101,7 +101,7 @@ module.exports = class TemplateQueryBuilder {
   }
 
   needPagination(apiResponse) {
-    if (this.edge.query_operation.method === "get" && this.edge.tags.includes("biothings")) {
+    if (this.APIEdge.query_operation.method === "get" && this.APIEdge.tags.includes("biothings")) {
       if (apiResponse.total > this.start + apiResponse.hits.length) {
         if (this.start + apiResponse.hits.length < 10000) {
           this.hasNext = true;
@@ -115,7 +115,7 @@ module.exports = class TemplateQueryBuilder {
 
   getNext() {
     this.start = Math.min(this.start + 1000, 9999);
-    const config = this.constructAxiosRequestConfig(this.edge);
+    const config = this.constructAxiosRequestConfig(this.APIEdge);
     config.params.from = this.start;
     if (config.params.size + this.start > 10000) {
       config.params.size = 10000 - this.start;
@@ -126,7 +126,7 @@ module.exports = class TemplateQueryBuilder {
 
   getConfig() {
     if (this.hasNext === false) {
-      return this.constructAxiosRequestConfig(this.edge);
+      return this.constructAxiosRequestConfig(this.APIEdge);
     }
     return this.getNext();
   }
