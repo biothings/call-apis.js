@@ -6,6 +6,7 @@ const resolver = require("biomedical_id_resolver");
 const debug = require("debug")("bte:call-apis:query");
 const LogEntry = require("./log_entry");
 const { ResolvableBioEntity } = require("biomedical_id_resolver/built/bioentity/valid_bioentity");
+const { performance } = require('perf_hooks');
 
 
 async function delay_here(sec) {
