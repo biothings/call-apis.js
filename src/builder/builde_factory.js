@@ -4,16 +4,16 @@ const template_builder = require("./template_query_builder")
 const debug = require("debug")("bte:call-apis:query");
 
 
-const builder_factory = (edge) => {
-    if ('tags' in edge && edge.tags.includes('bte-trapi')) {
+const builder_factory = (APIEdge) => {
+    if ('tags' in APIEdge && APIEdge.tags.includes('bte-trapi')) {
         debug(`using trapi builder now`)
-        return new trapi_builder(edge);
-    } else if (edge.query_operation.useTemplating) {
+        return new trapi_builder(APIEdge);
+    } else if (APIEdge.query_operation.useTemplating) {
         debug("using template builder");
-        return new template_builder(edge);
+        return new template_builder(APIEdge);
     }
     debug('using default builder')
-    return new default_builder(edge);
+    return new default_builder(APIEdge);
 }
 
 module.exports = builder_factory;

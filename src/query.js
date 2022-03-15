@@ -15,38 +15,38 @@ async function delay_here(sec) {
 }
 
 /**
- * Make API Queries based on input BTE Edges, collect and align the results into BioLink Model
+ * Make API Queries based on input BTE Edges, collect and align the records into BioLink Model
  */
-module.exports = class APIQueryDispathcer {
+module.exports = class APIQueryDispatcher {
     /**
      * Construct inputs for APIQueryDispatcher
-     * @param {array} edges - an array of BTE edges with input added
+     * @param {array} APIEdges - an array of BTE edges with input added
      */
-    constructor(edges) {
-        this.edges = edges;
+    constructor(APIEdges) {
+        this.APIEdges = APIEdges;
         this.logs = [];
     }
 
     async _queryBucket(queries, unavailableAPIs = {}) {
-        const dryrun_only = process.env.DRYRUN === 'true';   //TODO: allow dryrun to be specified from the query parameter
+        const dryrun_only = process.env.DRYRUN === 'true';
         const res = await Promise.allSettled(queries.map(async query => {
             let query_config, n_inputs, query_info, edge_operation;
             try {
                 query_config = query.getConfig();
-                if (unavailableAPIs[query.edge.query_operation.server]) {
-                    unavailableAPIs[query.edge.query_operation.server] += 1;
+                if (unavailableAPIs[query.APIEdge.query_operation.server]) {
+                    unavailableAPIs[query.APIEdge.query_operation.server] += 1;
                     return undefined;
                 }
-                n_inputs = Array.isArray(query.edge.input) ? query.edge.input.length : 1;
+                n_inputs = Array.isArray(query.APIEdge.input) ? query.APIEdge.input.length : 1;
                 query_info = {
-                    edge_id: query.edge.reasoner_edge.qEdge.id,
+                    qEdgeID: query.APIEdge.reasoner_edge.qEdge.id,
                     url: query_config.url,
-                    subject: query.edge.association.input_type,
-                    object: query.edge.association.output_type,
-                    predicate: query.edge.association.predicate,
+                    subject: query.APIEdge.association.input_type,
+                    object: query.APIEdge.association.output_type,
+                    predicate: query.APIEdge.association.predicate,
                     ids: n_inputs
                 }
-                edge_operation = `${query.edge.association.input_type} > ${query.edge.association.predicate} > ${query.edge.association.output_type}`
+                edge_operation = `${query.APIEdge.association.input_type} > ${query.APIEdge.association.predicate} > ${query.APIEdge.association.output_type}`
             } catch (error) {
                 debug('Query configuration error, query skipped');
                 this.logs.push(
@@ -71,21 +71,21 @@ module.exports = class APIQueryDispathcer {
                     await delay_here(1);
                 }
                 const queryResponse = dryrun_only ? {data: []} : await axios(query_config);
-                const res = {
+                const unTransformedHits = {
                     response: queryResponse.data,
-                    edge: query.edge,
+                    edge: query.APIEdge,
                 };
-                if (query.needPagination(res.response)) {
+                if (query.needPagination(unTransformedHits.response)) {
                     this.logs.push(new LogEntry("DEBUG", null, "call-apis: This query needs to be paginated").getLog());
                     debug("This query needs to be paginated");
                 }
                 // const console_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
-                const log_msg =  `call-apis: Successful ${query_config.method.toUpperCase()} ${query.edge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? 's' : ''}): ${edge_operation}`
+                const log_msg =  `call-apis: Successful ${query_config.method.toUpperCase()} ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? 's' : ''}): ${edge_operation}`
                 // if (log_msg.length > 1000) {
                 //     log_msg = log_msg.substring(0, 1000) + "...";
                 // }
-                const tf_obj = new tf.Transformer(res);
-                const transformed = await tf_obj.transform();
+                const tf_obj = new tf.Transformer(unTransformedHits);
+                const transformedRecords = await tf_obj.transform();
                 debug(log_msg);
                 this.logs.push(
                     new LogEntry(
@@ -94,25 +94,25 @@ module.exports = class APIQueryDispathcer {
                         log_msg,
                         {
                             type: "query",
-                            hits: transformed.length,
+                            hits: transformedRecords.length,
                             ...query_info,
                         }
                     ).getLog(),
                 );
-                debug(`After transformation, BTE is able to retrieve ${transformed.length} hits!`);
+                debug(`After transformation, BTE is able to retrieve ${transformedRecords.length} records!`);
                 this.logs.push(
                     new LogEntry(
                         "DEBUG",
                         null,
-                        `call-apis: After transformation, BTE is able to retrieve ${transformed.length} hits!`,
+                        `call-apis: After transformation, BTE is able to retrieve ${transformedRecords.length} records!`,
                     ).getLog(),
                 );
-                return transformed;
+                return transformedRecords;
             } catch (error) {
                 if ((error.response && error.response.status >= 502) || error.code === 'ECONNABORTED') {
-                    const errorMessage = `${query.edge.query_operation.server} appears to be unavailable. Queries to it will be skipped.`;
+                    const errorMessage = `${query.APIEdge.query_operation.server} appears to be unavailable. Queries to it will be skipped.`;
                     debug(errorMessage);
-                    unavailableAPIs[query.edge.query_operation.server] = 1;
+                    unavailableAPIs[query.APIEdge.query_operation.server] = 1;
                 }
                 debug(
                     `Failed to make to following query: ${JSON.stringify(
@@ -120,7 +120,7 @@ module.exports = class APIQueryDispathcer {
                     )}. The error is ${error.toString()}`,
                 );
 
-                const log_msg =  `call-apis: Failed ${query_config.method.toUpperCase()} ${query.edge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? 's' : ''}): ${edge_operation}: (${error.toString()})`
+                const log_msg =  `call-apis: Failed ${query_config.method.toUpperCase()} ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? 's' : ''}): ${edge_operation}: (${error.toString()})`
                 this.logs.push(
                     new LogEntry(
                         "ERROR",
@@ -158,8 +158,8 @@ module.exports = class APIQueryDispathcer {
         })
     }
 
-    _constructQueries(edges) {
-        return edges.map(edge => {
+    _constructQueries(APIEdges) {
+        return APIEdges.map(edge => {
             return qb(edge);
         });
     }
@@ -172,51 +172,53 @@ module.exports = class APIQueryDispathcer {
     async query(resolveOutputIDs = true, unavailableAPIs = {}) {
         debug(`Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`)
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`).getLog());
-        debug(`Number of BTE Edges received is ${this.edges.length}`);
-        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Number of BTE Edges received is ${this.edges.length}`).getLog());
-        let queryResult = [];
-        const queries = this._constructQueries(this.edges);
+        debug(`Number of BTE Edges received is ${this.APIEdges.length}`);
+        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Number of API Edges received is ${this.APIEdges.length}`).getLog());
+        let queryRecords = [];
+        const queries = this._constructQueries(this.APIEdges);
         this._constructQueue(queries);
         while (this.queue.queue.length > 0) {
             const bucket = this.queue.queue[0].getBucket();
-            let res = await this._queryBucket(bucket, unavailableAPIs);
-            queryResult = [...queryResult, ...res];
+            let newHits = await this._queryBucket(bucket, unavailableAPIs);
+            queryRecords = [...queryRecords, ...newHits];
             this._checkIfNext(bucket);
         }
         debug("query completes.")
-        const mergedResult = this._merge(queryResult);
+        const mergedRecords = this._merge(queryRecords);
         debug("Start to use id resolver module to annotate output ids.")
-        const annotatedResult = await this._annotate(mergedResult, resolveOutputIDs);
+        const annotatedRecords = await this._annotate(mergedRecords, resolveOutputIDs);
         debug("id annotation completes");
         debug("Query completes");
         this.logs.push(new LogEntry("DEBUG", null, "call-apis: Query completes").getLog());
-        return annotatedResult;
+        return annotatedRecords;
     }
 
     /**
-     * Merge the results into a single array from Promise.allSettled
+     * Merge the records into a single array from Promise.allSettled
      */
-    _merge(queryResult) {
-        let result = [];
-        queryResult.map(res => {
-            if (res.status === "fulfilled" && !(res.value === undefined)) {
-                result = [...result, ...res.value];
+    _merge(queryRecords) {
+        let mergedRecords = [];
+        queryRecords.map(record => {
+            if (record.status === "fulfilled" && !(record.value === undefined)) {
+                mergedRecords = [...mergedRecords, ...record.value];
             }
         });
-        debug(`Total number of results returned for this query is ${result.length}`)
+        debug(`Total number of records returned for this query is ${mergedRecords.length}`)
         this.logs.push(
           new LogEntry(
             "DEBUG",
             null,
-            `call-apis: Total number of results returned for this query is ${result.length}`,
+            `call-apis: Total number of records returned for this query is ${mergedRecords.length}`,
           ).getLog(),
         );
-        return result;
+        return mergedRecords;
     }
 
-    _groupOutputIDsBySemanticType(result) {
+    _groupOutputIDsBySemanticType(record
+        ) {
         const output_ids = {};
-        result.map(item => {
+        record
+        .map(item => {
             if (item && item.$edge_metadata) {
                 const output_type = item.$edge_metadata.output_type;
                 if (!(output_type in output_ids)) {
@@ -231,63 +233,63 @@ module.exports = class APIQueryDispathcer {
         return output_ids;
     }
 
-    _groupIDsBySemanticType(result) {
-        const ids = {};
-        result.map(item => {
-            if (item && item.$edge_metadata) {
+    _groupCuriesBySemanticType(records) {
+        const curies = {};
+        records.map(record => {
+            if (record && record.$edge_metadata) {
                 //INPUTS
-                const input_type = item.$edge_metadata.input_type;
-                if (!(input_type in ids)) {
-                    ids[input_type] = new Set();
+                const input_type = record.$edge_metadata.input_type;
+                if (!(input_type in curies)) {
+                    curies[input_type] = new Set();
                 }
-                ids[input_type].add(item.$input.original);
+                curies[input_type].add(record.$input.original);
                 // OUTPUTS
-                const output_type = item.$edge_metadata.output_type;
-                if (!(output_type in ids)) {
-                    ids[output_type] = new Set();
+                const output_type = record.$edge_metadata.output_type;
+                if (!(output_type in curies)) {
+                    curies[output_type] = new Set();
                 }
-                ids[output_type].add(item.$output.original);
+                curies[output_type].add(record.$output.original);
             }
         });
-        for (const key in ids) {
-            //remove undefined ids
-            let good_ids = [...ids[key]].filter(id => id !== undefined);
-            ids[key] = good_ids;
+        for (const semanticType in curies) {
+            //remove undefined curies
+            let good_curies = [...curies[semanticType]].filter(id => id !== undefined);
+            curies[semanticType] = good_curies;
         }
-        return ids;
+        return curies;
     }
 
     /**
      * Add equivalent ids to all entities using biomedical-id-resolver service
      */
-    async _annotate(result, enable = true) {
-        const groupedIDs = this._groupIDsBySemanticType(result);
+    async _annotate(records, resolveOutputIDs = true) {
+        const groupedCuries = this._groupCuriesBySemanticType(records);
         let res;
         let attributes;
-        if (enable === false) {
-            res = resolver.generateInvalidBioentities(groupedIDs);
+        if (resolveOutputIDs === false) {
+            res = resolver.generateInvalidBioentities(groupedCuries);
         } else {
-            res = await resolver.resolveSRI(groupedIDs);
-            attributes = await resolver.getAttributes(groupedIDs);
+            res = await resolver.resolveSRI(groupedCuries);
+            attributes = await resolver.getAttributes(groupedCuries);
         }
-        result.map(item => {
-            if (item && item !== undefined) {
-                item.$output.obj = res[item.$output.original];
-                item.$input.obj = res[item.$input.original];
+        records.map(record => {
+            if (record && record !== undefined) {
+                record.$output.obj = res[record.$output.original];
+                record.$input.obj = res[record.$input.original];
             }
             //add attributes
-            if (attributes && item && Object.hasOwnProperty.call(attributes, item.$input.original)) {
-                if (item instanceof ResolvableBioEntity) {
-                    item.$input.obj[0]['attributes'] = attributes[item.$input.original]
+            if (attributes && record && Object.hasOwnProperty.call(attributes, record.$input.original)) {
+                if (record instanceof ResolvableBioEntity) {
+                    record.$input.obj[0]['attributes'] = attributes[record.$input.original]
                 }
             }
-            if (attributes && item && Object.hasOwnProperty.call(attributes, item.$output.original)) {
-                if (item instanceof ResolvableBioEntity){
-                    item.$output.obj[0]['attributes'] = attributes[item.$output.original]
+            if (attributes && record && Object.hasOwnProperty.call(attributes, record.$output.original)) {
+                if (record instanceof ResolvableBioEntity){
+                    record.$output.obj[0]['attributes'] = attributes[record.$output.original]
                 }
             }
         });
-        return result;
+        return records;
     }
 
 }
