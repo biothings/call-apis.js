@@ -96,66 +96,67 @@ describe("Test query class", () => {
             expect(res).toEqual({});
         })
 
-        test("Output IDs are correctly grouped", () => {
-            const caller = new q([]);
-            const result = [
-                {
-                    $edge_metadata: {
-                        output_type: 'Gene'
-                    },
-                    $output: {
-                        original: "NCBIGene:1017"
-                    }
-                },
-                {
-                    $edge_metadata: {
-                        output_type: 'Gene'
-                    },
-                    $output: {
-                        original: "NCBIGene:1018"
-                    }
-                },
-                {
-                    $edge_metadata: {
-                        output_type: 'Disease'
-                    },
-                    $output: {
-                        original: "MONDO:1234"
-                    }
-                },
-            ]
-            const res = caller._groupOutputIDsBySemanticType(result);
-            expect(res).toHaveProperty("Disease");
-            expect(res.Disease).toEqual(['MONDO:1234']);
-            expect(res).toHaveProperty("Gene");
-            expect(res.Gene).toEqual(['NCBIGene:1017', 'NCBIGene:1018'])
-        })
+        // test of deprecated function
+        // test("Output IDs are correctly grouped", () => {
+        //     const caller = new q([]);
+        //     const result = [
+        //         {
+        //             apiEdge: {
+        //                 output_type: 'Gene'
+        //             },
+        //             object: {
+        //                 original: "NCBIGene:1017"
+        //             }
+        //         },
+        //         {
+        //             apiEdge: {
+        //                 output_type: 'Gene'
+        //             },
+        //             object: {
+        //                 original: "NCBIGene:1018"
+        //             }
+        //         },
+        //         {
+        //             apiEdge: {
+        //                 output_type: 'Disease'
+        //             },
+        //             object: {
+        //                 original: "MONDO:1234"
+        //             }
+        //         },
+        //     ]
+        //     const res = caller._groupOutputIDsBySemanticType(result);
+        //     expect(res).toHaveProperty("Disease");
+        //     expect(res.Disease).toEqual(['MONDO:1234']);
+        //     expect(res).toHaveProperty("Gene");
+        //     expect(res.Gene).toEqual(['NCBIGene:1017', 'NCBIGene:1018'])
+        // })
     })
 
     describe("test _annotate function", () => {
         test("check if annotated ids are correctly mapped", async () => {
             const res = [
                 {
-                    $edge_metadata: {
+                    apiEdge: {
                         input_type: "Gene",
                         output_type: "SmallMolecule"
                     },
-                    $input: {
+                    subject: {
                         original: "NCBIGene:1017"
                     },
-                    $output: {
+                    object: {
                         original: "CHEBI:1234"
-                    }
+                    },
                 },
                 {
-                    $edge_metadata: {
+                    apiEdge: {
                         input_type: "Gene",
                         output_type: "SmallMolecule"
                     },
-                    $input: {
+                    subject: {
                         original: "NCBIGene:1017"
                     },
-                    $output: {
+                    object: {
                         original: "CHEBI:1234"
                     }
                 }
@@ -168,26 +169,26 @@ describe("Test query class", () => {
         test("if set enabled equal to false, return the result itself", async () => {
             const res = [
                 {
-                    $edge_metadata: {
+                    apiEdge: {
                         input_type: "Gene",
                         output_type: "SmallMolecule"
                     },
-                    $input: {
+                    subject: {
                         original: "NCBIGene:1017"
                     },
-                    $output: {
+                    object: {
                         original: "CHEBI:1234"
                     }
                 },
                 {
-                    $edge_metadata: {
+                    apiEdge: {
                         input_type: "Gene",
                         output_type: "SmallMolecule"
                     },
-                    $input: {
+                    subject: {
                         original: "NCBIGene:1017"
                     },
-                    $output: {
+                    object: {
                         original: "CHEBI:1234"
                     }
                 },

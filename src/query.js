@@ -41,7 +41,7 @@ module.exports = class APIQueryDispatcher {
                 }
                 n_inputs = Array.isArray(query.APIEdge.input) ? query.APIEdge.input.length : 1;
                 query_info = {
-                    qEdgeID: query.APIEdge.reasoner_edge.qEdge.id,
+                    qEdgeID: query.APIEdge.reasoner_edge?.qEdge?.id,
                     url: query_config.url,
                     subject: query.APIEdge.association.input_type,
                     object: query.APIEdge.association.output_type,
@@ -229,10 +229,11 @@ module.exports = class APIQueryDispatcher {
         return mergedRecords;
     }
 
-    _groupOutputIDsBySemanticType(record
+    // Deprecated
+    _groupOutputIDsBySemanticType(records
         ) {
         const output_ids = {};
-        record
+        records
         .map(item => {
             if (item && item.apiEdge) {
                 const output_type = item.apiEdge.output_type;
