@@ -23,9 +23,10 @@ module.exports = class APIQueryDispatcher {
      * Construct inputs for APIQueryDispatcher
      * @param {array} APIEdges - an array of BTE edges with input added
      */
-    constructor(APIEdges) {
+    constructor(APIEdges, options) {
         this.APIEdges = APIEdges;
         this.logs = [];
+        this.options = options;
     }
 
     async _queryBucket(queries, unavailableAPIs = {}) {
@@ -85,7 +86,7 @@ module.exports = class APIQueryDispatcher {
                     response: queryResponse.data,
                     edge: query.APIEdge,
                 };
-                const tf_obj = new tf.Transformer(unTransformedHits);
+                const tf_obj = new tf.Transformer(unTransformedHits, this.options);
                 const transformedRecords = await tf_obj.transform();
                 if (query.needPagination(unTransformedHits.response)) {
                     this.logs.push(new LogEntry("DEBUG", null, "call-apis: This query needs to be paginated").getLog());
@@ -180,14 +181,14 @@ module.exports = class APIQueryDispatcher {
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`).getLog());
         debug(`Number of BTE Edges received is ${this.APIEdges.length}`);
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Number of API Edges received is ${this.APIEdges.length}`).getLog());
-        let queryRecords = [];
+        let queryResponseRecords = [];
         const queries = this._constructQueries(this.APIEdges);
         this._constructQueue(queries);
         const startTime = performance.now();
         while (this.queue.queue.length > 0) {
             const bucket = this.queue.queue[0].getBucket();
-            let newHits = await this._queryBucket(bucket, unavailableAPIs);
-            queryRecords = [...queryRecords, ...newHits];
+            let newResponseRecords = await this._queryBucket(bucket, unavailableAPIs);
+            queryResponseRecords = [...queryResponseRecords, ...newResponseRecords];
             this._checkIfNext(bucket);
         }
         const finishTime = performance.now();
@@ -198,7 +199,7 @@ module.exports = class APIQueryDispatcher {
         );
         const timeUnits = finishTime - startTime > 1000 ? "s" : "ms";
         debug("query completes.")
-        const mergedRecords = this._merge(queryRecords);
+        const mergedRecords = this._merge(queryResponseRecords);
         debug("Start to use id resolver module to annotate output ids.")
         const annotatedRecords = await this._annotate(mergedRecords, resolveOutputIDs);
         debug("id annotation completes");
@@ -210,11 +211,11 @@ module.exports = class APIQueryDispatcher {
     /**
      * Merge the records into a single array from Promise.allSettled
      */
-    _merge(queryRecords) {
+    _merge(queryResponseRecords) {
         let mergedRecords = [];
-        queryRecords.map(record => {
-            if (record.status === "fulfilled" && !(record.value === undefined)) {
-                mergedRecords = [...mergedRecords, ...record.value];
+        queryResponseRecords.map(responseRecords => { // value is an array of records
+            if (responseRecords.status === "fulfilled" && !(responseRecords.value === undefined)) {
+                mergedRecords = [...mergedRecords, ...responseRecords.value];
             }
         });
         debug(`Total number of records returned for this query is ${mergedRecords.length}`)
@@ -233,12 +234,12 @@ module.exports = class APIQueryDispatcher {
         const output_ids = {};
         record
         .map(item => {
-            if (item && item.$edge_metadata) {
-                const output_type = item.$edge_metadata.output_type;
+            if (item && item.apiEdge) {
+                const output_type = item.apiEdge.output_type;
                 if (!(output_type in output_ids)) {
                     output_ids[output_type] = new Set();
                 }
-                output_ids[output_type].add(item.$output.original);
+                output_ids[output_type].add(item.object.original);
             }
         });
         for (const key in output_ids) {
@@ -250,19 +251,19 @@ module.exports = class APIQueryDispatcher {
     _groupCuriesBySemanticType(records) {
         const curies = {};
         records.map(record => {
-            if (record && record.$edge_metadata) {
+            if (record && record.apiEdge) {
                 //INPUTS
-                const input_type = record.$edge_metadata.input_type;
+                const input_type = record.apiEdge.input_type;
                 if (!(input_type in curies)) {
                     curies[input_type] = new Set();
                 }
-                curies[input_type].add(record.$input.original);
+                curies[input_type].add(record.subject.original);
                 // OUTPUTS
-                const output_type = record.$edge_metadata.output_type;
+                const output_type = record.apiEdge.output_type;
                 if (!(output_type in curies)) {
                     curies[output_type] = new Set();
                 }
-                curies[output_type].add(record.$output.original);
+                curies[output_type].add(record.object.original);
             }
         });
         for (const semanticType in curies) {
@@ -288,18 +289,18 @@ module.exports = class APIQueryDispatcher {
         }
         records.map(record => {
             if (record && record !== undefined) {
-                record.$output.obj = res[record.$output.original];
-                record.$input.obj = res[record.$input.original];
+                record.object.normalizedInfo = res[record.object.original];
+                record.subject.normalizedInfo = res[record.subject.original];
             }
             //add attributes
-            if (attributes && record && Object.hasOwnProperty.call(attributes, record.$input.original)) {
+            if (attributes && record && Object.hasOwnProperty.call(attributes, record.subject.original)) {
                 if (record instanceof ResolvableBioEntity) {
-                    record.$input.obj[0]['attributes'] = attributes[record.$input.original]
+                    record.subject.normalizedInfo[0].attributes = attributes[record.subject.original]
                 }
             }
-            if (attributes && record && Object.hasOwnProperty.call(attributes, record.$output.original)) {
+            if (attributes && record && Object.hasOwnProperty.call(attributes, record.object.original)) {
                 if (record instanceof ResolvableBioEntity){
-                    record.$output.obj[0]['attributes'] = attributes[record.$output.original]
+                    record.object.normalizedInfo[0].attributes = attributes[record.object.original]
                 }
             }
         });
