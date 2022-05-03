@@ -234,13 +234,13 @@ module.exports = class APIQueryDispatcher {
         ) {
         const output_ids = {};
         records
-        .map(item => {
-            if (item && item.apiEdge) {
-                const output_type = item.apiEdge.output_type;
+        .map(record => {
+            if (record && record.association) {
+                const output_type = record.association.output_type;
                 if (!(output_type in output_ids)) {
                     output_ids[output_type] = new Set();
                 }
-                output_ids[output_type].add(item.object.original);
+                output_ids[output_type].add(record.object.original);
             }
         });
         for (const key in output_ids) {
@@ -252,15 +252,15 @@ module.exports = class APIQueryDispatcher {
     _groupCuriesBySemanticType(records) {
         const curies = {};
         records.map(record => {
-            if (record && record.apiEdge) {
+            if (record && record.association) {
                 //INPUTS
-                const input_type = record.apiEdge.input_type;
+                const input_type = record.association.input_type;
                 if (!(input_type in curies)) {
                     curies[input_type] = new Set();
                 }
                 curies[input_type].add(record.subject.original);
                 // OUTPUTS
-                const output_type = record.apiEdge.output_type;
+                const output_type = record.association.output_type;
                 if (!(output_type in curies)) {
                     curies[output_type] = new Set();
                 }
