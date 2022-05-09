@@ -65,7 +65,7 @@ module.exports = class APIQueryDispatcher {
                 query_config.headers = query_config.headers
                     ? { ...query_config.headers, "User-Agent": userAgent }
                     : { "User-Agent": userAgent }
-                // debug(query_config);
+                debug(query_config);
                 if (query_config.url.includes("arax.ncats.io")) {
                     //delay 1s specifically for RTX KG2 at https://arax.ncats.io/api/rtxkg2/v1.2
                     // https://smart-api.info/registry?q=acca268be3645a24556b81cc15ce0e9a
