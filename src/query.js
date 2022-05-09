@@ -39,7 +39,16 @@ module.exports = class APIQueryDispatcher {
                     unavailableAPIs[query.APIEdge.query_operation.server] += 1;
                     return undefined;
                 }
-                n_inputs = Array.isArray(query.APIEdge.input) ? query.APIEdge.input.length : 1;
+                if (Array.isArray(query.APIEdge.input)) {
+                    n_inputs = query.APIEdge.input.length;
+                } else if (query.APIEdge.input.hasOwnProperty('queryInputs')) {
+                    n_inputs = Array.isArray(query.APIEdge.input.queryInputs)
+                        ? query.APIEdge.input.queryInputs.length
+                        : 1;
+                } else {
+                    n_inputs = 1;
+                }
+
                 query_info = {
                     qEdgeID: query.APIEdge.reasoner_edge?.qEdge?.id,
                     url: query_config.url,
