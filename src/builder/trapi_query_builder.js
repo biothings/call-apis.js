@@ -81,7 +81,6 @@ module.exports = class TRAPIQueryBuilder {
             url: this._getUrl(this.APIEdge, input),
             data: this._getRequestBody(this.APIEdge, input),
             method: this.APIEdge.query_operation.method,
-            timeout: 50000,
             headers: {
                 'Content-Type': 'application/json'
             },

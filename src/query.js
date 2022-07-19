@@ -7,6 +7,7 @@ const debug = require("debug")("bte:call-apis:query");
 const LogEntry = require("./log_entry");
 const { ResolvableBioEntity } = require("biomedical_id_resolver/built/bioentity/valid_bioentity");
 const { performance } = require('perf_hooks');
+const { globalTimeout, timeoutByAPI } = require('./config/timeouts')
 
 
 async function delay_here(sec) {
@@ -59,6 +60,7 @@ module.exports = class APIQueryDispatcher {
                     ids: n_inputs
                 }
                 edge_operation = `${query.APIEdge.association.input_type} > ${query.APIEdge.association.predicate} > ${query.APIEdge.association.output_type}`
+                query_config.timeout = this._getTimeout(query_info.api_name)
             } catch (error) {
                 debug('Query configuration error, query skipped');
                 this.logs.push(
@@ -165,6 +167,11 @@ module.exports = class APIQueryDispatcher {
         }));
         this.queue.dequeue()
         return res;
+    }
+
+    _getTimeout(apiName) {
+      if (timeoutByAPI[apiName] !== undefined) return timeoutByAPI[apiName]
+      return globalTimeout
     }
 
     _checkIfNext(queries) {
