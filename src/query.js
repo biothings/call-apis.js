@@ -60,7 +60,7 @@ module.exports = class APIQueryDispatcher {
                     ids: n_inputs
                 }
                 edge_operation = `${query.APIEdge.association.input_type} > ${query.APIEdge.association.predicate} > ${query.APIEdge.association.output_type}`
-                query_config.timeout = this._getTimeout(query_info.api_name)
+                query_config.timeout = this._getTimeout(query.APIEdge.association.smartapi.id)
             } catch (error) {
                 debug('Query configuration error, query skipped');
                 this.logs.push(
@@ -169,8 +169,8 @@ module.exports = class APIQueryDispatcher {
         return res;
     }
 
-    _getTimeout(apiName) {
-      if (timeoutByAPI[apiName] !== undefined) return timeoutByAPI[apiName]
+    _getTimeout(apiID) {
+      if (timeoutByAPI[apiID] !== undefined) return timeoutByAPI[apiID]
       return globalTimeout
     }
 
