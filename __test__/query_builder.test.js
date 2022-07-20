@@ -253,7 +253,6 @@ describe("test query builder class", () => {
             }
             const builder = new qb(edge);
             const res = builder.constructAxiosRequestConfig();
-            expect(res.timeout).toEqual(50000);
             expect(res.url).toEqual("https://google.com/1017/query");
             expect(res.params).not.toHaveProperty("geneid");
             expect(res.params.output).toEqual("json");
