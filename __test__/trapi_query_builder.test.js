@@ -23,7 +23,6 @@ describe("test trapi query builder class", () => {
             const builder = new qb(edge);
             const res = builder.getConfig();
             expect(res).toHaveProperty('url', 'https://google.com/query');
-            expect(res).toHaveProperty('timeout', 50000);
             expect(res.data.message.query_graph.nodes.n0.ids).toEqual(['123', '456']);
             expect(res.data.message.query_graph.nodes.n0.categories).toContain('biolink:Pathway');
             expect(res.data.message.query_graph.nodes.n1.categories).toContain('biolink:Gene');
