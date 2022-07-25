@@ -36,8 +36,8 @@ module.exports = class APIQueryDispatcher {
             let query_config, n_inputs, query_info, edge_operation;
             try {
                 query_config = query.getConfig();
-                if (unavailableAPIs[query.APIEdge.query_operation.server]) {
-                    unavailableAPIs[query.APIEdge.query_operation.server] += 1;
+                if (unavailableAPIs[query.APIEdge.query_operation.server]?.skip) {
+                    unavailableAPIs[query.APIEdge.query_operation.server].skippedQueries += 1;
                     return undefined;
                 }
                 if (Array.isArray(query.APIEdge.input)) {
@@ -131,7 +131,16 @@ module.exports = class APIQueryDispatcher {
                 if ((error.response && error.response.status >= 502) || error.code === 'ECONNABORTED') {
                     const errorMessage = `${query.APIEdge.query_operation.server} appears to be unavailable. Queries to it will be skipped.`;
                     debug(errorMessage);
-                    unavailableAPIs[query.APIEdge.query_operation.server] = 1;
+                    unavailableAPIs[query.APIEdge.query_operation.server] = { skip: true, skippedQueries: 0 };
+                } else if (error.response && error.response.status === 429) {
+                    debug(`${query.APIEdge.query_operation.server} has rate-limited BTE. Queries to it will be skipped until the provided time.`);
+                    unavailableAPIs[query.APIEdge.query_operation.server] = {skip: true, skippedQueries: 0}
+                    const delay = error.response.headers['retry-after']
+                        ? isNaN(parseInt(error.response.headers['retry-after']))
+                            ? (new Date(error.response.headers['retry-after'])).getTime()-Date.now()
+                            : parseInt(error.response.headers['retry-after']) * 1000
+                        : 6000;  // default wait for a minute
+                    setTimeout(() => unavailableAPIs[query.APIEdge.query_operation.server].skip = false, delay)
                 }
                 debug(
                     `Failed to make to following query: ${JSON.stringify(
