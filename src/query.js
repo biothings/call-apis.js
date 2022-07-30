@@ -105,28 +105,31 @@ module.exports = class APIQueryDispatcher {
                     debug("This query needs to be paginated");
                 }
                 // const console_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
-                const log_msg = `call-apis: Successful ${query_config.method.toUpperCase()} ${
-                  query.APIEdge.query_operation.server
-                } (${n_inputs} ID${n_inputs > 1 ? "s" : ""}): ${edge_operation} (obtained ${
-                  transformedRecords.length
-                } record${transformedRecords.length === 1 ? "" : "s"}, took ${timeElapsed}${timeUnits})`;
-                // if (log_msg.length > 1000) {
-                //     log_msg = log_msg.substring(0, 1000) + "...";
-                // }
-                debug(log_msg);
-                this.logs.push(
-                    new LogEntry(
-                        "DEBUG",
-                        null,
-                        log_msg,
-                        {
-                            type: "query",
-                            hits: transformedRecords.length,
-                            ...query_info,
-                        }
-                    ).getLog(),
-                );
-                return transformedRecords;
+                const findUndefinedHits = unTransformedHits.response.message.results[0];
+                if(findUndefinedHits !== undefined) {
+                    const log_msg = `call-apis: Successful ${query_config.method.toUpperCase()} ${
+                    query.APIEdge.query_operation.server
+                    } (${n_inputs} ID${n_inputs > 1 ? "s" : ""}): ${edge_operation} (obtained ${
+                    transformedRecords.length
+                    } record${transformedRecords.length === 1 ? "" : "s"}, took ${timeElapsed}${timeUnits})`;
+                    // if (log_msg.length > 1000) {
+                    //     log_msg = log_msg.substring(0, 1000) + "...";
+                    // }
+                    debug(log_msg);
+                    this.logs.push(
+                        new LogEntry(
+                            "DEBUG",
+                            null,
+                            log_msg,
+                            {
+                                type: "query",
+                                hits: transformedRecords.length,
+                                ...query_info,
+                            }
+                        ).getLog(),
+                    );
+                    return transformedRecords;
+                }
             } catch (error) {
                 if ((error.response && error.response.status >= 502) || error.code === 'ECONNABORTED') {
                     const errorMessage = `${query.APIEdge.query_operation.server} appears to be unavailable. Queries to it will be skipped.`;
