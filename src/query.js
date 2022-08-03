@@ -105,11 +105,12 @@ module.exports = class APIQueryDispatcher {
                     debug("This query needs to be paginated");
                 }
                 // const console_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
+                const definedRecords = transformedRecords.filter(record => {return record !== undefined});
                 const log_msg = `call-apis: Successful ${query_config.method.toUpperCase()} ${
-                  query.APIEdge.query_operation.server
+                query.APIEdge.query_operation.server
                 } (${n_inputs} ID${n_inputs > 1 ? "s" : ""}): ${edge_operation} (obtained ${
-                  transformedRecords.length
-                } record${transformedRecords.length === 1 ? "" : "s"}, took ${timeElapsed}${timeUnits})`;
+                    definedRecords.length
+                } record${definedRecords.length === 1 ? "" : "s"}, took ${timeElapsed}${timeUnits})`;
                 // if (log_msg.length > 1000) {
                 //     log_msg = log_msg.substring(0, 1000) + "...";
                 // }
@@ -121,7 +122,7 @@ module.exports = class APIQueryDispatcher {
                         log_msg,
                         {
                             type: "query",
-                            hits: transformedRecords.length,
+                            hits: definedRecords.length,
                             ...query_info,
                         }
                     ).getLog(),
