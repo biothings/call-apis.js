@@ -193,7 +193,9 @@ module.exports = class APIQueryDispatcher {
 
     _constructQueries(APIEdges) {
         return APIEdges.map(edge => {
-            return qb(edge);
+            const built = qb(edge);
+            built.addSubmitter?.(this.options.submitter);
+            return built;
         });
     }
 
