@@ -7,12 +7,12 @@ const debug = require("debug")("bte:call-apis:query");
 const LogEntry = require("./log_entry");
 const { ResolvableBioEntity } = require("biomedical_id_resolver/built/bioentity/valid_bioentity");
 const { performance } = require('perf_hooks');
-const { globalTimeout, timeoutByAPI } = require('./config/timeouts')
-
+const { globalTimeout, timeoutByAPI } = require('./config/timeouts');
+const qgh = require("@biothings-explorer/query_graph_handler");
 
 async function delay_here(sec) {
     return new Promise(resolve => {
-        setTimeout(() => { resolve('') }, sec*1000);
+        setTimeout(resolve, sec * 1000);
     })
 }
 
@@ -83,6 +83,9 @@ module.exports = class APIQueryDispatcher {
                     // https://smart-api.info/registry?q=acca268be3645a24556b81cc15ce0e9a
                     debug("delay 1s for RTX KG2 KP...");
                     await delay_here(1);
+                }
+                if (query.APIEdge.association['x-trapi']?.rate_limit) {
+                    await this._rateLimit(query_info.api_name, query.APIEdge.association['x-trapi'].rate_limit);
                 }
                 const startTime = performance.now();
                 const queryResponse = dryrun_only ? {data: []} : await axios(query_config);
@@ -176,6 +179,32 @@ module.exports = class APIQueryDispatcher {
         }));
         this.queue.dequeue()
         return res;
+    }
+
+    async _rateLimit(api, count) {
+        if (qgh.redisClient.clientEnabled) {
+            const usage = await qgh.redisClient.client.incrTimeout(`APIUsageCount:${api}`);
+            await qgh.redisClient.client.expireTimeout(`APIUsageCount:${api}`, 60);
+            if (usage >= count) {
+                await qgh.redisClient.client.decrTimeout(`APIUsageCount:${api}`);
+                debug(`API ${api} is rate-limited and is at maximum (${count}) requests per minute. Checking again in ${60000 / count}ms`);
+                return new Promise(resolve => {
+                    setTimeout(async () => {
+                        await this._rateLimit(api, count);
+                        resolve();
+                    }, 60000 / count);
+                });
+            } else {
+                debug(`Rate-limited API ${api} is free to use (${usage || 0}/${count}), querying...`);
+                setTimeout(async () => {
+                    await qgh.redisClient.client.decrTimeout(`APIUsageCount:${api}`);
+                    await qgh.redisClient.client.expireTimeout(`APIUsageCount:${api}`, 60);
+                }, 60000);
+            }
+        } else {
+            debug(`API ${api} is rate-limited. Using naive strategy (waiting ${60000 / count}ms)...`)
+            return new Promise(resolve => setTimeout(resolve, 60000 / count));
+        }
     }
 
     _getTimeout(apiID) {
