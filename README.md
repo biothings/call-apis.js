@@ -1,7 +1,7 @@
 # Welcome to @biothings-explorer/call-apis 👋
 
-![Test Coveralls](https://github.com/biothings/call-apis.js/workflows/Test%20Coveralls/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/biothings/call-apis.js/badge.svg)](https://coveralls.io/github/biothings/call-apis.js)
+[![Test Codecov with Workspace](https://github.com/biothings/call-apis.js/actions/workflows/test_ws_codecov.yml/badge.svg)](https://github.com/biothings/call-apis.js/actions/workflows/test_ws_codecov.yml)
+[![codecov](https://codecov.io/gh/biothings/call-apis.js/branch/main/graph/badge.svg?token=XQZSYV8I2H)](https://codecov.io/gh/biothings/call-apis.js)
 <a href="https://github.com/biothings/call-apis.js#readme" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
