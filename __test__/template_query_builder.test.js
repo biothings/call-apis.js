@@ -326,6 +326,7 @@ describe("test query builder class", () => {
             const edge = {
                 query_operation: {
                     method: "post",
+                    server: "mygene.info"
                 },
                 tags: ["translator", "biothings"]
             };
