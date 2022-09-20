@@ -108,13 +108,13 @@ module.exports = class TemplateQueryBuilder {
     ) {
       if (apiResponse.max_total > this.start + 1000) {
         this.hasNext = true;
-        return true;
+        return this.start + 1000;
       }
     } else if (this.APIEdge.query_operation.method === "get" && this.APIEdge.tags.includes("biothings")) {
       if (apiResponse.total > this.start + apiResponse.hits.length) {
         if (this.start + apiResponse.hits.length < 10000) {
           this.hasNext = true;
-          return true;
+          return this.start + 1000;
         }
       }
     }
