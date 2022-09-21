@@ -115,8 +115,12 @@ module.exports = class APIQueryDispatcher {
                 const queryNeedsPagination = query.needPagination(unTransformedHits.response);
                 if (queryNeedsPagination) {
                     const log = `Query requires pagination, will re-query to window ${queryNeedsPagination}-${queryNeedsPagination + 1000}: ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? "s" : ""})`
-                    this.logs.push(new LogEntry("DEBUG", null, log).getLog());
                     debug(log);
+                    if (queryNeedsPagination >= 9000) {
+                        const log = `Biothings query reaches 10,000 max: ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? "s" : ""})`
+                        debug(log);
+                        this.logs.push(new LogEntry("DEBUG", null, log).getLog());
+                    }
                 }
                 debug(log_msg);
                 this.logs.push(
