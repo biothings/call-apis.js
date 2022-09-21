@@ -104,7 +104,7 @@ module.exports = class TemplateQueryBuilder {
     // TODO check for biothings pending, use smarter post method (also do config properly to use new parameter)
     if (
       this.APIEdge.query_operation.method === "post" &&
-      this.APIEdge.query_operation.server.includes("biothings.ncats.io")
+      this.APIEdge.tags.includes("biothings")
     ) {
       if (apiResponse.max_total > this.start + 1000) {
         this.hasNext = true;
@@ -126,7 +126,7 @@ module.exports = class TemplateQueryBuilder {
     const config = this.constructAxiosRequestConfig(this.APIEdge);
     if (
       this.APIEdge.query_operation.method === "post" &&
-      this.APIEdge.query_operation.server.includes("biothings.ncats.io")
+      this.APIEdge.tags.includes("biothings")
     ) {
       this.start = this.start + 1000;
       config.params.from = this.start;
