@@ -119,7 +119,7 @@ module.exports = class APIQueryDispatcher {
                     if (queryNeedsPagination >= 9000) {
                         const log = `Biothings query reaches 10,000 max: ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? "s" : ""})`
                         debug(log);
-                        this.logs.push(new LogEntry("DEBUG", null, log).getLog());
+                        this.logs.push(new LogEntry("WARNING", null, log).getLog());
                     }
                 }
                 debug(log_msg);
