@@ -103,20 +103,28 @@ module.exports = class APIQueryDispatcher {
                 };
                 const tf_obj = new tf.Transformer(unTransformedHits, this.options);
                 const transformedRecords = await tf_obj.transform();
-                if (query.needPagination(unTransformedHits.response)) {
-                    this.logs.push(new LogEntry("DEBUG", null, "call-apis: This query needs to be paginated").getLog());
-                    debug("This query needs to be paginated");
-                }
+
                 // const console_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
                 const definedRecords = transformedRecords.filter(record => {return record !== undefined});
-                const log_msg = `call-apis: Successful ${query_config.method.toUpperCase()} ${
-                query.APIEdge.query_operation.server
-                } (${n_inputs} ID${n_inputs > 1 ? "s" : ""}): ${edge_operation} (obtained ${
-                    definedRecords.length
-                } record${definedRecords.length === 1 ? "" : "s"}, took ${timeElapsed}${timeUnits})`;
-                // if (log_msg.length > 1000) {
-                //     log_msg = log_msg.substring(0, 1000) + "...";
-                // }
+                const log_msg = [
+                    `Successful ${query_config.method.toUpperCase()}`,
+                    query.APIEdge.query_operation.server,
+                    `(${n_inputs} ID${n_inputs > 1 ? "s" : ""}):`,
+                    `${edge_operation} (obtained ${definedRecords.length}`,
+                    `record${definedRecords.length === 1 ? "" : "s"},`,
+                    `took ${timeElapsed}${timeUnits})`
+                ].join(' ');
+
+                const queryNeedsPagination = query.needPagination(unTransformedHits.response);
+                if (queryNeedsPagination) {
+                    const log = `Query requires pagination, will re-query to window ${queryNeedsPagination}-${queryNeedsPagination + 1000}: ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? "s" : ""})`
+                    debug(log);
+                    if (queryNeedsPagination >= 9000) {
+                        const log = `Biothings query reaches 10,000 max: ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? "s" : ""})`
+                        debug(log);
+                        this.logs.push(new LogEntry("WARNING", null, log).getLog());
+                    }
+                }
                 debug(log_msg);
                 this.logs.push(
                     new LogEntry(
