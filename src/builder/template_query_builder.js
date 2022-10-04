@@ -23,9 +23,9 @@ module.exports = class TemplateQueryBuilder {
   _getUrl(APIEdge, input) {
     let server = APIEdge.query_operation.server;
     if (server.includes('biothings.ncats.io')) {
-      server.replace('biothings.ncats.io', 'biothings.ci.transltr.io');
+      server.replace('biothings.ncats.io', 'biothings.transltr.io');
     } else if (server.includes('pending.biothings.io')) {
-      server.replace('pending.biothings.io', 'biothings.ci.transltr.io');
+      server.replace('pending.biothings.io', 'biothings.transltr.io');
     }
     if (server.endsWith("/")) {
       server = server.substring(0, server.length - 1);
