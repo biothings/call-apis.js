@@ -14,7 +14,7 @@ describe("Integration test", () => {
         test("check response", async () => {
             const query = new q([edge]);
             const res = await query.query();
-            expect(res).toHaveLength(23);
+            expect(res).toHaveLength(28);
         })
     })
 
@@ -43,7 +43,7 @@ describe("Integration test", () => {
             const query = new q([edge]);
             const res = await query.query(false);
             expect(res).toHaveLength(0);
-            expect(query.logs[query.logs.length - 3]).toHaveProperty('level', 'ERROR');
+            expect(query.logs.some(log => log.level === 'ERROR' ? true : false)).toBeTruthy();
         })
     })
 

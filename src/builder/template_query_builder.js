@@ -52,6 +52,12 @@ module.exports = class TemplateQueryBuilder {
    */
   _getParams(APIEdge, input) {
     const params = {};
+    if (
+      this.APIEdge.query_operation.method === "post" &&
+      this.APIEdge.query_operation.server.includes("biothings.ncats.io")
+    ) {
+      params.with_total = true;
+    }
     Object.keys(APIEdge.query_operation.params).map(param => {
       if (Array.isArray(APIEdge.query_operation.path_params) && APIEdge.query_operation.path_params.includes(param)) {
         return;
@@ -94,18 +100,26 @@ module.exports = class TemplateQueryBuilder {
       params: this._getParams(this.APIEdge, input),
       data: this._getRequestBody(this.APIEdge, input),
       method: this.APIEdge.query_operation.method,
-      timeout: 50000,
     };
     this.config = config;
     return config;
   }
 
   needPagination(apiResponse) {
-    if (this.APIEdge.query_operation.method === "get" && this.APIEdge.tags.includes("biothings")) {
+    // TODO check for biothings pending, use smarter post method (also do config properly to use new parameter)
+    if (
+      this.APIEdge.query_operation.method === "post" &&
+      this.APIEdge.tags.includes("biothings")
+    ) {
+      if (apiResponse.max_total > this.start + 1000) {
+        this.hasNext = true;
+        return this.start + 1000;
+      }
+    } else if (this.APIEdge.query_operation.method === "get" && this.APIEdge.tags.includes("biothings")) {
       if (apiResponse.total > this.start + apiResponse.hits.length) {
         if (this.start + apiResponse.hits.length < 10000) {
           this.hasNext = true;
-          return true;
+          return this.start + 1000;
         }
       }
     }
@@ -114,11 +128,19 @@ module.exports = class TemplateQueryBuilder {
   }
 
   getNext() {
-    this.start = Math.min(this.start + 1000, 9999);
     const config = this.constructAxiosRequestConfig(this.APIEdge);
-    config.params.from = this.start;
-    if (config.params.size + this.start > 10000) {
-      config.params.size = 10000 - this.start;
+    if (
+      this.APIEdge.query_operation.method === "post" &&
+      this.APIEdge.tags.includes("biothings")
+    ) {
+      this.start = this.start + 1000;
+      config.params.from = this.start;
+    } else {
+      this.start = Math.min(this.start + 1000, 9999);
+      config.params.from = this.start;
+      if (config.params.size + this.start > 10000) {
+        config.params.size = 10000 - this.start;
+      }
     }
     this.config = config;
     return config;

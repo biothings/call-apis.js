@@ -95,7 +95,6 @@ module.exports = class QueryBuilder {
             params: this._getParams(this.APIEdge, input),
             data: this._getRequestBody(this.APIEdge, input),
             method: this.APIEdge.query_operation.method,
-            timeout: 50000,
         };
         this.config = config;
         return config;

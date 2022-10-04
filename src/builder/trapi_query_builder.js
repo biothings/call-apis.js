@@ -14,6 +14,7 @@ module.exports = class TRAPIQueryBuilder {
         this.start = 0
         this.hasNext = false
         this.APIEdge = APIEdge;
+        this.originalSubmitter;
     }
 
     getUrl() {
@@ -47,6 +48,10 @@ module.exports = class TRAPIQueryBuilder {
         return APIEdge.input;
     }
 
+    addSubmitter(submitter) {
+        this.originalSubmitter = submitter;
+    }
+
     /**
      * Construct TRAPI request body
      */
@@ -74,6 +79,14 @@ module.exports = class TRAPIQueryBuilder {
             },
             "submitter": "infores:bte"
         };
+        const xmaturityMap = {
+            ci: "staging",
+            test: "test",
+            prod: "prod",
+            dev: "dev",
+        }
+        if (process.env.INSTANCE_ENV) qg.submitter += `; bte-${xmaturityMap[process.env.INSTANCE_ENV]}`;
+        if (this.originalSubmitter) qg.submitter += `; subquery for client "${this.originalSubmitter}"`;
         return qg;
     }
 
@@ -86,7 +99,6 @@ module.exports = class TRAPIQueryBuilder {
             url: this._getUrl(this.APIEdge, input),
             data: this._getRequestBody(this.APIEdge, input),
             method: this.APIEdge.query_operation.method,
-            timeout: 50000,
             headers: {
                 'Content-Type': 'application/json'
             },
