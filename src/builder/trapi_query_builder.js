@@ -74,6 +74,10 @@ module.exports = class TRAPIQueryBuilder {
             },
             "submitter": "infores:bte"
         };
+        const qualfierConstraints = APIEdge.reasoner_edge.getQualifierConstraints();
+        if (qualfierConstraints) {
+            qg.message.query_graph.edges.e01.qualifier_constraints = qualfierConstraints;
+        }
         const xmaturityMap = {
             ci: "staging",
             test: "test",
