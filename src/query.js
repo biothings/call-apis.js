@@ -28,11 +28,18 @@ module.exports = class APIQueryDispatcher {
         this.APIEdges = APIEdges;
         this.logs = [];
         this.options = options;
+        this.totalRecords = 0;
+        this.maxRecords = parseInt(process.env.MAX_RECORDS_PER_EDGE) || 20000;
+        this.stoppedOnMax = false
+        this.nextPageQueries = 0;
     }
 
     async _queryBucket(queries, unavailableAPIs = {}) {
         const dryrun_only = process.env.DRYRUN === 'true';
         const res = await Promise.allSettled(queries.map(async query => {
+            if (this.checkMaxRecords()) {
+                return;
+            }
             let query_config, n_inputs, query_info, edge_operation;
             try {
                 query_config = query.getConfig();
@@ -106,6 +113,7 @@ module.exports = class APIQueryDispatcher {
 
                 // const console_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
                 const definedRecords = transformedRecords.filter(record => {return record !== undefined});
+                this.totalRecords += definedRecords.length;
                 const log_msg = [
                     `Successful ${query_config.method.toUpperCase()}`,
                     query.APIEdge.query_operation.server,
@@ -138,7 +146,7 @@ module.exports = class APIQueryDispatcher {
                         }
                     ).getLog(),
                 );
-                return transformedRecords;
+                return definedRecords;
             } catch (error) {
                 if ((error.response && error.response.status >= 502) || error.code === 'ECONNABORTED') {
                     const errorMessage = `${query.APIEdge.query_operation.server} appears to be unavailable. Queries to it will be skipped.`;
@@ -225,6 +233,7 @@ module.exports = class APIQueryDispatcher {
         queries.map(query => {
             if (query.hasNext === true) {
                 this.queue.addQuery(query)
+                this.nextPageQueries += 1;
             }
         })
     }
@@ -242,11 +251,17 @@ module.exports = class APIQueryDispatcher {
         this.queue.constructQueue(queries);
     }
 
+    checkMaxRecords() {
+        if (this.maxRecords > 0 && this.totalRecords >= this.maxRecords) {
+            return true;
+        }
+    }
+
     async query(resolveOutputIDs = true, unavailableAPIs = {}) {
         debug(`Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`)
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`).getLog());
-        debug(`Number of BTE Edges received is ${this.APIEdges.length}`);
-        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Number of API Edges received is ${this.APIEdges.length}`).getLog());
+        debug(`Number of API Edges received is ${this.APIEdges.length}`);
+        this.logs.push(new LogEntry("DEBUG", null, `call-apis: ${this.APIEdges.length} planned queries for edge ${this.APIEdges[0].reasoner_edge?.qEdge?.id}`).getLog());
         let queryResponseRecords = [];
         const queries = this._constructQueries(this.APIEdges);
         this._constructQueue(queries);
@@ -256,6 +271,25 @@ module.exports = class APIQueryDispatcher {
             let newResponseRecords = await this._queryBucket(bucket, unavailableAPIs);
             queryResponseRecords = [...queryResponseRecords, ...newResponseRecords];
             this._checkIfNext(bucket);
+            if (this.checkMaxRecords()) {
+                const remainingSubQueries = this.queue.queue.reduce((count, bucket) => {
+                    return count + bucket.bucket.length;
+                }, 0);
+                const message = [
+                    `QEdge ${this.APIEdges[0].reasoner_edge?.qEdge?.id}`,
+                    `obtained ${this.totalRecords} records,`,
+                    this.totalRecords === this.maxRecords ? "hitting" : "exceeding",
+                    `maximum of ${this.maxRecords}.`,
+                    `Skipping remaining ${remainingSubQueries}`,
+                    `(${remainingSubQueries - this.nextPageQueries} planned/${this.nextPageQueries} paged)`,
+                    `queries for this edge.`,
+                    `Your query may be too general?`,
+                ].join(" ");
+                debug(message);
+                this.logs.push(new LogEntry("WARNING", null, message).getLog());
+                this.queue.queue = [];
+                break;
+            }
         }
         const finishTime = performance.now();
         const timeElapsed = Math.round(
