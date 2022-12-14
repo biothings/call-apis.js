@@ -284,10 +284,62 @@ module.exports = class APIQueryDispatcher {
                     `(${remainingSubQueries - this.nextPageQueries} planned/${this.nextPageQueries} paged)`,
                     `queries for this edge.`,
                     `Your query may be too general?`,
-                ].join(" ");
-                debug(message);
+                ];
+                debug(message.join(" "));
                 this.logs.push(new LogEntry("WARNING", null, message).getLog());
                 this.queue.queue = [];
+                if (!(process.env.SLACK_OAUTH && process.env.SLACK_CHANNEL)) {
+                    break;
+                }
+                try {
+                    let server;
+                    switch (process.env.INSTANCE_ENV ?? '') {
+                        case 'dev':
+                            server = 'https://api.bte.ncats.io';
+                            break;
+                        case 'ci':
+                            server = 'https://bte.ci.transltr.io';
+                            break;
+                        case 'test':
+                            server = 'https://bte.test.transltr.io';
+                            break;
+                        default:
+                            server = `https://bte.transltr.io`;
+                    }
+                    message.pop();
+                    message.unshift([
+                        `${server}: Attached query`,
+                        global.queryInformation.jobID
+                            ? ` (ID: <${server}/v1/check_query_status/${global.queryInformation.jobID}|${global.queryInformation.jobID}>) `
+                            : ' (synchronous) ',
+                        global.queryInformation.callback_url
+                            ? ` (callback: ${global.queryInformation.callback_url}): `
+                            : global.queryInformation.jobID ? ` (no callback provided): ` : `: `,
+                        '\n\n',
+                    ].join(''));
+                    const content = JSON.stringify(global.queryInformation.queryGraph, null, 2);
+                    // don't try more than 1MB
+                    if (Buffer.byteLength(content, 'utf8') > 1000000000) break;
+                    const data = new URLSearchParams({
+                        channels: process.env.SLACK_CHANNEL,
+                        filename: "query_graph.json",
+                        title: "query_graph.json",
+                        filetype: "json",
+                        content: content,
+                        initial_comment: message.join(' '),
+                    });
+                    await axios({
+                        url: `https://slack.com/api/files.upload`,
+                        method: 'post',
+                        headers: {
+                            "Content-type": "application/x-www-form-urlencoded",
+                            Authorization: `Bearer ${process.env.SLACK_OAUTH}`,
+                        },
+                        data,
+                    });
+                } catch (e) {
+                    debug(`Logging to Slack failed. due to error ${e}`);
+                }
                 break;
             }
         }
