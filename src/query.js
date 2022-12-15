@@ -295,23 +295,23 @@ module.exports = class APIQueryDispatcher {
                     let server;
                     switch (process.env.INSTANCE_ENV ?? '') {
                         case 'dev':
-                            server = 'https://api.bte.ncats.io';
+                            server = 'api.bte.ncats.io';
                             break;
                         case 'ci':
-                            server = 'https://bte.ci.transltr.io';
+                            server = 'bte.ci.transltr.io';
                             break;
                         case 'test':
-                            server = 'https://bte.test.transltr.io';
+                            server = 'bte.test.transltr.io';
                             break;
                         default:
-                            server = `https://bte.transltr.io`;
+                            server = `bte.transltr.io`;
                     }
                     message.pop();
                     message.unshift([
                         `${server}: Attached query`,
                         global.queryInformation.jobID
-                            ? ` (ID: <${server}/v1/check_query_status/${global.queryInformation.jobID}|${global.queryInformation.jobID}>) `
-                            : ' (synchronous) ',
+                            ? ` (ID: <https://${server}/v1/check_query_status/${global.queryInformation.jobID}|${global.queryInformation.jobID}>)`
+                            : ' (synchronous)',
                         global.queryInformation.callback_url
                             ? ` (callback: ${global.queryInformation.callback_url}): `
                             : global.queryInformation.jobID ? ` (no callback provided): ` : `: `,
