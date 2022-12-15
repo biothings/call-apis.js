@@ -30,6 +30,7 @@ module.exports = class APIQueryDispatcher {
         this.options = options;
         this.totalRecords = 0;
         this.maxRecords = parseInt(process.env.MAX_RECORDS_PER_EDGE) || 20000;
+        this.globalMaxRecords = parseInt(process.env.MAX_RECORDS_TOTAL) || 50000;
         this.stoppedOnMax = false
         this.nextPageQueries = 0;
     }
@@ -114,6 +115,12 @@ module.exports = class APIQueryDispatcher {
                 // const console_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
                 const definedRecords = transformedRecords.filter(record => {return record !== undefined});
                 this.totalRecords += definedRecords.length;
+                if (global.queryInformation.queryGraph) {
+                    const globalRecords = global.queryInformation.totalRecords;
+                    global.queryInformation.totalRecords = globalRecords
+                        ? globalRecords + definedRecords.length
+                        : definedRecords.length;
+                }
                 const log_msg = [
                     `Successful ${query_config.method.toUpperCase()}`,
                     query.APIEdge.query_operation.server,
@@ -252,9 +259,10 @@ module.exports = class APIQueryDispatcher {
     }
 
     checkMaxRecords() {
-        if (this.maxRecords > 0 && this.totalRecords >= this.maxRecords) {
-            return true;
-        }
+        return (
+          (this.maxRecords > 0 && this.totalRecords >= this.maxRecords) ||
+          (this.globalMaxRecords > 0 && global.queryInformation.totalRecords > this.globalMaxRecords)
+        );
     }
 
     async query(resolveOutputIDs = true, unavailableAPIs = {}) {
@@ -271,77 +279,90 @@ module.exports = class APIQueryDispatcher {
             let newResponseRecords = await this._queryBucket(bucket, unavailableAPIs);
             queryResponseRecords = [...queryResponseRecords, ...newResponseRecords];
             this._checkIfNext(bucket);
-            if (this.checkMaxRecords()) {
-                const remainingSubQueries = this.queue.queue.reduce((count, bucket) => {
-                    return count + bucket.bucket.length;
-                }, 0);
-                const message = [
-                    `QEdge ${this.APIEdges[0].reasoner_edge?.qEdge?.id}`,
-                    `obtained ${this.totalRecords} records,`,
-                    this.totalRecords === this.maxRecords ? "hitting" : "exceeding",
-                    `maximum of ${this.maxRecords}.`,
-                    `Skipping remaining ${remainingSubQueries}`,
-                    `(${remainingSubQueries - this.nextPageQueries} planned/${this.nextPageQueries} paged)`,
-                    `queries for this edge.`,
-                    `Your query may be too general?`,
-                ];
-                debug(message.join(" "));
-                this.logs.push(new LogEntry("WARNING", null, message).getLog());
-                this.queue.queue = [];
-                if (!(process.env.SLACK_OAUTH && process.env.SLACK_CHANNEL)) {
-                    break;
-                }
-                try {
-                    let server;
-                    switch (process.env.INSTANCE_ENV ?? '') {
-                        case 'dev':
-                            server = 'api.bte.ncats.io';
-                            break;
-                        case 'ci':
-                            server = 'bte.ci.transltr.io';
-                            break;
-                        case 'test':
-                            server = 'bte.test.transltr.io';
-                            break;
-                        default:
-                            server = `bte.transltr.io`;
-                    }
-                    message.pop();
-                    message.unshift([
-                        `${server}: Attached query`,
-                        global.queryInformation.jobID
-                            ? ` (ID: <https://${server}/v1/check_query_status/${global.queryInformation.jobID}|${global.queryInformation.jobID}>)`
-                            : ' (synchronous)',
-                        global.queryInformation.callback_url
-                            ? ` (callback: ${global.queryInformation.callback_url}): `
-                            : global.queryInformation.jobID ? ` (no callback provided): ` : `: `,
-                        '\n\n',
-                    ].join(''));
-                    const content = JSON.stringify(global.queryInformation.queryGraph, null, 2);
-                    // don't try more than 1MB
-                    if (Buffer.byteLength(content, 'utf8') > 1000000000) break;
-                    const data = new URLSearchParams({
-                        channels: process.env.SLACK_CHANNEL,
-                        filename: "query_graph.json",
-                        title: "query_graph.json",
-                        filetype: "json",
-                        content: content,
-                        initial_comment: message.join(' '),
-                    });
-                    await axios({
-                        url: `https://slack.com/api/files.upload`,
-                        method: 'post',
-                        headers: {
-                            "Content-type": "application/x-www-form-urlencoded",
-                            Authorization: `Bearer ${process.env.SLACK_OAUTH}`,
-                        },
-                        data,
-                    });
-                } catch (e) {
-                    debug(`Logging to Slack failed. due to error ${e}`);
-                }
+
+            // Handle cases of too many records
+            if (!this.checkMaxRecords()) continue;
+            const stoppedOnGlobalMax = this.globalMaxRecords > 0 && global.queryInformation.totalRecords >= this.globalMaxRecords;
+            const remainingSubQueries = this.queue.queue.reduce((count, bucket) => {
+                return count + bucket.bucket.length;
+            }, 0);
+            let message = [
+                `QEdge ${this.APIEdges[0].reasoner_edge?.qEdge?.id}`,
+                `obtained ${this.totalRecords} records,`,
+                this.totalRecords === this.maxRecords ? "hitting" : "exceeding",
+                `maximum of ${this.maxRecords}.`,
+                `Skipping remaining ${remainingSubQueries}`,
+                `(${remainingSubQueries - this.nextPageQueries} planned/${this.nextPageQueries} paged)`,
+                `queries for this edge.`,
+                `Your query may be too general?`,
+            ];
+            if (stoppedOnGlobalMax) {
+                message = message.slice(0, 2);
+                message.push(...[
+                    `totalling ${global.queryInformation.totalRecords} for this query.`,
+                    `This exceeds the per-query maximum of ${this.globalMaxRecords}.`,
+                    `For stability purposes, this query is terminated.`,
+                    `Please consider refining your query further.`,
+                ]);
+            }
+            debug(message.join(" "));
+            this.logs.push(new LogEntry("WARNING", null, message.join(" ")).getLog());
+            this.queue.queue = [];
+            if (!(process.env.SLACK_OAUTH && process.env.SLACK_CHANNEL)) {
+                if (stoppedOnGlobalMax) return;
                 break;
             }
+            try {
+                let server;
+                switch (process.env.INSTANCE_ENV ?? '') {
+                    case 'dev':
+                        server = 'api.bte.ncats.io';
+                        break;
+                    case 'ci':
+                        server = 'bte.ci.transltr.io';
+                        break;
+                    case 'test':
+                        server = 'bte.test.transltr.io';
+                        break;
+                    default:
+                        server = `bte.transltr.io`;
+                }
+                message.pop();
+                message.unshift([
+                    `${server}: Attached query`,
+                    global.queryInformation.jobID
+                        ? ` (ID: <https://${server}/v1/check_query_status/${global.queryInformation.jobID}|${global.queryInformation.jobID}>)`
+                        : ' (synchronous)',
+                    global.queryInformation.callback_url
+                        ? ` (callback: ${global.queryInformation.callback_url}): `
+                        : global.queryInformation.jobID ? ` (no callback provided): ` : `: `,
+                    '\n\n',
+                ].join(''));
+                const content = JSON.stringify(global.queryInformation.queryGraph, null, 2);
+                // don't try more than 1MB
+                if (Buffer.byteLength(content, 'utf8') > 1000000000) break;
+                const data = new URLSearchParams({
+                    channels: process.env.SLACK_CHANNEL,
+                    filename: "query_graph.json",
+                    title: "query_graph.json",
+                    filetype: "json",
+                    content: content,
+                    initial_comment: message.join(' '),
+                });
+                await axios({
+                    url: `https://slack.com/api/files.upload`,
+                    method: 'post',
+                    headers: {
+                        "Content-type": "application/x-www-form-urlencoded",
+                        Authorization: `Bearer ${process.env.SLACK_OAUTH}`,
+                    },
+                    data,
+                });
+            } catch (e) {
+                debug(`Logging to Slack failed. due to error ${e}`);
+            }
+            if (stoppedOnGlobalMax) return;
+            break;
         }
         const finishTime = performance.now();
         const timeElapsed = Math.round(
