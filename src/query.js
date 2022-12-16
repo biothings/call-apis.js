@@ -29,8 +29,8 @@ module.exports = class APIQueryDispatcher {
         this.logs = [];
         this.options = options;
         this.totalRecords = 0;
-        this.maxRecords = parseInt(process.env.MAX_RECORDS_PER_EDGE) || 20000;
-        this.globalMaxRecords = parseInt(process.env.MAX_RECORDS_TOTAL) || 50000;
+        this.maxRecords = parseInt(process.env.MAX_RECORDS_PER_EDGE) || 30000;
+        this.globalMaxRecords = parseInt(process.env.MAX_RECORDS_TOTAL) || 60000;
         this.stoppedOnMax = false
         this.nextPageQueries = 0;
     }
@@ -115,7 +115,7 @@ module.exports = class APIQueryDispatcher {
                 // const console_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
                 const definedRecords = transformedRecords.filter(record => {return record !== undefined});
                 this.totalRecords += definedRecords.length;
-                if (global.queryInformation.queryGraph) {
+                if (global.queryInformation?.queryGraph) {
                     const globalRecords = global.queryInformation.totalRecords;
                     global.queryInformation.totalRecords = globalRecords
                         ? globalRecords + definedRecords.length
@@ -129,6 +129,8 @@ module.exports = class APIQueryDispatcher {
                     `record${definedRecords.length === 1 ? "" : "s"},`,
                     `took ${timeElapsed}${timeUnits})`
                 ].join(' ');
+
+                if (query.start > 0) this.nextPageQueries -= 1;
 
                 const queryNeedsPagination = query.needPagination(unTransformedHits.response);
                 if (queryNeedsPagination) {
@@ -261,7 +263,7 @@ module.exports = class APIQueryDispatcher {
     checkMaxRecords() {
         return (
           (this.maxRecords > 0 && this.totalRecords >= this.maxRecords) ||
-          (this.globalMaxRecords > 0 && global.queryInformation.totalRecords > this.globalMaxRecords)
+          (this.globalMaxRecords > 0 && global.queryInformation?.totalRecords > this.globalMaxRecords)
         );
     }
 
@@ -282,9 +284,11 @@ module.exports = class APIQueryDispatcher {
 
             // Handle cases of too many records
             if (!this.checkMaxRecords()) continue;
-            const stoppedOnGlobalMax = this.globalMaxRecords > 0 && global.queryInformation.totalRecords >= this.globalMaxRecords;
+            const stoppedOnGlobalMax = this.globalMaxRecords > 0 && global.queryInformation?.totalRecords >= this.globalMaxRecords;
             const remainingSubQueries = this.queue.queue.reduce((count, bucket) => {
-                return count + bucket.bucket.length;
+                return bucket.bucket ?
+                    count + bucket.bucket.length
+                    : count + bucket.length;
             }, 0);
             let message = [
                 `QEdge ${this.APIEdges[0].reasoner_edge?.qEdge?.id}`,
