@@ -334,6 +334,9 @@ module.exports = class APIQueryDispatcher {
                 message.pop();
                 message.unshift([
                     `${server}: Attached query`,
+                    global.queryInformation.isCreativeMode
+                        ? ` (creative mode, template ${global.queryInformation.creativeTemplate}) `
+                        : ``,
                     global.queryInformation.jobID
                         ? ` (ID: <https://${server}/v1/check_query_status/${global.queryInformation.jobID}|${global.queryInformation.jobID}>)`
                         : ' (synchronous)',
