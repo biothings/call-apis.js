@@ -60,8 +60,8 @@ describe("Integration test", () => {
         test("check response", async () => {
             const query = new q(edges);
             const res = await query.query(false);
-            const mydisease_res = await axios.get("http://mydisease.info/v1/disease/MONDO:0002494?fields=mondo.descendants&dotfield=true");
-            expect(res.length).toEqual(mydisease_res.data["mondo.descendants"].length)
+            const mydisease_res = await axios.get("http://mydisease.info/v1/disease/MONDO:0002494?fields=mondo.children&dotfield=true");
+            expect(res.length).toEqual(mydisease_res.data["mondo.children"].length)
         })
     })
 })
