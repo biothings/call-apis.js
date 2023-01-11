@@ -295,7 +295,7 @@ module.exports = class APIQueryDispatcher {
                 `obtained ${this.totalRecords} records,`,
                 this.totalRecords === this.maxRecords ? "hitting" : "exceeding",
                 `maximum of ${this.maxRecords}.`,
-                `Skipping remaining ${remainingSubQueries}`,
+                `Truncating records to ${this.maxRecords} and skipping remaining ${remainingSubQueries}`,
                 `(${remainingSubQueries - this.nextPageQueries} planned/${this.nextPageQueries} paged)`,
                 `queries for this edge.`,
                 `Your query may be too general?`,
@@ -379,7 +379,17 @@ module.exports = class APIQueryDispatcher {
         );
         const timeUnits = finishTime - startTime > 1000 ? "s" : "ms";
         debug("query completes.")
-        const mergedRecords = this._merge(queryResponseRecords);
+        let mergedRecords = this._merge(queryResponseRecords);
+        // truncate merged records to maximum allowed
+        mergedRecords = mergedRecords.slice(0, this.maxRecords);
+        debug(`Total number of records returned for this query is ${mergedRecords.length}`)
+        this.logs.push(
+          new LogEntry(
+            "DEBUG",
+            null,
+            `call-apis: Total number of records returned for this query is ${mergedRecords.length}`,
+          ).getLog(),
+        );
         debug("Start to use id resolver module to annotate output ids.")
         const annotatedRecords = await this._annotate(mergedRecords, resolveOutputIDs);
         debug("id annotation completes");
@@ -398,14 +408,6 @@ module.exports = class APIQueryDispatcher {
                 mergedRecords = [...mergedRecords, ...responseRecords.value];
             }
         });
-        debug(`Total number of records returned for this query is ${mergedRecords.length}`)
-        this.logs.push(
-          new LogEntry(
-            "DEBUG",
-            null,
-            `call-apis: Total number of records returned for this query is ${mergedRecords.length}`,
-          ).getLog(),
-        );
         return mergedRecords;
     }
 
