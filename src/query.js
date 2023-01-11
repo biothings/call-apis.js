@@ -28,11 +28,19 @@ module.exports = class APIQueryDispatcher {
         this.APIEdges = APIEdges;
         this.logs = [];
         this.options = options;
+        this.totalRecords = 0;
+        this.maxRecords = parseInt(process.env.MAX_RECORDS_PER_EDGE) || 30000;
+        this.globalMaxRecords = parseInt(process.env.MAX_RECORDS_TOTAL) || 60000;
+        this.stoppedOnMax = false
+        this.nextPageQueries = 0;
     }
 
     async _queryBucket(queries, unavailableAPIs = {}) {
         const dryrun_only = process.env.DRYRUN === 'true';
         const res = await Promise.allSettled(queries.map(async query => {
+            if (this.checkMaxRecords()) {
+                return;
+            }
             let query_config, n_inputs, query_info, edge_operation;
             try {
                 query_config = query.getConfig();
@@ -106,6 +114,13 @@ module.exports = class APIQueryDispatcher {
 
                 // const console_msg = `Succesfully made the following query: ${JSON.stringify(query_config)}`;
                 const definedRecords = transformedRecords.filter(record => {return record !== undefined});
+                this.totalRecords += definedRecords.length;
+                if (global.queryInformation?.queryGraph) {
+                    const globalRecords = global.queryInformation.totalRecords;
+                    global.queryInformation.totalRecords = globalRecords
+                        ? globalRecords + definedRecords.length
+                        : definedRecords.length;
+                }
                 const log_msg = [
                     `Successful ${query_config.method.toUpperCase()}`,
                     query.APIEdge.query_operation.server,
@@ -114,6 +129,8 @@ module.exports = class APIQueryDispatcher {
                     `record${definedRecords.length === 1 ? "" : "s"},`,
                     `took ${timeElapsed}${timeUnits})`
                 ].join(' ');
+
+                if (query.start > 0) this.nextPageQueries -= 1;
 
                 const queryNeedsPagination = query.needPagination(unTransformedHits.response);
                 if (queryNeedsPagination) {
@@ -138,7 +155,7 @@ module.exports = class APIQueryDispatcher {
                         }
                     ).getLog(),
                 );
-                return transformedRecords;
+                return definedRecords;
             } catch (error) {
                 if ((error.response && error.response.status >= 502) || error.code === 'ECONNABORTED') {
                     const errorMessage = `${query.APIEdge.query_operation.server} appears to be unavailable. Queries to it will be skipped.`;
@@ -225,6 +242,7 @@ module.exports = class APIQueryDispatcher {
         queries.map(query => {
             if (query.hasNext === true) {
                 this.queue.addQuery(query)
+                this.nextPageQueries += 1;
             }
         })
     }
@@ -242,11 +260,18 @@ module.exports = class APIQueryDispatcher {
         this.queue.constructQueue(queries);
     }
 
+    checkMaxRecords() {
+        return (
+          (this.maxRecords > 0 && this.totalRecords >= this.maxRecords) ||
+          (this.globalMaxRecords > 0 && global.queryInformation?.totalRecords > this.globalMaxRecords)
+        );
+    }
+
     async query(resolveOutputIDs = true, unavailableAPIs = {}) {
         debug(`Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`)
         this.logs.push(new LogEntry("DEBUG", null, `call-apis: Resolving ID feature is turned ${(resolveOutputIDs) ? 'on' : 'off'}`).getLog());
-        debug(`Number of BTE Edges received is ${this.APIEdges.length}`);
-        this.logs.push(new LogEntry("DEBUG", null, `call-apis: Number of API Edges received is ${this.APIEdges.length}`).getLog());
+        debug(`Number of API Edges received is ${this.APIEdges.length}`);
+        this.logs.push(new LogEntry("DEBUG", null, `call-apis: ${this.APIEdges.length} planned queries for edge ${this.APIEdges[0].reasoner_edge?.qEdge?.id}`).getLog());
         let queryResponseRecords = [];
         const queries = this._constructQueries(this.APIEdges);
         this._constructQueue(queries);
@@ -256,6 +281,95 @@ module.exports = class APIQueryDispatcher {
             let newResponseRecords = await this._queryBucket(bucket, unavailableAPIs);
             queryResponseRecords = [...queryResponseRecords, ...newResponseRecords];
             this._checkIfNext(bucket);
+
+            // Handle cases of too many records
+            if (!this.checkMaxRecords()) continue;
+            const stoppedOnGlobalMax = this.globalMaxRecords > 0 && global.queryInformation?.totalRecords >= this.globalMaxRecords;
+            const remainingSubQueries = this.queue.queue.reduce((count, bucket) => {
+                return bucket.bucket ?
+                    count + bucket.bucket.length
+                    : count + bucket.length;
+            }, 0);
+            let message = [
+                `QEdge ${this.APIEdges[0].reasoner_edge?.qEdge?.id}`,
+                `obtained ${this.totalRecords} records,`,
+                this.totalRecords === this.maxRecords ? "hitting" : "exceeding",
+                `maximum of ${this.maxRecords}.`,
+                `Truncating records to ${this.maxRecords} and skipping remaining ${remainingSubQueries}`,
+                `(${remainingSubQueries - this.nextPageQueries} planned/${this.nextPageQueries} paged)`,
+                `queries for this edge.`,
+                `Your query may be too general?`,
+            ];
+            if (stoppedOnGlobalMax) {
+                message = message.slice(0, 2);
+                message.push(...[
+                    `totalling ${global.queryInformation.totalRecords} for this query.`,
+                    `This exceeds the per-query maximum of ${this.globalMaxRecords}.`,
+                    `For stability purposes, this query is terminated.`,
+                    `Please consider refining your query further.`,
+                ]);
+            }
+            debug(message.join(" "));
+            this.logs.push(new LogEntry("WARNING", null, message.join(" ")).getLog());
+            this.queue.queue = [];
+            if (!(process.env.SLACK_OAUTH && process.env.SLACK_CHANNEL)) {
+                if (stoppedOnGlobalMax) return;
+                break;
+            }
+            try {
+                let server;
+                switch (process.env.INSTANCE_ENV ?? '') {
+                    case 'dev':
+                        server = 'api.bte.ncats.io';
+                        break;
+                    case 'ci':
+                        server = 'bte.ci.transltr.io';
+                        break;
+                    case 'test':
+                        server = 'bte.test.transltr.io';
+                        break;
+                    default:
+                        server = `bte.transltr.io`;
+                }
+                message.pop();
+                message.unshift([
+                    `${server}: Attached query`,
+                    global.queryInformation.isCreativeMode
+                        ? ` (creative mode, template ${global.queryInformation.creativeTemplate}) `
+                        : ``,
+                    global.queryInformation.jobID
+                        ? ` (ID: <https://${server}/v1/check_query_status/${global.queryInformation.jobID}|${global.queryInformation.jobID}>)`
+                        : ' (synchronous)',
+                    global.queryInformation.callback_url
+                        ? ` (callback: ${global.queryInformation.callback_url}): `
+                        : global.queryInformation.jobID ? ` (no callback provided): ` : `: `,
+                    '\n\n',
+                ].join(''));
+                const content = JSON.stringify(global.queryInformation.queryGraph, null, 2);
+                // don't try more than 1MB
+                if (Buffer.byteLength(content, 'utf8') > 1000000000) break;
+                const data = new URLSearchParams({
+                    channels: process.env.SLACK_CHANNEL,
+                    filename: "query_graph.json",
+                    title: "query_graph.json",
+                    filetype: "json",
+                    content: content,
+                    initial_comment: message.join(' '),
+                });
+                await axios({
+                    url: `https://slack.com/api/files.upload`,
+                    method: 'post',
+                    headers: {
+                        "Content-type": "application/x-www-form-urlencoded",
+                        Authorization: `Bearer ${process.env.SLACK_OAUTH}`,
+                    },
+                    data,
+                });
+            } catch (e) {
+                debug(`Logging to Slack failed. due to error ${e}`);
+            }
+            if (stoppedOnGlobalMax) return;
+            break;
         }
         const finishTime = performance.now();
         const timeElapsed = Math.round(
@@ -265,7 +379,17 @@ module.exports = class APIQueryDispatcher {
         );
         const timeUnits = finishTime - startTime > 1000 ? "s" : "ms";
         debug("query completes.")
-        const mergedRecords = this._merge(queryResponseRecords);
+        let mergedRecords = this._merge(queryResponseRecords);
+        // truncate merged records to maximum allowed
+        mergedRecords = mergedRecords.slice(0, this.maxRecords);
+        debug(`Total number of records returned for this query is ${mergedRecords.length}`)
+        this.logs.push(
+          new LogEntry(
+            "DEBUG",
+            null,
+            `call-apis: Total number of records returned for this query is ${mergedRecords.length}`,
+          ).getLog(),
+        );
         debug("Start to use id resolver module to annotate output ids.")
         const annotatedRecords = await this._annotate(mergedRecords, resolveOutputIDs);
         debug("id annotation completes");
@@ -284,14 +408,6 @@ module.exports = class APIQueryDispatcher {
                 mergedRecords = [...mergedRecords, ...responseRecords.value];
             }
         });
-        debug(`Total number of records returned for this query is ${mergedRecords.length}`)
-        this.logs.push(
-          new LogEntry(
-            "DEBUG",
-            null,
-            `call-apis: Total number of records returned for this query is ${mergedRecords.length}`,
-          ).getLog(),
-        );
         return mergedRecords;
     }
 
