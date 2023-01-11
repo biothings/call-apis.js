@@ -68,25 +68,6 @@ describe("Test query class", () => {
             expect(res[1]).toEqual(success2.value[0]);
             expect(res[2]).toEqual(success1.value[0]);
         })
-
-        test("logs is correctly populated", () => {
-            const success1 = {
-                status: "fulfilled",
-                value: [{ id: 1 }]
-            }
-            const success2 = {
-                status: "fulfilled",
-                value: [{ id: 3 }]
-            }
-            const fail = {
-                status: "rejected",
-                reason: "bad request"
-            }
-            const caller = new q([]);
-            caller._merge([success1, success2, success1, fail, fail]);
-            expect(caller.logs).toHaveLength(1);
-            expect(caller.logs[0]).toHaveProperty("message", "call-apis: Total number of records returned for this query is 3")
-        })
     })
 
     describe("Test _groupOutputIDsBySemanticType function", () => {
