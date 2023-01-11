@@ -29,8 +29,8 @@ module.exports = class APIQueryDispatcher {
         this.logs = [];
         this.options = options;
         this.totalRecords = 0;
-        this.maxRecords = parseInt(process.env.MAX_RECORDS_PER_EDGE) || 50000;
-        this.globalMaxRecords = parseInt(process.env.MAX_RECORDS_TOTAL) || 100000;
+        this.maxRecords = parseInt(process.env.MAX_RECORDS_PER_EDGE) || 30000;
+        this.globalMaxRecords = parseInt(process.env.MAX_RECORDS_TOTAL) || 60000;
         this.stoppedOnMax = false
         this.nextPageQueries = 0;
     }
