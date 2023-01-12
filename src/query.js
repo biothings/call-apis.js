@@ -59,7 +59,7 @@ module.exports = class APIQueryDispatcher {
                 }
 
                 query_info = {
-                    qEdgeID: query.APIEdge.reasoner_edge?.qEdge?.id,
+                    qEdgeID: query.APIEdge.reasoner_edge?.id,
                     url: query_config.url,
                     api_name: query.APIEdge.association.api_name,
                     subject: query.APIEdge.association.input_type,
