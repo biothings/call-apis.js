@@ -3,6 +3,11 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 
+// if needed
+const og_axios = jest.requireActual("axios")
+
+jest.mock('axios');
+
 describe("Integration test", () => {
     describe("Integration test using mygene.info gene to biological process association", () => {
         let edge;
@@ -10,6 +15,13 @@ describe("Integration test", () => {
         beforeEach(() => {
             const edge_path = path.resolve(__dirname, '../data/mygene_example_edge.json');
             edge = JSON.parse(fs.readFileSync(edge_path));
+
+            // mocking API calls
+            const normalized_info_path = path.resolve(__dirname, '../data/api_results/mygene_normalized_nodes.json');
+            axios.post.mockResolvedValue({data: JSON.parse(fs.readFileSync(normalized_info_path))});
+
+            const result_path = path.resolve(__dirname, '../data/api_results/mygene_query_result.json');
+            axios.mockResolvedValue({data: JSON.parse(fs.readFileSync(result_path))});
         })
         test("check response", async () => {
             const query = new q([edge]);
@@ -56,6 +68,13 @@ describe("Integration test", () => {
             meta_kg.constructMetaKGSync();
             edges = meta_kg.filter({ api_name: "MyDisease.info API", predicate: "superclass_of" });
             edges.map(op => op.input = ["MONDO:0002494"])
+
+            // mocking API calls
+            const get_result_path = path.resolve(__dirname, '../data/api_results/mydisease_get_result.json');
+            axios.get.mockResolvedValue({data: JSON.parse(fs.readFileSync(get_result_path))});
+
+            const post_result_path = path.resolve(__dirname, '../data/api_results/mydisease_post_result.json');
+            axios.mockResolvedValue({data: JSON.parse(fs.readFileSync(post_result_path))});
         })
         test("check response", async () => {
             const query = new q(edges);
