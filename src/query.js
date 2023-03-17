@@ -281,7 +281,7 @@ module.exports = class APIQueryDispatcher {
         message,
       ).getLog(),
     );
-    message = `call-apis: ${this.APIEdges.length} planned queries for edge ${this.APIEdges[0].reasoner_edge?.qEdge?.id}`;
+    message = `call-apis: ${this.APIEdges.length} planned queries for edge ${this.APIEdges[0].reasoner_edge?.id}`;
     debug(message);
     this.logs.push(
       new LogEntry(
@@ -308,7 +308,7 @@ module.exports = class APIQueryDispatcher {
         return bucket.bucket ? count + bucket.bucket.length : count + bucket.length;
       }, 0);
       let message = [
-        `QEdge ${this.APIEdges[0].reasoner_edge?.qEdge?.id}`,
+        `QEdge ${this.APIEdges[0].reasoner_edge?.id}`,
         `obtained ${this.totalRecords} records,`,
         this.totalRecords === this.maxRecords ? "hitting" : "exceeding",
         `maximum of ${this.maxRecords}.`,
