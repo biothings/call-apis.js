@@ -74,7 +74,7 @@ module.exports = class APIQueryDispatcher {
             new LogEntry(
               "ERROR",
               null,
-              `${error.toString()} while configuring query. Query dump: ${query.toString()}`,
+              `${error.toString()} while configuring query. Query dump: ${JSON.stringify(query)}`,
             ).getLog(),
           );
           return undefined;
