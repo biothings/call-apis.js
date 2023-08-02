@@ -87,7 +87,7 @@ module.exports = class APIQueryDispatcher {
           );
 
           // end span
-          span.finish();
+          span?.finish();
 
           return undefined;
         }
@@ -174,7 +174,7 @@ module.exports = class APIQueryDispatcher {
           );
 
         // end span
-        span.finish();
+        span?.finish();
 
           return transformedRecords;
         } catch (error) {
@@ -218,7 +218,7 @@ module.exports = class APIQueryDispatcher {
           }
 
           // end span
-          span.finish();
+          span?.finish();
 
           return undefined;
         }
