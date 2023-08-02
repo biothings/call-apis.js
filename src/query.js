@@ -44,11 +44,11 @@ module.exports = class APIQueryDispatcher {
           return;
         }
 
-        const span = Sentry.getCurrentHub().getScope().getTransaction().startChild({
+        const span = Sentry?.getCurrentHub()?.getScope()?.getTransaction()?.startChild({
             description: "apiCall",
         });
 
-        span.setData("apiName", query.APIEdge.association.api_name);
+        span?.setData("apiName", query.APIEdge.association.api_name);
 
         let query_config, n_inputs, query_info, edge_operation;
         try {
