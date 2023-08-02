@@ -8,6 +8,7 @@ const LogEntry = require("./log_entry");
 const { ResolvableBioEntity } = require("biomedical_id_resolver/built/bioentity/valid_bioentity");
 const { performance } = require("perf_hooks");
 const { globalTimeout, timeoutByAPI } = require("./config/timeouts");
+const Sentry = require("@sentry/node")
 const qgh = require("@biothings-explorer/query_graph_handler");
 
 async function delay_here(sec) {
@@ -42,6 +43,13 @@ module.exports = class APIQueryDispatcher {
         if (this.checkMaxRecords()) {
           return;
         }
+
+        const span = Sentry.getCurrentHub().getScope().getTransaction().startChild({
+            description: "apiCall",
+        });
+
+        span.setData("apiName", query.APIEdge.association.api_name);
+
         let query_config, n_inputs, query_info, edge_operation;
         try {
           query_config = query.getConfig();
@@ -77,8 +85,13 @@ module.exports = class APIQueryDispatcher {
               `${error.toString()} while configuring query. Query dump: ${JSON.stringify(query)}`,
             ).getLog(),
           );
+
+          // end span
+          span.finish();
+
           return undefined;
         }
+
         try {
           const userAgent = `BTE/${process.env.NODE_ENV === "production" ? "prod" : "dev"} Node/${process.version} ${
             process.platform
@@ -159,6 +172,10 @@ module.exports = class APIQueryDispatcher {
               ...query_info,
             }).getLog(),
           );
+
+        // end span
+        span.finish();
+
           return transformedRecords;
         } catch (error) {
           if ((error.response && error.response.status >= 502) || error.code === "ECONNABORTED") {
@@ -177,7 +194,7 @@ module.exports = class APIQueryDispatcher {
               : 6000; // default wait for a minute
             setTimeout(() => (unavailableAPIs[query.APIEdge.query_operation.server].skip = false), delay);
           }
-          debug(`Failed to make to following query: ${JSON.stringify(query.config)}. The error is ${error.toString()}`);
+          debug(`Failed to make to following query: ${JSON.stringify(query.config)}. The error is ${error.toString()} with ${error.stack} A`);
 
           const log_msg = `call-apis: Failed ${query_config.method.toUpperCase()} ${
             query.APIEdge.query_operation.server
@@ -199,6 +216,10 @@ module.exports = class APIQueryDispatcher {
               ).getLog(),
             );
           }
+
+          // end span
+          span.finish();
+
           return undefined;
         }
       }),
