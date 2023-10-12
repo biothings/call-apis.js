@@ -1,31 +1,74 @@
-const axios = require("axios");
-const qb = require("./builder/builde_factory");
-const queue = require("./query_queue");
-const tf = require("@biothings-explorer/api-response-transform");
-const resolver = require("biomedical_id_resolver");
-const debug = require("debug")("bte:call-apis:query");
-const LogEntry = require("./log_entry");
-const { ResolvableBioEntity } = require("biomedical_id_resolver/built/bioentity/valid_bioentity");
-const { performance } = require("perf_hooks");
-const { globalTimeout, timeoutByAPI } = require("./config/timeouts");
-const Sentry = require("@sentry/node")
-const qgh = require("@biothings-explorer/query_graph_handler");
+import axios, { AxiosRequestConfig } from "axios";
+import queryBuilder from "./builder/builder_factory";
+import queue from "./query_queue";
+import Transformer, { NodeNormalizerResultObj, Record } from "@biothings-explorer/api-response-transform";
+import {
+  resolveSRI,
+  generateInvalidBioentities,
+  getAttributes,
+  SRIResolverOutput,
+  ResolverOutput,
+} from "biomedical_id_resolver";
+import Debug from "debug";
+const debug = Debug("bte:call-apis:query");
+import LogEntry from "./log_entry";
+import {
+  APIEdge,
+  QueryHandlerOptions,
+  RedisClient,
+  TemplateBatchAPIEdge,
+  TemplateNonBatchAPIEdge,
+  UnavailableAPITracker,
+} from "./types";
+import { StampedLog } from "./log_entry";
+import { ResolvableBioEntity } from "biomedical_id_resolver/built/bioentity/valid_bioentity";
+import { performance } from "perf_hooks";
+import { globalTimeout, timeoutByAPI } from "./config/timeouts";
+import Sentry from "@sentry/node";
+import BaseQueryBuilder from "./builder/base_query_builder";
+import { BTEQueryObject } from "@biothings-explorer/api-response-transform";
+import APIQueryQueue from "./query_queue";
+import TRAPIQueryBuilder from "./builder/trapi_query_builder";
 
-async function delay_here(sec) {
+export interface QueryInfo {
+  qEdgeID: string;
+  url: string;
+  api_name: string;
+  subject: string;
+  object: string;
+  predicate: string;
+  ids: number;
+}
+
+export interface CuriesBySemanticType {
+  [semanticType: string]: string[];
+}
+
+async function delayFor(seconds: number) {
   return new Promise(resolve => {
-    setTimeout(resolve, sec * 1000);
+    setTimeout(resolve, seconds * 1000);
   });
 }
 
 /**
  * Make API Queries based on input BTE Edges, collect and align the records into BioLink Model
  */
-module.exports = class APIQueryDispatcher {
+export default class APIQueryDispatcher {
+  APIEdges: APIEdge[];
+  logs: StampedLog[];
+  options: QueryHandlerOptions;
+  totalRecords: number;
+  maxRecords: number;
+  globalMaxRecords: number;
+  stoppedOnMax: boolean;
+  nextPageQueries: number;
+  queue: APIQueryQueue;
+  redisClient: RedisClient;
   /**
    * Construct inputs for APIQueryDispatcher
    * @param {array} APIEdges - an array of BTE edges with input added
    */
-  constructor(APIEdges, options) {
+  constructor(APIEdges: APIEdge[], options: QueryHandlerOptions = {}, redisClient?: RedisClient) {
     this.APIEdges = APIEdges;
     this.logs = [];
     this.options = options;
@@ -34,9 +77,13 @@ module.exports = class APIQueryDispatcher {
     this.globalMaxRecords = parseInt(process.env.MAX_RECORDS_TOTAL) || 60000;
     this.stoppedOnMax = false;
     this.nextPageQueries = 0;
+    this.redisClient = redisClient;
   }
 
-  async _queryBucket(queries, unavailableAPIs = {}) {
+  async _queryBucket(
+    queries: BaseQueryBuilder[],
+    unavailableAPIs: UnavailableAPITracker = {},
+  ): Promise<PromiseSettledResult<Record[]>[]> {
     const dryrun_only = process.env.DRYRUN === "true";
     const res = await Promise.allSettled(
       queries.map(async query => {
@@ -45,12 +92,12 @@ module.exports = class APIQueryDispatcher {
         }
 
         const span = Sentry?.getCurrentHub()?.getScope()?.getTransaction()?.startChild({
-            description: "apiCall",
+          description: "apiCall",
         });
 
         span?.setData("apiName", query.APIEdge.association.api_name);
 
-        let query_config, n_inputs, query_info, edge_operation;
+        let query_config: AxiosRequestConfig, n_inputs: number, query_info: QueryInfo, edge_operation: string;
         try {
           query_config = query.getConfig();
           if (unavailableAPIs[query.APIEdge.query_operation.server]?.skip) {
@@ -59,8 +106,15 @@ module.exports = class APIQueryDispatcher {
           }
           if (Array.isArray(query.APIEdge.input)) {
             n_inputs = query.APIEdge.input.length;
-          } else if (query.APIEdge.input.hasOwnProperty("queryInputs")) {
-            n_inputs = Array.isArray(query.APIEdge.input.queryInputs) ? query.APIEdge.input.queryInputs.length : 1;
+          } else if (
+            typeof query.APIEdge.input == "object" &&
+            "queryInputs" in (query.APIEdge as TemplateBatchAPIEdge | TemplateNonBatchAPIEdge).input
+          ) {
+            n_inputs = Array.isArray(
+              (query.APIEdge as TemplateBatchAPIEdge | TemplateNonBatchAPIEdge).input.queryInputs,
+            )
+              ? (query.APIEdge as TemplateBatchAPIEdge | TemplateNonBatchAPIEdge).input.queryInputs.length
+              : 1;
           } else {
             n_inputs = 1;
           }
@@ -93,9 +147,8 @@ module.exports = class APIQueryDispatcher {
         }
 
         try {
-          const userAgent = `BTE/${process.env.NODE_ENV === "production" ? "prod" : "dev"} Node/${process.version} ${
-            process.platform
-          }`;
+          const userAgent = `BTE/${process.env.NODE_ENV === "production" ? "prod" : "dev"} Node/${process.version} ${process.platform
+            }`;
           query_config.headers = query_config.headers
             ? { ...query_config.headers, "User-Agent": userAgent }
             : { "User-Agent": userAgent };
@@ -104,7 +157,7 @@ module.exports = class APIQueryDispatcher {
             //delay 1s specifically for RTX KG2 at https://arax.ncats.io/api/rtxkg2/v1.2
             // https://smart-api.info/registry?q=acca268be3645a24556b81cc15ce0e9a
             debug("delay 1s for RTX KG2 KP...");
-            await delay_here(1);
+            await delayFor(1);
           }
           if (query.APIEdge.association["x-trapi"]?.rate_limit) {
             await this._rateLimit(query_info.api_name, query.APIEdge.association["x-trapi"].rate_limit);
@@ -112,8 +165,8 @@ module.exports = class APIQueryDispatcher {
 
           const startTime = performance.now();
           let queryResponse = dryrun_only ? { data: [] } : await axios(query_config);
-          debug("query success, transforming hits->records...");
           const finishTime = performance.now();
+          debug("query success, transforming hits->records...");
           const timeElapsed = Math.round(
             finishTime - startTime > 1000 ? (finishTime - startTime) / 1000 : finishTime - startTime,
           );
@@ -126,25 +179,23 @@ module.exports = class APIQueryDispatcher {
           queryResponse = null; // drop any unneeded references
           const queryNeedsPagination = query.needPagination(unTransformedHits.response);
           if (queryNeedsPagination) {
-            const log = `Query requires pagination, will re-query to window ${queryNeedsPagination}-${
-              queryNeedsPagination + 1000
-            }: ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? "s" : ""})`;
+            const log = `Query requires pagination, will re-query to window ${queryNeedsPagination}-${queryNeedsPagination + 1000
+              }: ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? "s" : ""})`;
             debug(log);
             if (queryNeedsPagination >= 9000) {
-              const log = `Biothings query reaches 10,000 max: ${query.APIEdge.query_operation.server} (${n_inputs} ID${
-                n_inputs > 1 ? "s" : ""
-              })`;
+              const log = `Biothings query reaches 10,000 max: ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? "s" : ""
+                })`;
               debug(log);
               this.logs.push(new LogEntry("WARNING", null, log).getLog());
             }
           }
-          let tf_obj = new tf.Transformer(unTransformedHits, this.options);
-          let transformedRecords = (await tf_obj.transform()).filter(record => {
+          let transformer = new Transformer(unTransformedHits as BTEQueryObject, this.options);
+          const transformedRecords = (await transformer.transform()).filter(record => {
             return record !== undefined;
           });
           // drop untransformed data (get back a tiny bit of memory sooner)
           unTransformedHits = null;
-          tf_obj = null;
+          transformer = null;
 
           this.totalRecords += transformedRecords.length;
           if (global.queryInformation?.queryGraph) {
@@ -173,8 +224,8 @@ module.exports = class APIQueryDispatcher {
             }).getLog(),
           );
 
-        // end span
-        span?.finish();
+          // end span
+          span?.finish();
 
           return transformedRecords;
         } catch (error) {
@@ -194,11 +245,14 @@ module.exports = class APIQueryDispatcher {
               : 6000; // default wait for a minute
             setTimeout(() => (unavailableAPIs[query.APIEdge.query_operation.server].skip = false), delay);
           }
-          debug(`Failed to make to following query: ${JSON.stringify(query.config)}. The error is ${error.toString()} with ${error.stack} A`);
+          debug(
+            `Failed to make to following query: ${JSON.stringify(
+              query.config,
+            )}. The error is ${error.toString()} with ${error.stack} A`,
+          );
 
-          const log_msg = `call-apis: Failed ${query_config.method.toUpperCase()} ${
-            query.APIEdge.query_operation.server
-          } (${n_inputs} ID${n_inputs > 1 ? "s" : ""}): ${edge_operation}: (${error.toString()})`;
+          const log_msg = `call-apis: Failed ${query_config.method.toUpperCase()} ${query.APIEdge.query_operation.server
+            } (${n_inputs} ID${n_inputs > 1 ? "s" : ""}): ${edge_operation}: (${error.toString()})`;
           this.logs.push(
             new LogEntry("ERROR", null, log_msg, {
               type: "query",
@@ -228,15 +282,14 @@ module.exports = class APIQueryDispatcher {
     return res;
   }
 
-  async _rateLimit(api, count) {
-    if (qgh.redisClient.clientEnabled) {
-      const usage = await qgh.redisClient.client.incrTimeout(`APIUsageCount:${api}`);
-      await qgh.redisClient.client.expireTimeout(`APIUsageCount:${api}`, 60);
+  async _rateLimit(api: string, count: number): Promise<void> {
+    if (this.redisClient.clientEnabled) {
+      const usage = await this.redisClient.client.incrTimeout(`APIUsageCount:${api}`);
+      await this.redisClient.client.expireTimeout(`APIUsageCount:${api}`, 60);
       if (usage >= count) {
-        await qgh.redisClient.client.decrTimeout(`APIUsageCount:${api}`);
+        await this.redisClient.client.decrTimeout(`APIUsageCount:${api}`);
         debug(
-          `API ${api} is rate-limited and is at maximum (${count}) requests per minute. Checking again in ${
-            60000 / count
+          `API ${api} is rate-limited and is at maximum (${count}) requests per minute. Checking again in ${60000 / count
           }ms`,
         );
         return new Promise(resolve => {
@@ -248,8 +301,8 @@ module.exports = class APIQueryDispatcher {
       } else {
         debug(`Rate-limited API ${api} is free to use (${usage || 0}/${count}), querying...`);
         setTimeout(async () => {
-          await qgh.redisClient.client.decrTimeout(`APIUsageCount:${api}`);
-          await qgh.redisClient.client.expireTimeout(`APIUsageCount:${api}`, 60);
+          await this.redisClient.client.decrTimeout(`APIUsageCount:${api}`);
+          await this.redisClient.client.expireTimeout(`APIUsageCount:${api}`, 60);
         }, 60000);
       }
     } else {
@@ -258,12 +311,12 @@ module.exports = class APIQueryDispatcher {
     }
   }
 
-  _getTimeout(apiID) {
+  _getTimeout(apiID: string): number {
     if (timeoutByAPI[apiID] !== undefined) return timeoutByAPI[apiID];
     return globalTimeout;
   }
 
-  _checkIfNext(queries) {
+  _checkIfNext(queries: BaseQueryBuilder[]): void {
     queries.map(query => {
       if (query.hasNext === true) {
         this.queue.addQuery(query);
@@ -272,52 +325,42 @@ module.exports = class APIQueryDispatcher {
     });
   }
 
-  _constructQueries(APIEdges) {
+  _constructQueries(APIEdges: APIEdge[]) {
     return APIEdges.map(edge => {
-      const built = qb(edge);
-      built.addSubmitter?.(this.options.submitter);
+      const built = queryBuilder(edge);
+      if (built instanceof TRAPIQueryBuilder) {
+        built.addSubmitter?.(this.options.submitter);
+      }
       return built;
     });
   }
 
-  _constructQueue(queries) {
+  _constructQueue(queries: BaseQueryBuilder[]): void {
     this.queue = new queue(queries);
     this.queue.constructQueue(queries);
   }
 
-  checkMaxRecords() {
+  checkMaxRecords(): boolean {
     return (
       (this.maxRecords > 0 && this.totalRecords >= this.maxRecords) ||
       (this.globalMaxRecords > 0 && global.queryInformation?.totalRecords > this.globalMaxRecords)
     );
   }
 
-  async query(resolveOutputIDs = true, unavailableAPIs = {}) {
+  async query(resolveOutputIDs = true, unavailableAPIs: UnavailableAPITracker = {}): Promise<Record[]> {
     let message = `Resolving ID feature is turned ${resolveOutputIDs ? "on" : "off"}`;
     debug(message);
-    this.logs.push(
-      new LogEntry(
-        "DEBUG",
-        null,
-        message,
-      ).getLog(),
-    );
+    this.logs.push(new LogEntry("DEBUG", null, message).getLog());
     message = `call-apis: ${this.APIEdges.length} planned queries for edge ${this.APIEdges[0].reasoner_edge?.id}`;
     debug(message);
-    this.logs.push(
-      new LogEntry(
-        "DEBUG",
-        null,
-        message,
-      ).getLog(),
-    );
-    let queryResponseRecords = [];
+    this.logs.push(new LogEntry("DEBUG", null, message).getLog());
+    let queryResponseRecords: PromiseSettledResult<Record[]>[] = [];
     const queries = this._constructQueries(this.APIEdges);
     this._constructQueue(queries);
     const startTime = performance.now();
     while (this.queue.queue.length > 0) {
       const bucket = this.queue.queue[0].getBucket();
-      let newResponseRecords = await this._queryBucket(bucket, unavailableAPIs);
+      const newResponseRecords = await this._queryBucket(bucket, unavailableAPIs);
       queryResponseRecords = [...queryResponseRecords, ...newResponseRecords];
       this._checkIfNext(bucket);
 
@@ -325,9 +368,7 @@ module.exports = class APIQueryDispatcher {
       if (!this.checkMaxRecords()) continue;
       const stoppedOnGlobalMax =
         this.globalMaxRecords > 0 && global.queryInformation?.totalRecords >= this.globalMaxRecords;
-      const remainingSubQueries = this.queue.queue.reduce((count, bucket) => {
-        return bucket.bucket ? count + bucket.bucket.length : count + bucket.length;
-      }, 0);
+      const remainingSubQueries = this.queue.queue.reduce((count, bucket) => bucket.bucket.length + count, 0);
       let message = [
         `QEdge ${this.APIEdges[0].reasoner_edge?.id}`,
         `obtained ${this.totalRecords} records,`,
@@ -357,7 +398,7 @@ module.exports = class APIQueryDispatcher {
         break;
       }
       try {
-        let server;
+        let server: string;
         switch (process.env.INSTANCE_ENV ?? "") {
           case "dev":
             server = "api.bte.ncats.io";
@@ -384,8 +425,8 @@ module.exports = class APIQueryDispatcher {
             global.queryInformation.callback_url
               ? ` (callback: ${global.queryInformation.callback_url}): `
               : global.queryInformation.jobID
-              ? ` (no callback provided): `
-              : `: `,
+                ? ` (no callback provided): `
+                : `: `,
             "\n\n",
           ].join(""),
         );
@@ -445,7 +486,7 @@ module.exports = class APIQueryDispatcher {
   /**
    * Merge the records into a single array from Promise.allSettled
    */
-  _merge(queryResponseRecords) {
+  _merge(queryResponseRecords: PromiseSettledResult<Record[]>[]): Record[] {
     let mergedRecords = [];
     queryResponseRecords.map(responseRecords => {
       // value is an array of records
@@ -457,25 +498,25 @@ module.exports = class APIQueryDispatcher {
   }
 
   // Deprecated
-  _groupOutputIDsBySemanticType(records) {
-    const output_ids = {};
-    records.map(record => {
-      if (record && record.association) {
-        const output_type = record.association.output_type;
-        if (!(output_type in output_ids)) {
-          output_ids[output_type] = new Set();
-        }
-        output_ids[output_type].add(record.object.original);
-      }
-    });
-    for (const key in output_ids) {
-      output_ids[key] = [...output_ids[key]];
-    }
-    return output_ids;
-  }
+  // _groupOutputIDsBySemanticType(records) {
+  //   const output_ids = {};
+  //   records.map(record => {
+  //     if (record && record.association) {
+  //       const output_type = record.association.output_type;
+  //       if (!(output_type in output_ids)) {
+  //         output_ids[output_type] = new Set();
+  //       }
+  //       output_ids[output_type].add(record.object.original);
+  //     }
+  //   });
+  //   for (const key in output_ids) {
+  //     output_ids[key] = [...output_ids[key]];
+  //   }
+  //   return output_ids;
+  // }
 
-  _groupCuriesBySemanticType(records) {
-    const curies = {};
+  _groupCuriesBySemanticType(records: Record[]): CuriesBySemanticType {
+    const curies: { [semanticType: string]: Set<string> | string[] } = {};
     records.map(record => {
       if (record && record.association) {
         // INPUTS
@@ -483,40 +524,40 @@ module.exports = class APIQueryDispatcher {
         if (!(inputType in curies)) {
           curies[inputType] = new Set();
         }
-        curies[inputType].add(record.subject.original);
+        (curies[inputType] as Set<string>).add(record.subject.original);
         // OUTPUTS
         const outputType = record.association.output_type;
         if (!(outputType in curies)) {
           curies[outputType] = new Set();
         }
-        curies[outputType].add(record.object.original);
+        (curies[outputType] as Set<string>).add(record.object.original);
       }
     });
     Object.entries(curies).forEach(([semanticType, curiesOfType]) => {
       // remove undefined curies
-      let goodCuries = [...curiesOfType].filter(id => id !== undefined);
+      const goodCuries = [...curiesOfType].filter(id => id !== undefined);
       curies[semanticType] = goodCuries;
     });
-    return curies;
+    return curies as CuriesBySemanticType;
   }
 
   /**
    * Add equivalent ids to all entities using biomedical-id-resolver service
    */
-  async _annotate(records, resolveOutputIDs = true) {
+  async _annotate(records: Record[], resolveOutputIDs = true): Promise<Record[]> {
     const groupedCuries = this._groupCuriesBySemanticType(records);
-    let res;
-    let attributes;
+    let res: SRIResolverOutput | ResolverOutput;
+    let attributes: any;
     if (resolveOutputIDs === false) {
-      res = resolver.generateInvalidBioentities(groupedCuries);
+      res = generateInvalidBioentities(groupedCuries);
     } else {
-      res = await resolver.resolveSRI(groupedCuries);
-      attributes = await resolver.getAttributes(groupedCuries);
+      res = await resolveSRI(groupedCuries);
+      attributes = await getAttributes(groupedCuries);
     }
     records.map(record => {
       if (record && record !== undefined) {
-        record.object.normalizedInfo = res[record.object.original];
-        record.subject.normalizedInfo = res[record.subject.original];
+        record.object.normalizedInfo = res[record.object.original] as NodeNormalizerResultObj;
+        record.subject.normalizedInfo = res[record.subject.original] as NodeNormalizerResultObj;
       }
       // add attributes
       if (attributes && record && Object.hasOwnProperty.call(attributes, record.subject.original)) {
@@ -532,4 +573,4 @@ module.exports = class APIQueryDispatcher {
     });
     return records;
   }
-};
+}

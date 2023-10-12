@@ -2,9 +2,9 @@
   "name": "@biothings-explorer/call-apis",
   "version": "1.24.0",
   "description": "A nodejs module to make api calls for biothings explorer",
-  "main": "src/query.js",
+  "main": "built/query.js",
   "scripts": {
-    "build": "echo 'no build needed'",
+    "build": "tsc",
     "test": "jest --env=node",
     "test-cov": "jest --coverage --env=node",
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
@@ -30,7 +30,6 @@
   "homepage": "https://github.com/biothings/call-apis.js#readme",
   "dependencies": {
     "@biothings-explorer/api-response-transform": "file:../api-response-transform",
-    "@biothings-explorer/query_graph_handler": "file:../query_graph_handler",
     "axios": "^0.21.1",
     "biomedical_id_resolver": "file:../../biomedical_id_resolver",
     "debug": "^4.3.1",
@@ -44,6 +43,7 @@
     "coveralls": "^3.1.0",
     "jest": "^26.6.3",
     "standard-version": "^9.1.1"
+    "typescript": "^5.2.2"
   },
   "husky": {
     "hooks": {
