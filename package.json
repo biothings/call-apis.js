@@ -30,6 +30,7 @@
   "homepage": "https://github.com/biothings/call-apis.js#readme",
   "dependencies": {
     "@biothings-explorer/api-response-transform": "file:../api-response-transform",
+    "@sentry/node": "^7.74.0",
     "axios": "^0.21.1",
     "biomedical_id_resolver": "file:../../biomedical_id_resolver",
     "debug": "^4.3.1",
