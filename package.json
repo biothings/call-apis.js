@@ -3,8 +3,10 @@
   "version": "1.24.0",
   "description": "A nodejs module to make api calls for biothings explorer",
   "main": "built/query.js",
+  "types": "built/query.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b",
+    "prepare": "npm run build",
     "test": "jest --env=node",
     "test-cov": "jest --coverage --env=node",
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
@@ -30,21 +32,21 @@
   "homepage": "https://github.com/biothings/call-apis.js#readme",
   "dependencies": {
     "@biothings-explorer/api-response-transform": "file:../api-response-transform",
+    "@biothings-explorer/smartapi-kg": "file:../smartapi-kg",
     "@sentry/node": "^7.74.0",
     "axios": "^0.21.1",
-    "biomedical_id_resolver": "file:../../biomedical_id_resolver",
+    "biomedical_id_resolver": "file:../biomedical_id_resolver",
     "debug": "^4.3.1",
     "husky": "^4.3.8",
     "nunjucks": "^3.2.3"
   },
   "devDependencies": {
-    "@biothings-explorer/smartapi-kg": "file:../smartapi-kg",
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
     "@types/jest": "^29.5.5",
     "@types/nunjucks": "^3.2.4",
     "coveralls": "^3.1.0",
-    "jest": "^29.0.0",
+    "jest": "^29.7.0",
     "standard-version": "^9.1.1",
     "ts-jest": "^29.1.1",
     "typescript": "^5.2.2"

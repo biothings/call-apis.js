@@ -217,7 +217,7 @@ export interface ExpandedCuries {
 export interface QNode {
   id: string;
   categories: string[];
-  equivalentIDs: SRIResolvedSet;
+  equivalentIDs?: SRIResolvedSet;
   expandedCategories: string[];
   equivalentIDsUpdated: boolean;
   curie: string[];
