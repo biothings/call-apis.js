@@ -31,7 +31,7 @@ jobs:
       run: |
         pnpm run clone
         pnpm run git checkout ${{ steps.branch-name.outputs.current_branch }}
-        pnpm ci
+        pnpm i
         pnpm --filter call-apis test-cov
 
     - name: Send coverage report to codecov for visualization
