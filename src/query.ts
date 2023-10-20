@@ -147,8 +147,9 @@ export default class APIQueryDispatcher {
         }
 
         try {
-          const userAgent = `BTE/${process.env.NODE_ENV === "production" ? "prod" : "dev"} Node/${process.version} ${process.platform
-            }`;
+          const userAgent = `BTE/${process.env.NODE_ENV === "production" ? "prod" : "dev"} Node/${process.version} ${
+            process.platform
+          }`;
           query_config.headers = query_config.headers
             ? { ...query_config.headers, "User-Agent": userAgent }
             : { "User-Agent": userAgent };
@@ -179,12 +180,14 @@ export default class APIQueryDispatcher {
           queryResponse = null; // drop any unneeded references
           const queryNeedsPagination = query.needPagination(unTransformedHits.response);
           if (queryNeedsPagination) {
-            const log = `Query requires pagination, will re-query to window ${queryNeedsPagination}-${queryNeedsPagination + 1000
-              }: ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? "s" : ""})`;
+            const log = `Query requires pagination, will re-query to window ${queryNeedsPagination}-${
+              queryNeedsPagination + 1000
+            }: ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? "s" : ""})`;
             debug(log);
             if (queryNeedsPagination >= 9000) {
-              const log = `Biothings query reaches 10,000 max: ${query.APIEdge.query_operation.server} (${n_inputs} ID${n_inputs > 1 ? "s" : ""
-                })`;
+              const log = `Biothings query reaches 10,000 max: ${query.APIEdge.query_operation.server} (${n_inputs} ID${
+                n_inputs > 1 ? "s" : ""
+              })`;
               debug(log);
               this.logs.push(new LogEntry("WARNING", null, log).getLog());
             }
@@ -251,8 +254,9 @@ export default class APIQueryDispatcher {
             )}. The error is ${error.toString()} with ${error.stack} A`,
           );
 
-          const log_msg = `call-apis: Failed ${query_config.method.toUpperCase()} ${query.APIEdge.query_operation.server
-            } (${n_inputs} ID${n_inputs > 1 ? "s" : ""}): ${edge_operation}: (${error.toString()})`;
+          const log_msg = `call-apis: Failed ${query_config.method.toUpperCase()} ${
+            query.APIEdge.query_operation.server
+          } (${n_inputs} ID${n_inputs > 1 ? "s" : ""}): ${edge_operation}: (${error.toString()})`;
           this.logs.push(
             new LogEntry("ERROR", null, log_msg, {
               type: "query",
@@ -289,7 +293,8 @@ export default class APIQueryDispatcher {
       if (usage >= count) {
         await this.redisClient.client.decrTimeout(`APIUsageCount:${api}`);
         debug(
-          `API ${api} is rate-limited and is at maximum (${count}) requests per minute. Checking again in ${60000 / count
+          `API ${api} is rate-limited and is at maximum (${count}) requests per minute. Checking again in ${
+            60000 / count
           }ms`,
         );
         return new Promise(resolve => {
@@ -425,8 +430,8 @@ export default class APIQueryDispatcher {
             global.queryInformation.callback_url
               ? ` (callback: ${global.queryInformation.callback_url}): `
               : global.queryInformation.jobID
-                ? ` (no callback provided): `
-                : `: `,
+              ? ` (no callback provided): `
+              : `: `,
             "\n\n",
           ].join(""),
         );
