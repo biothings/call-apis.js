@@ -75,7 +75,7 @@ describe("test query builder class", () => {
     });
 
     test("if _getUrl nunjucks templates are filled", () => {
-      const edge_path = path.resolve(__dirname, "data/multi_input_edge.json");
+      const edge_path = path.resolve(__dirname, "../data/multi_input_edge.json");
       const edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
       const builder = new qb(edge);
       const res = builder._getUrl(edge, {
@@ -212,7 +212,7 @@ describe("test query builder class", () => {
     });
 
     test("if _getParams nunjucks templates are filled", () => {
-      const edge_path = path.resolve(__dirname, "data/multi_input_edge.json");
+      const edge_path = path.resolve(__dirname, "../data/multi_input_edge.json");
       const edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
 
       const builder = new qb(edge);
@@ -291,7 +291,7 @@ describe("test query builder class", () => {
     });
 
     test("if nunjucks _getRequestBody templates are filled", () => {
-      const edge_path = path.resolve(__dirname, "data/multi_input_edge.json");
+      const edge_path = path.resolve(__dirname, "../data/multi_input_edge.json");
       const edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
 
       const builder = new qb(edge);
