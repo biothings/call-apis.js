@@ -277,7 +277,7 @@ export type APIDefinition = {
   id?: string; // SmartAPI ID, takes priority over infores
   name: string; // Must match name on SmartAPI registry
   infores?: string; // infores of API
-  primarySource: boolean;
+  primarySource?: boolean;
 } & ({ id: string } | { infores: string });
 
 export interface APIList {
