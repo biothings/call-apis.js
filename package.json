@@ -2,16 +2,19 @@
   "name": "@biothings-explorer/call-apis",
   "version": "1.24.0",
   "description": "A nodejs module to make api calls for biothings explorer",
-  "main": "src/query.js",
+  "main": "built/query.js",
+  "types": "built/query.d.ts",
   "scripts": {
-    "build": "echo 'no build needed'",
+    "build": "tsc -b",
+    "prepare": "pnpm run build",
     "test": "jest --env=node",
     "test-cov": "jest --coverage --env=node",
-    "coveralls": "jest --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
-    "release": "standard-version",
-    "release:minor": "standard-version --release-as minor",
-    "release:patch": "standard-version --release-as patch",
-    "release:major": "standard-version --release-as major"
+    "clean": "rimraf ./built './**/tsconfig.tsbuildinfo'",
+    "build:clean": "pnpm run clean && pnpm run build",
+    "format": "prettier --check 'src/**/*.ts'",
+    "format:fix": "prettier --write 'src/**/*.ts'",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "pnpm lint --fix"
   },
   "repository": {
     "type": "git",
@@ -30,20 +33,34 @@
   "homepage": "https://github.com/biothings/call-apis.js#readme",
   "dependencies": {
     "@biothings-explorer/api-response-transform": "file:../api-response-transform",
-    "@biothings-explorer/query_graph_handler": "file:../query_graph_handler",
-    "axios": "^0.21.1",
-    "biomedical_id_resolver": "file:../../biomedical_id_resolver",
-    "debug": "^4.3.1",
+    "@biothings-explorer/smartapi-kg": "file:../smartapi-kg",
+    "@sentry/node": "^7.74.1",
+    "axios": "^0.21.4",
+    "biomedical_id_resolver": "file:../biomedical_id_resolver",
+    "debug": "^4.3.4",
     "husky": "^4.3.8",
-    "nunjucks": "^3.2.3"
+    "nunjucks": "^3.2.4"
   },
   "devDependencies": {
-    "@biothings-explorer/smartapi-kg": "file:../smartapi-kg",
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
-    "coveralls": "^3.1.0",
-    "jest": "^26.6.3",
-    "standard-version": "^9.1.1"
+    "@types/debug": "^4.1.10",
+    "@types/jest": "^29.5.6",
+    "@types/lodash": "^4.14.200",
+    "@types/node": "^20.8.7",
+    "@types/nunjucks": "^3.2.5",
+    "@typescript-eslint/eslint-plugin": "^6.8.0",
+    "@typescript-eslint/parser": "^6.8.0",
+    "coveralls": "^3.1.1",
+    "eslint": "^8.52.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "jest": "^29.7.0",
+    "prettier": "^3.0.3",
+    "rimraf": "^3.0.2",
+    "standard-version": "^9.5.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
   },
   "husky": {
     "hooks": {

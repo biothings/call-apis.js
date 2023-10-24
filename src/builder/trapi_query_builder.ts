@@ -1,27 +1,18 @@
+import type { APIEdge, TrapiResponse } from "../types";
+import { AxiosRequestConfig, Method } from "axios";
+import { TrapiRequest } from "../types";
+import BaseQueryBuilder from "./base_query_builder";
+
 /**
  * Build API queries serving as input for Axios library based on BTE Edge info
  */
-const nunjucks = require("nunjucks");
-const nunjucksConfig = require("./nunjucks_config");
-const env = nunjucks.configure({ autoescape: false });
-nunjucksConfig(env);
-module.exports = class TRAPIQueryBuilder {
-  /**
-   * Constructor for Query Builder
-   * @param {object} APIEdge - BTE Edge object with input field provided
-   */
-  constructor(APIEdge) {
-    this.start = 0;
-    this.hasNext = false;
-    this.APIEdge = APIEdge;
-    this.originalSubmitter;
-  }
+export default class TRAPIQueryBuilder extends BaseQueryBuilder {
+  start: number;
+  hasNext: boolean;
+  APIEdge: APIEdge;
+  originalSubmitter: string;
 
-  getUrl() {
-    return this.APIEdge.query_operation.server + this.APIEdge.query_operation.path;
-  }
-
-  _getUrl(APIEdge, input) {
+  _getUrl(APIEdge: APIEdge, input: string | string[]): string {
     let server = APIEdge.query_operation.server;
     if (server.endsWith("/")) {
       server = server.substring(0, server.length - 1);
@@ -29,29 +20,28 @@ module.exports = class TRAPIQueryBuilder {
     let path = APIEdge.query_operation.path;
     if (Array.isArray(APIEdge.query_operation.path_params)) {
       APIEdge.query_operation.path_params.map(param => {
-        const val = APIEdge.query_operation.params[param];
-        path = path.replace("{" + param + "}", val).replace("{inputs[0]}", input);
+        const val = String(APIEdge.query_operation.params[param]);
+        path = path.replace("{" + param + "}", val).replace("{inputs[0]}", String(input));
       });
     }
     return server + path;
   }
-
   /**
    * Construct input based on method and inputSeparator
    */
-  _getInput(APIEdge) {
-    return APIEdge.input;
+  _getInput(APIEdge: APIEdge): string[] {
+    return APIEdge.input as string[];
   }
 
-  addSubmitter(submitter) {
+  addSubmitter(submitter: string): void {
     this.originalSubmitter = submitter;
   }
 
   /**
    * Construct TRAPI request body
    */
-  _getRequestBody(APIEdge, input) {
-    const qg = {
+  _getRequestBody(APIEdge: APIEdge, input: string | string[]): TrapiRequest {
+    const queryGraph: TrapiRequest = {
       message: {
         query_graph: {
           nodes: {
@@ -76,7 +66,7 @@ module.exports = class TRAPIQueryBuilder {
     };
     const qualifierConstraints = APIEdge.reasoner_edge?.getQualifierConstraints?.();
     if (qualifierConstraints) {
-      qg.message.query_graph.edges.e01.qualifier_constraints = qualifierConstraints;
+      queryGraph.message.query_graph.edges.e01.qualifier_constraints = qualifierConstraints;
     }
     const xmaturityMap = {
       ci: "staging",
@@ -84,20 +74,20 @@ module.exports = class TRAPIQueryBuilder {
       prod: "prod",
       dev: "dev",
     };
-    if (process.env.INSTANCE_ENV) qg.submitter += `; bte-${xmaturityMap[process.env.INSTANCE_ENV]}`;
-    if (this.originalSubmitter) qg.submitter += `; subquery for client "${this.originalSubmitter}"`;
-    return qg;
+    if (process.env.INSTANCE_ENV) queryGraph.submitter += `; bte-${xmaturityMap[process.env.INSTANCE_ENV]}`;
+    if (this.originalSubmitter) queryGraph.submitter += `; subquery for client "${this.originalSubmitter}"`;
+    return queryGraph;
   }
 
   /**
    * Construct the request config for Axios reqeust.
    */
-  constructAxiosRequestConfig() {
+  constructAxiosRequestConfig(): AxiosRequestConfig {
     const input = this._getInput(this.APIEdge);
     const config = {
       url: this._getUrl(this.APIEdge, input),
       data: this._getRequestBody(this.APIEdge, input),
-      method: this.APIEdge.query_operation.method,
+      method: this.APIEdge.query_operation.method as Method,
       headers: {
         "Content-Type": "application/json",
       },
@@ -106,20 +96,20 @@ module.exports = class TRAPIQueryBuilder {
     return config;
   }
 
-  needPagination(apiResponse) {
+  needPagination(apiResponse: TrapiResponse): number {
     this.hasNext = false;
-    return false;
+    return 0;
   }
 
-  getNext() {
-    const config = this.constructAxiosRequestConfig(this.APIEdge);
+  getNext(): AxiosRequestConfig {
+    const config = this.constructAxiosRequestConfig();
     return config;
   }
 
-  getConfig() {
+  getConfig(): AxiosRequestConfig {
     if (this.hasNext === false) {
-      return this.constructAxiosRequestConfig(this.APIEdge);
+      return this.constructAxiosRequestConfig();
     }
     return this.getNext();
   }
-};
+}

@@ -16,7 +16,7 @@ A nodejs module to make API calls in batch mode for BioThings Explorer
 ## Install
 
 ```sh
-npm i @biothings-explorer/call-apis
+pnpm i @biothings-explorer/call-apis
 ```
 
 ## Usage
@@ -30,7 +30,7 @@ npm i @biothings-explorer/call-apis
 ## Run tests
 
 ```sh
-npm run test
+pnpm run test
 ```
 
 ## Author

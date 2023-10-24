@@ -1,0 +1,36 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "built",
+    "paths": {
+      "@biothings-explorer/smartapi-kg": [
+        "../smartapi-kg"
+      ],
+      "@biothings-explorer/api-response-transform": [
+        "../api-response-transform"
+      ],
+      "biomedical_id_resolver": [
+        "../biomedical_id_resolver"
+      ]
+    }
+  },
+  "include": [
+    "./src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "__test__/"
+  ],
+  "references": [
+    {
+      "path": "../api-response-transform"
+    },
+    {
+      "path": "../biomedical_id_resolver"
+    },
+    {
+      "path": "../smartapi-kg"
+    }
+  ]
+}
