@@ -21,7 +21,9 @@ export default class TRAPIQueryBuilder extends BaseQueryBuilder {
     if (Array.isArray(APIEdge.query_operation.path_params)) {
       APIEdge.query_operation.path_params.map(param => {
         const val = String(APIEdge.query_operation.params[param]);
-        path = path.replace("{" + param + "}", val).replace("{inputs[0]}", String(input));
+        path = path
+          .replace("{" + param + "}", val)
+          .replace("{inputs[0]}", String(input));
       });
     }
     return server + path;
@@ -66,7 +68,8 @@ export default class TRAPIQueryBuilder extends BaseQueryBuilder {
     };
     const qualifierConstraints = APIEdge.reasoner_edge?.getQualifierConstraints?.();
     if (qualifierConstraints) {
-      queryGraph.message.query_graph.edges.e01.qualifier_constraints = qualifierConstraints;
+      queryGraph.message.query_graph.edges.e01.qualifier_constraints =
+        qualifierConstraints;
     }
     const xmaturityMap = {
       ci: "staging",
@@ -74,8 +77,10 @@ export default class TRAPIQueryBuilder extends BaseQueryBuilder {
       prod: "prod",
       dev: "dev",
     };
-    if (process.env.INSTANCE_ENV) queryGraph.submitter += `; bte-${xmaturityMap[process.env.INSTANCE_ENV]}`;
-    if (this.originalSubmitter) queryGraph.submitter += `; subquery for client "${this.originalSubmitter}"`;
+    if (process.env.INSTANCE_ENV)
+      queryGraph.submitter += `; bte-${xmaturityMap[process.env.INSTANCE_ENV]}`;
+    if (this.originalSubmitter)
+      queryGraph.submitter += `; subquery for client "${this.originalSubmitter}"`;
     return queryGraph;
   }
 

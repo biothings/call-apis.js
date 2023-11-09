@@ -1,7 +1,7 @@
 import { SmartAPIKGOperationObject } from "@biothings-explorer/smartapi-kg";
 import { SmartAPISpec } from "@biothings-explorer/smartapi-kg";
 import { Record } from "@biothings-explorer/api-response-transform";
-import { StampedLog } from "./log_entry";
+import { StampedLog } from "@biothings-explorer/utils";
 import { SRIBioEntity } from "biomedical_id_resolver";
 
 /* TODO: most of these are temporarily pulled from other packages
@@ -23,7 +23,7 @@ declare global {
     jobID?: string;
     callback_url?: string;
   };
-  var job: any; // TODO type as Piscina job
+  var job: { log: (logString: string) => void }; // TODO type as Piscina job
 }
 export interface QueryParams {
   [paramName: string]: unknown;
@@ -102,7 +102,13 @@ export interface TrapiAttribute {
   attribute_source?: string | null;
   value_url?: string | null;
   attributes?: TrapiAttribute;
-  [additionalProperties: string]: string | string[] | null | TrapiAttribute | number | number[];
+  [additionalProperties: string]:
+  | string
+  | string[]
+  | null
+  | TrapiAttribute
+  | number
+  | number[];
 }
 
 export interface TrapiQualifier {
@@ -278,6 +284,7 @@ export type APIDefinition = {
   name: string; // Must match name on SmartAPI registry
   infores?: string; // infores of API
   primarySource?: boolean;
+  timeout?: number;
 } & ({ id: string } | { infores: string });
 
 export interface APIList {
@@ -308,7 +315,9 @@ export interface UnavailableAPITracker {
 interface RedisClientInterface {
   getTimeout: (key: string) => Promise<string>;
   setTimeout: (key: string, value: string | number | Buffer) => Promise<"OK">;
-  hsetTimeout: (...args: [key: string, ...fieldValues: (string | Buffer | number)[]]) => Promise<number>;
+  hsetTimeout: (
+    ...args: [key: string, ...fieldValues: (string | Buffer | number)[]]
+  ) => Promise<number>;
   hgetallTimeout: (key: string) => Promise<unknown>;
   expireTimeout: (key: string, seconds: string | number) => Promise<number>;
   delTimeout: (...args: string[]) => Promise<number>;

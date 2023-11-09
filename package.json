@@ -2,8 +2,8 @@
   "name": "@biothings-explorer/call-apis",
   "version": "1.24.0",
   "description": "A nodejs module to make api calls for biothings explorer",
-  "main": "built/query.js",
-  "types": "built/query.d.ts",
+  "main": "built/index.js",
+  "types": "built/index.d.ts",
   "scripts": {
     "build": "tsc -b",
     "prepare": "pnpm run build",
@@ -34,9 +34,11 @@
   "dependencies": {
     "@biothings-explorer/api-response-transform": "workspace:../api-response-transform",
     "@biothings-explorer/smartapi-kg": "workspace:../smartapi-kg",
+    "biomedical_id_resolver": "workspace:../biomedical_id_resolver",
+    "@biothings-explorer/utils": "workspace:../utils",
     "@sentry/node": "^7.74.1",
     "axios": "^0.21.4",
-    "biomedical_id_resolver": "workspace:../biomedical_id_resolver",
+    "axios-retry": "^3.8.1",
     "debug": "^4.3.4",
     "husky": "^4.3.8",
     "nunjucks": "^3.2.4"

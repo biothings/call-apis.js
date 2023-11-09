@@ -5,7 +5,9 @@ import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
 import type { APIEdge } from "../types";
 
-function builderFactory(APIEdge: APIEdge): TRAPIQueryBuilder | TemplateQueryBuilder | QueryBuilder {
+function builderFactory(
+  APIEdge: APIEdge,
+): TRAPIQueryBuilder | TemplateQueryBuilder | QueryBuilder {
   if ("tags" in APIEdge && APIEdge.tags.includes("bte-trapi")) {
     debug(`using trapi builder now`);
     return new TRAPIQueryBuilder(APIEdge);
