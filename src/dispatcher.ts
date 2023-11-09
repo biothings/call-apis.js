@@ -2,7 +2,11 @@ import { Record } from "@biothings-explorer/api-response-transform";
 import BaseQueryBuilder from "./builder/base_query_builder";
 import APIQueryPool from "./query_pool";
 import APIQueryQueue from "./query_queue";
-import { QueryHandlerOptions, RedisClient, UnavailableAPITracker } from "./types";
+import {
+  QueryHandlerOptions,
+  RedisClient,
+  UnavailableAPITracker,
+} from "./types";
 import { LogEntry, StampedLog } from "@biothings-explorer/utils";
 import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
@@ -44,13 +48,20 @@ export default class SubQueryDispatcher {
   }
 
   async execute(): Promise<{ records: Record[]; logs: StampedLog[] }> {
+    const promise: Promise<{ records: Record[]; logs: StampedLog[] }> =
+      new Promise(resolve => {
+        this.complete = ({
+          records,
+          logs,
+        }: {
+          records: Record[];
+          logs: StampedLog[];
+        }) => resolve({ records, logs });
+      });
     for (let i = 0; i < this.pool.size; i++) {
       await this.queryPool();
     }
-    return new Promise(resolve => {
-      this.complete = ({ records, logs }: { records: Record[]; logs: StampedLog[] }) =>
-        resolve({ records, logs });
-    });
+    return promise;
   }
 
   async queryPool(): Promise<void> {
@@ -90,10 +101,12 @@ export default class SubQueryDispatcher {
     if (records) {
       this.records.push(...records);
 
-      const globalRecords = global.queryInformation.totalRecords;
-      global.queryInformation.totalRecords = globalRecords
-        ? globalRecords + records.length
-        : records.length;
+      const globalRecords = global.queryInformation?.totalRecords;
+      if (global.queryInformation) {
+        global.queryInformation.totalRecords = globalRecords
+          ? globalRecords + records.length
+          : records.length;
+      }
     }
     if (followUp) this.queue.add(followUp);
     this.currentlyDispatched -= 1;
@@ -126,7 +139,9 @@ export default class SubQueryDispatcher {
             ],
           );
           debug(message.join(" "));
-          this.logs.push(new LogEntry("WARNING", null, message.join(" ")).getLog());
+          this.logs.push(
+            new LogEntry("WARNING", null, message.join(" ")).getLog(),
+          );
           this.complete({ logs: this.logs });
         }
       }
