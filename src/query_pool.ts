@@ -41,7 +41,7 @@ export default class APIQueryPool {
   constructor(options: QueryHandlerOptions) {
     this.stop = false;
     this.options = options;
-    this.size = os.cpus().length * 2;
+    this.size = os.cpus().length * 4;
     this.usage = 0;
   }
 
