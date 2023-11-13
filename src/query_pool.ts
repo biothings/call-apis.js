@@ -16,7 +16,7 @@ import { Telemetry, LogEntry, StampedLog } from "@biothings-explorer/utils";
 import axiosRetry from "axios-retry";
 
 const SUBQUERY_DEFAULT_TIMEOUT = parseInt(
-  process.env.SUBQUERY_DEFAULT_TIMEOUT ?? "30000",
+  process.env.SUBQUERY_DEFAULT_TIMEOUT ?? "50000",
 );
 
 export interface QueryInfo {
