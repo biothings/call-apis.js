@@ -235,7 +235,9 @@ export default class APIQueryPool {
         }
         followUp.push(query);
       }
-
+      const transformSpan = Telemetry.startSpan({
+        description: "transformRecords",
+      });
       // have to go through unknown for now to avoid conversion warnings
       // TODO eventually fix this when we pull out more types
       const transformer = new Transformer(
@@ -247,6 +249,7 @@ export default class APIQueryPool {
           return record !== undefined;
         },
       );
+      transformSpan.finish();
 
       if (global.queryInformation?.queryGraph) {
         const globalRecords = global.queryInformation.totalRecords;

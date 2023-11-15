@@ -7,7 +7,7 @@ import {
   RedisClient,
   UnavailableAPITracker,
 } from "./types";
-import { LogEntry, StampedLog } from "@biothings-explorer/utils";
+import { LogEntry, StampedLog, Telemetry } from "@biothings-explorer/utils";
 import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
 
@@ -143,6 +143,11 @@ export default class SubQueryDispatcher {
             new LogEntry("WARNING", null, message.join(" ")).getLog(),
           );
           this.complete({ logs: this.logs });
+          Telemetry.captureException(
+            new Error(
+              `Stopped on globalMaxRecords: ${global.queryInformation.totalRecords} > ${this.globalMaxRecords}`,
+            ),
+          );
         }
       }
       this.wrapup();
