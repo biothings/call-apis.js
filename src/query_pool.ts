@@ -175,6 +175,8 @@ export default class APIQueryPool {
         ? { ...(queryConfig.headers as headers), "User-Agent": userAgent }
         : { "User-Agent": userAgent };
 
+      span?.setData("queryBody", queryConfig.data);
+
       const startTime = performance.now();
 
       // @ts-expect-error Some weird typing mismatch that doesn't break anything
@@ -223,13 +225,16 @@ export default class APIQueryPool {
         unTransformedHits.response,
       );
       if (queryNeedsPagination) {
-        const log = `Query requires pagination, will re-query to window ${queryNeedsPagination}-${queryNeedsPagination + 1000
-          }: ${query.APIEdge.query_operation.server} (${nInputs} ID${nInputs > 1 ? "s" : ""
-          })`;
+        const log = `Query requires pagination, will re-query to window ${queryNeedsPagination}-${
+          queryNeedsPagination + 1000
+        }: ${query.APIEdge.query_operation.server} (${nInputs} ID${
+          nInputs > 1 ? "s" : ""
+        })`;
         debug(log);
         if (queryNeedsPagination >= 9000) {
-          const log = `Biothings query reaches 10,000 max: ${query.APIEdge.query_operation.server
-            } (${nInputs} ID${nInputs > 1 ? "s" : ""})`;
+          const log = `Biothings query reaches 10,000 max: ${
+            query.APIEdge.query_operation.server
+          } (${nInputs} ID${nInputs > 1 ? "s" : ""})`;
           debug(log);
           logs.push(new LogEntry("WARNING", null, log).getLog());
         }
