@@ -145,7 +145,7 @@ export default class SubQueryDispatcher {
           this.complete({ logs: this.logs });
           Telemetry.captureException(
             new Error(
-              `Stopped on globalMaxRecords: ${global.queryInformation.totalRecords} > ${this.globalMaxRecords}`,
+              `Stopped on globalMaxRecords (exceeded ${this.globalMaxRecords})`,
             ),
           );
         }
