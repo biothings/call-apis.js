@@ -40,8 +40,8 @@ export default class SubQueryDispatcher {
     this.pool = new APIQueryPool(options);
     this.records = [];
     this.currentlyDispatched = 0;
-    this.maxRecords = parseInt(process.env.MAX_RECORDS_PER_EDGE) || 30000;
-    this.globalMaxRecords = parseInt(process.env.MAX_RECORDS_TOTAL) || 60000;
+    this.maxRecords = parseInt(process.env.MAX_RECORDS_PER_EDGE) || 50000;
+    this.globalMaxRecords = parseInt(process.env.MAX_RECORDS_TOTAL) || 100000;
     this.totalRecords = 0;
     this.done = false;
     this.logs = [];
