@@ -164,7 +164,7 @@ export default class APIQueryDispatcher {
     const timeUnits = finishTime - startTime > 1000 ? "s" : "ms";
 
     debug("query completes.");
-    message = `Total number of records returend for this qEdge is ${records.length}`;
+    message = `Total number of records returned for this qEdge is ${records.length}`;
     debug(message);
     this.logs.push(new LogEntry("DEBUG", null, message).getLog());
 
