@@ -113,7 +113,7 @@ export interface TrapiAttribute {
 
 export interface TrapiQualifier {
   qualifier_type_id: string;
-  qualifier_value: string;
+  qualifier_value: string | string[];
 }
 
 export interface TrapiQualifierConstraint {
