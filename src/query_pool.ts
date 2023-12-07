@@ -165,6 +165,8 @@ export default class APIQueryPool {
     const { queryConfig, nInputs, queryInfo, edgeOperation } =
       queryConfigAttempt;
 
+    debug(queryConfig);
+
     try {
       const userAgent = [
         `BTE/${process.env.NODE_ENV === "production" ? "prod" : "dev"}`,
