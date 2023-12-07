@@ -37,7 +37,9 @@ export default class QueryBuilder extends BaseQueryBuilder {
   _getInput(APIEdge: APIEdge): string {
     if (APIEdge.query_operation.supportBatch === true) {
       if (Array.isArray(APIEdge.input)) {
-        return (APIEdge as BatchAPIEdge).input.join(APIEdge.query_operation.inputSeparator);
+        return (APIEdge as BatchAPIEdge).input.join(
+          APIEdge.query_operation.inputSeparator,
+        );
       }
     }
     return (APIEdge as NonBatchAPIEdge).input;
@@ -49,11 +51,17 @@ export default class QueryBuilder extends BaseQueryBuilder {
   _getParams(APIEdge: APIEdge, input: string): QueryParams {
     const params: QueryParams = {};
     Object.keys(APIEdge.query_operation.params).map(param => {
-      if (Array.isArray(APIEdge.query_operation.path_params) && APIEdge.query_operation.path_params.includes(param)) {
+      if (
+        Array.isArray(APIEdge.query_operation.path_params) &&
+        APIEdge.query_operation.path_params.includes(param)
+      ) {
         return;
       }
       if (typeof APIEdge.query_operation.params[param] === "string") {
-        params[param] = (APIEdge.query_operation.params[param] as string).replace("{inputs[0]}", input);
+        params[param] = (APIEdge.query_operation.params[param] as string).replace(
+          "{inputs[0]}",
+          input,
+        );
       } else {
         params[param] = APIEdge.query_operation.params[param];
       }
@@ -65,10 +73,18 @@ export default class QueryBuilder extends BaseQueryBuilder {
    * Construct request body for API calls
    */
   _getRequestBody(APIEdge: APIEdge, input: string): string {
-    if (APIEdge.query_operation.request_body !== undefined && "body" in APIEdge.query_operation.request_body) {
+    if (
+      APIEdge.query_operation.request_body !== undefined &&
+      "body" in APIEdge.query_operation.request_body
+    ) {
       const body = APIEdge.query_operation.request_body.body;
       const data = Object.keys(body).reduce(
-        (accumulator, key) => accumulator + key + "=" + body[key].toString().replace("{inputs[0]}", input) + "&",
+        (accumulator, key) =>
+          accumulator +
+          key +
+          "=" +
+          body[key].toString().replace("{inputs[0]}", input) +
+          "&",
         "",
       );
       return data.substring(0, data.length - 1);
@@ -91,8 +107,14 @@ export default class QueryBuilder extends BaseQueryBuilder {
   }
 
   needPagination(apiResponse: unknown): number {
-    if (this.APIEdge.query_operation.method === "get" && this.APIEdge.tags.includes("biothings")) {
-      if ((apiResponse as BiothingsResponse).total > this.start + (apiResponse as BiothingsResponse).hits.length) {
+    if (
+      this.APIEdge.query_operation.method === "get" &&
+      this.APIEdge.tags.includes("biothings")
+    ) {
+      if (
+        (apiResponse as BiothingsResponse).total >
+        this.start + (apiResponse as BiothingsResponse).hits.length
+      ) {
         if (this.start + (apiResponse as BiothingsResponse).hits.length < 10000) {
           this.hasNext = true;
           return this.start + 1000;

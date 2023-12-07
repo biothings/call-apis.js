@@ -1,4 +1,4 @@
-import APIQueryDispatcher from "../../src/query";
+import APIQueryDispatcher, { RedisClient } from "../../src/index";
 import fs from "fs";
 import path from "path";
 import axios from "axios";
@@ -28,7 +28,7 @@ describe("Integration test", () => {
       axios.mockResolvedValue({ data: JSON.parse(fs.readFileSync(result_path, { encoding: "utf8" })) });
     });
     test("check response", async () => {
-      const query = new APIQueryDispatcher([edge]);
+      const query = new APIQueryDispatcher([edge], {}, { redisClient: { clientEnabled: false } } as unknown as RedisClient);
       const res = await query.query();
       expect([...res.reduce((set, record) => set.add(record.recordHash), new Set())]).toHaveLength(28);
     });
@@ -42,7 +42,7 @@ describe("Integration test", () => {
       edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
     });
     test("check response", async () => {
-      const query = new APIQueryDispatcher([edge]);
+      const query = new APIQueryDispatcher([edge], {}, { redisClient: { clientEnabled: false } } as unknown as RedisClient);
       const res = await query.query(false);
       expect(res).toHaveLength(3762);
     });
@@ -56,7 +56,7 @@ describe("Integration test", () => {
       edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
     });
     test("check response", async () => {
-      const query = new APIQueryDispatcher([edge]);
+      const query = new APIQueryDispatcher([edge], {}, { redisClient: { clientEnabled: false } } as unknown as RedisClient);
       const res = await query.query(false);
       expect(res).toHaveLength(0);
       expect(query.logs.some(log => (log.level === "ERROR" ? true : false))).toBeTruthy();
@@ -81,7 +81,7 @@ describe("Integration test", () => {
       axios.mockResolvedValue({ data: JSON.parse(fs.readFileSync(post_result_path, { encoding: "utf8" })) });
     });
     test("check response", async () => {
-      const query = new APIQueryDispatcher(edges);
+      const query = new APIQueryDispatcher(edges, {}, { redisClient: { clientEnabled: false } } as unknown as RedisClient);
       const res = await query.query(false);
       const mydisease_res = await axios.get(
         "http://mydisease.info/v1/disease/MONDO:0002494?fields=mondo.children&dotfield=true",

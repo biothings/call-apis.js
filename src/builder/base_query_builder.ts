@@ -8,6 +8,7 @@ export default class BaseQueryBuilder {
   start: number;
   hasNext: boolean;
   APIEdge: APIEdge;
+  delayUntil: Date;
   config: AxiosRequestConfig;
   /**
    * Constructor for Query Builder
@@ -41,11 +42,17 @@ export default class BaseQueryBuilder {
   _getParams(APIEdge: APIEdge, input: string): QueryParams {
     const params: QueryParams = {};
     Object.keys(APIEdge.query_operation.params).map(param => {
-      if (Array.isArray(APIEdge.query_operation.path_params) && APIEdge.query_operation.path_params.includes(param)) {
+      if (
+        Array.isArray(APIEdge.query_operation.path_params) &&
+        APIEdge.query_operation.path_params.includes(param)
+      ) {
         return;
       }
       if (typeof APIEdge.query_operation.params[param] === "string") {
-        params[param] = (APIEdge.query_operation.params[param] as string).replace("{inputs[0]}", input);
+        params[param] = (APIEdge.query_operation.params[param] as string).replace(
+          "{inputs[0]}",
+          input,
+        );
       } else {
         params[param] = APIEdge.query_operation.params[param];
       }

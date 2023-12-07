@@ -25,7 +25,10 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
       APIEdge.query_operation.path_params.map(param => {
         const val = String(APIEdge.query_operation.params[param]);
         // cast input to any because nunjucks typing is a little broken
-        path = nunjucks.renderString(path.replace("{" + param + "}", val), input as any);
+        path = nunjucks.renderString(
+          path.replace("{" + param + "}", val),
+          input as any,
+        );
       });
     }
     return server + path;
@@ -50,12 +53,18 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
       params.with_total = true;
     }
     Object.keys(APIEdge.query_operation.params).map(param => {
-      if (Array.isArray(APIEdge.query_operation.path_params) && APIEdge.query_operation.path_params.includes(param)) {
+      if (
+        Array.isArray(APIEdge.query_operation.path_params) &&
+        APIEdge.query_operation.path_params.includes(param)
+      ) {
         return;
       }
       if (typeof APIEdge.query_operation.params[param] === "string") {
         // cast input to any because nunjucks typing is a little broken
-        params[param] = nunjucks.renderString(String(APIEdge.query_operation.params[param]), input as any);
+        params[param] = nunjucks.renderString(
+          String(APIEdge.query_operation.params[param]),
+          input as any,
+        );
       } else {
         params[param] = APIEdge.query_operation.params[param];
       }
@@ -66,8 +75,14 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
   /**
    * Construct request body for API calls
    */
-  _getRequestBody(APIEdge: APIEdge, input: string | string[] | TemplatedInput): unknown {
-    if (APIEdge.query_operation.request_body !== undefined && "body" in APIEdge.query_operation.request_body) {
+  _getRequestBody(
+    APIEdge: APIEdge,
+    input: string | string[] | TemplatedInput,
+  ): unknown {
+    if (
+      APIEdge.query_operation.request_body !== undefined &&
+      "body" in APIEdge.query_operation.request_body
+    ) {
       const body = APIEdge.query_operation.request_body.body;
       let data: unknown;
       if (APIEdge.query_operation.requestBodyType === "object") {
@@ -76,7 +91,13 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
       } else {
         data = Object.keys(body).reduce((accumulator, key) => {
           // cast input to any because nunjucks typing is a little broken
-          return accumulator + key + "=" + nunjucks.renderString(body[key].toString(), input as any) + "&";
+          return (
+            accumulator +
+            key +
+            "=" +
+            nunjucks.renderString(body[key].toString(), input as any) +
+            "&"
+          );
         }, "");
         data = (data as string).substring(0, (data as string).length - 1);
       }
@@ -101,13 +122,22 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
 
   needPagination(apiResponse: unknown): number {
     // TODO check for biothings pending, use smarter post method (also do config properly to use new parameter)
-    if (this.APIEdge.query_operation.method === "post" && this.APIEdge.tags.includes("biothings")) {
+    if (
+      this.APIEdge.query_operation.method === "post" &&
+      this.APIEdge.tags.includes("biothings")
+    ) {
       if ((apiResponse as BiothingsResponse).max_total > this.start + 1000) {
         this.hasNext = true;
         return this.start + 1000;
       }
-    } else if (this.APIEdge.query_operation.method === "get" && this.APIEdge.tags.includes("biothings")) {
-      if ((apiResponse as BiothingsResponse).total > this.start + (apiResponse as BiothingsResponse).hits.length) {
+    } else if (
+      this.APIEdge.query_operation.method === "get" &&
+      this.APIEdge.tags.includes("biothings")
+    ) {
+      if (
+        (apiResponse as BiothingsResponse).total >
+        this.start + (apiResponse as BiothingsResponse).hits.length
+      ) {
         if (this.start + (apiResponse as BiothingsResponse).hits.length < 10000) {
           this.hasNext = true;
           return this.start + 1000;
@@ -120,7 +150,10 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
 
   getNext(): AxiosRequestConfig {
     const config = this.constructAxiosRequestConfig();
-    if (this.APIEdge.query_operation.method === "post" && this.APIEdge.tags.includes("biothings")) {
+    if (
+      this.APIEdge.query_operation.method === "post" &&
+      this.APIEdge.tags.includes("biothings")
+    ) {
       this.start = this.start + 1000;
       config.params.from = this.start;
     } else {

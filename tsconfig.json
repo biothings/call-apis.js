@@ -2,27 +2,17 @@
   "$schema": "http://json.schemastore.org/tsconfig",
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "built",
+    "rootDir": "./src",
+    "outDir": "./built",
     "paths": {
-      "@biothings-explorer/smartapi-kg": [
-        "../smartapi-kg"
-      ],
-      "@biothings-explorer/api-response-transform": [
-        "../api-response-transform"
-      ],
-      "biomedical_id_resolver": [
-        "../biomedical_id_resolver"
-      ]
+      "@biothings-explorer/smartapi-kg": ["../smartapi-kg"],
+      "@biothings-explorer/api-response-transform": ["../api-response-transform"],
+      "biomedical_id_resolver": ["../biomedical_id_resolver"],
+      "@biothings-explorer/utils": ["../utils"]
     }
   },
-  "include": [
-    "./src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "__test__/"
-  ],
+  "include": ["./src/**/*"],
+  "exclude": ["node_modules", "__test__/"],
   "references": [
     {
       "path": "../api-response-transform"
@@ -32,6 +22,9 @@
     },
     {
       "path": "../smartapi-kg"
+    },
+    {
+      "path": "../utils"
     }
   ]
 }

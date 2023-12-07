@@ -24,7 +24,11 @@ const mappableStringTemplateFuncs = {
     return split.length < 2 ? input : split[1];
   },
   replPrefix: function (input: string, prefix?: string, delim?: string) {
-    return mappableStringTemplateFuncs.addPrefix(mappableStringTemplateFuncs.rmPrefix(input, delim), prefix, delim);
+    return mappableStringTemplateFuncs.addPrefix(
+      mappableStringTemplateFuncs.rmPrefix(input, delim),
+      prefix,
+      delim,
+    );
   },
   wrap: function (input: unknown, start: unknown, end?: unknown) {
     if (typeof start === "undefined") {
@@ -42,7 +46,9 @@ const arrayOnlyTemplateFuncs = {
   },
 };
 
-function mapIfNeeded<F extends (...args: (string | string[] | undefined)[]) => string | string[]>(func: F) {
+function mapIfNeeded<
+  F extends (...args: (string | string[] | undefined)[]) => string | string[],
+>(func: F) {
   return (...args: Parameters<F>) => {
     const input = args.shift();
     if (typeof input === "undefined") {
