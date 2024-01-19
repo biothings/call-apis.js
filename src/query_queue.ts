@@ -1,6 +1,6 @@
 import BaseQueryBuilder from "./builder/base_query_builder";
 import RateCounter from "./rate_limiter";
-import { RedisClient } from "./types";
+import { RedisClient } from "@biothings-explorer/utils";
 import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
 

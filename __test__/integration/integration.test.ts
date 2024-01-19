@@ -1,4 +1,5 @@
-import APIQueryDispatcher, { RedisClient } from "../../src/index";
+import APIQueryDispatcher from "../../src/index";
+import { RedisClient } from "@biothings-explorer/utils";
 import fs from "fs";
 import path from "path";
 import axios from "axios";
