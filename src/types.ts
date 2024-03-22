@@ -9,22 +9,6 @@ import { SRIBioEntity } from "biomedical_id_resolver";
  * This would allow for greater flexibility in package structure/type importing
  */
 
-declare global {
-  var missingAPIs: SmartAPISpec[];
-  var BIOLINK_VERSION: string;
-  var SCHEMA_VERSION: string;
-  var parentPort: MessagePort;
-  var cachingTasks: Promise<void>[];
-  var queryInformation: {
-    queryGraph: TrapiQueryGraph;
-    isCreativeMode: boolean;
-    creativeTemplate?: string;
-    totalRecords: number;
-    jobID?: string;
-    callback_url?: string;
-  };
-  var job: { log: (logString: string) => void }; // TODO type as Piscina job
-}
 export interface QueryParams {
   [paramName: string]: unknown;
 }
@@ -103,12 +87,12 @@ export interface TrapiAttribute {
   value_url?: string | null;
   attributes?: TrapiAttribute;
   [additionalProperties: string]:
-    | string
-    | string[]
-    | null
-    | TrapiAttribute
-    | number
-    | number[];
+  | string
+  | string[]
+  | null
+  | TrapiAttribute
+  | number
+  | number[];
 }
 
 export interface TrapiQualifier {
