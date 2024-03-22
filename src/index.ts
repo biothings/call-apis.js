@@ -1,10 +1,5 @@
-import { LogEntry, StampedLog } from "@biothings-explorer/utils";
-import {
-  APIEdge,
-  QueryHandlerOptions,
-  RedisClient,
-  UnavailableAPITracker,
-} from "./types";
+import { LogEntry, StampedLog, RedisClient } from "@biothings-explorer/utils";
+import { APIEdge, QueryHandlerOptions, UnavailableAPITracker } from "./types";
 import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
 import queryBuilder from "./builder/builder_factory";
@@ -83,7 +78,10 @@ export default class APIQueryDispatcher {
   /**
    * Add equivalent ids to all entities using biomedical-id-resolver service
    */
-  async _annotate(records: Record[], resolveOutputIDs = true): Promise<Record[]> {
+  async _annotate(
+    records: Record[],
+    resolveOutputIDs = true,
+  ): Promise<Record[]> {
     const groupedCuries = this._groupCuriesBySemanticType(records);
     let res: SRIResolverOutput | ResolverOutput;
     let attributes: unknown;
@@ -119,7 +117,8 @@ export default class APIQueryDispatcher {
         Object.hasOwnProperty.call(attributes, record.object.original)
       ) {
         if (record instanceof ResolvableBioEntity) {
-          record.object.normalizedInfo.attributes = attributes[record.object.original];
+          record.object.normalizedInfo.attributes =
+            attributes[record.object.original];
         }
       }
     });
@@ -132,7 +131,8 @@ export default class APIQueryDispatcher {
   ): Promise<Record[]> {
     // Used for temporarily storing a message to log via both debug and TRAPI logs
     let message: string;
-    message = `Resolving ID feature is turned ${resolveOutputIDs ? "on" : "off"}`;
+    message = `Resolving ID feature is turned ${resolveOutputIDs ? "on" : "off"
+      }`;
     debug(message);
     this.logs.push(new LogEntry("DEBUG", null, message).getLog());
     message = [
@@ -151,7 +151,7 @@ export default class APIQueryDispatcher {
       this.options,
     );
     const { records, logs } = await subQueryDispatcher.execute();
-    this.logs.push(...logs)
+    this.logs.push(...logs);
     // Occurs when globalMaxRecords hit, requiring query termination
     if (!records) return undefined;
 
