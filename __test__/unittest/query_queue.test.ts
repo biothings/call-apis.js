@@ -8,6 +8,7 @@ import APIQueryQueue from "../../src/query_queue";
 describe("Test Query Queue module", () => {
   describe("Test getNext function", () => {
     test("Test getNext function", async () => {
+      // @ts-expect-error don't need full redisClient, just that it's disabled
       const queue = new APIQueryQueue([], { clientEnabled: false });
       queue.queue = [
         {
