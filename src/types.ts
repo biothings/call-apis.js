@@ -9,22 +9,6 @@ import { SRIBioEntity } from "biomedical_id_resolver";
  * This would allow for greater flexibility in package structure/type importing
  */
 
-declare global {
-  var missingAPIs: SmartAPISpec[];
-  var BIOLINK_VERSION: string;
-  var SCHEMA_VERSION: string;
-  var parentPort: MessagePort;
-  var cachingTasks: Promise<void>[];
-  var queryInformation: {
-    queryGraph: TrapiQueryGraph;
-    isCreativeMode: boolean;
-    creativeTemplate?: string;
-    totalRecords: number;
-    jobID?: string;
-    callback_url?: string;
-  };
-  var job: { log: (logString: string) => void }; // TODO type as Piscina job
-}
 export interface QueryParams {
   [paramName: string]: unknown;
 }
@@ -310,29 +294,4 @@ export interface QueryHandlerOptions {
 
 export interface UnavailableAPITracker {
   [server: string]: { skip: boolean; skippedQueries: number };
-}
-
-interface RedisClientInterface {
-  getTimeout: (key: string) => Promise<string>;
-  setTimeout: (key: string, value: string | number | Buffer) => Promise<"OK">;
-  hsetTimeout: (
-    ...args: [key: string, ...fieldValues: (string | Buffer | number)[]]
-  ) => Promise<number>;
-  hgetallTimeout: (key: string) => Promise<unknown>;
-  expireTimeout: (key: string, seconds: string | number) => Promise<number>;
-  delTimeout: (...args: string[]) => Promise<number>;
-  usingLock: (
-    resources: string[],
-    duration: number,
-    routine?: (signal: unknown) => Promise<unknown>,
-  ) => Promise<unknown>;
-  incrTimeout: (key: string) => Promise<number>;
-  decrTimeout: (key: string) => Promise<number>;
-  existsTimeout: (...args: string[]) => Promise<number>;
-  pingTimeout: () => Promise<"PONG">;
-}
-
-export interface RedisClient {
-  client?: RedisClientInterface;
-  clientEnabled: boolean;
 }

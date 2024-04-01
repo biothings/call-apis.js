@@ -2,12 +2,13 @@ import { Record } from "@biothings-explorer/api-response-transform";
 import BaseQueryBuilder from "./builder/base_query_builder";
 import APIQueryPool from "./query_pool";
 import APIQueryQueue from "./query_queue";
+import { QueryHandlerOptions, UnavailableAPITracker } from "./types";
 import {
-  QueryHandlerOptions,
+  LogEntry,
+  StampedLog,
+  Telemetry,
   RedisClient,
-  UnavailableAPITracker,
-} from "./types";
-import { LogEntry, StampedLog, Telemetry } from "@biothings-explorer/utils";
+} from "@biothings-explorer/utils";
 import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
 
