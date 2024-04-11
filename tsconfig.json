@@ -8,7 +8,8 @@
       "@biothings-explorer/smartapi-kg": ["../smartapi-kg"],
       "@biothings-explorer/api-response-transform": ["../api-response-transform"],
       "biomedical_id_resolver": ["../biomedical_id_resolver"],
-      "@biothings-explorer/utils": ["../utils"]
+      "@biothings-explorer/utils": ["../utils"],
+      "@biothings-explorer/types": ["../types"]
     }
   },
   "include": ["./src/**/*"],
@@ -25,6 +26,9 @@
     },
     {
       "path": "../utils"
+    },
+    {
+      "path": "../types"
     }
   ]
 }
