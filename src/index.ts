@@ -42,7 +42,7 @@ export default class APIQueryDispatcher {
 
   _constructQueries(APIEdges: APIEdge[]) {
     return APIEdges.map(edge => {
-      const built = queryBuilder(edge);
+      const built = queryBuilder(edge, this.options);
       if (built instanceof TRAPIQueryBuilder) {
         built.addSubmitter?.(this.options.submitter);
       }
