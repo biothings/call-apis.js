@@ -71,6 +71,9 @@ export default class TRAPIQueryBuilder extends BaseQueryBuilder {
       queryBody.message.query_graph.edges.e01.qualifier_constraints =
         qualifierConstraints;
     }
+    if (this.options.caching === false) {
+      queryBody.bypass_cache = true;
+    }
     const xmaturityMap = {
       ci: "staging",
       test: "test",
