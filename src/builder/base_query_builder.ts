@@ -1,5 +1,5 @@
 import { AxiosRequestConfig, Method } from "axios";
-import { QueryParams, APIEdge } from "../types";
+import { QueryParams, APIEdge, QueryHandlerOptions } from "../types";
 
 /**
  * Build API queries serving as input for Axios library based on BTE Edge info
@@ -10,14 +10,16 @@ export default class BaseQueryBuilder {
   APIEdge: APIEdge;
   delayUntil: Date;
   config: AxiosRequestConfig;
+  options: QueryHandlerOptions;
   /**
    * Constructor for Query Builder
    * @param {object} APIEdge - BTE Edge object with input field provided
    */
-  constructor(APIEdge: APIEdge) {
+  constructor(APIEdge: APIEdge, options: QueryHandlerOptions) {
     this.start = 0;
     this.hasNext = false;
     this.APIEdge = APIEdge;
+    this.options = options;
   }
 
   getUrl(): string {

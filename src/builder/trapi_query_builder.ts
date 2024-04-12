@@ -1,6 +1,6 @@
-import type { APIEdge, TrapiResponse } from "../types";
+import type { APIEdge } from "../types";
+import { TrapiQuery, TrapiResponse } from "@biothings-explorer/types";
 import { AxiosRequestConfig, Method } from "axios";
-import { TrapiRequest } from "../types";
 import BaseQueryBuilder from "./base_query_builder";
 
 /**
@@ -42,8 +42,8 @@ export default class TRAPIQueryBuilder extends BaseQueryBuilder {
   /**
    * Construct TRAPI request body
    */
-  _getRequestBody(APIEdge: APIEdge, input: string | string[]): TrapiRequest {
-    const queryGraph: TrapiRequest = {
+  _getRequestBody(APIEdge: APIEdge, input: string | string[]): TrapiQuery {
+    const queryBody: TrapiQuery = {
       message: {
         query_graph: {
           nodes: {
@@ -68,8 +68,11 @@ export default class TRAPIQueryBuilder extends BaseQueryBuilder {
     };
     const qualifierConstraints = APIEdge.reasoner_edge?.getQualifierConstraints?.();
     if (qualifierConstraints) {
-      queryGraph.message.query_graph.edges.e01.qualifier_constraints =
+      queryBody.message.query_graph.edges.e01.qualifier_constraints =
         qualifierConstraints;
+    }
+    if (this.options.caching === false) {
+      queryBody.bypass_cache = true;
     }
     const xmaturityMap = {
       ci: "staging",
@@ -78,10 +81,10 @@ export default class TRAPIQueryBuilder extends BaseQueryBuilder {
       dev: "dev",
     };
     if (process.env.INSTANCE_ENV)
-      queryGraph.submitter += `; bte-${xmaturityMap[process.env.INSTANCE_ENV]}`;
+      queryBody.submitter += `; bte-${xmaturityMap[process.env.INSTANCE_ENV]}`;
     if (this.originalSubmitter)
-      queryGraph.submitter += `; subquery for client "${this.originalSubmitter}"`;
-    return queryGraph;
+      queryBody.submitter += `; subquery for client "${this.originalSubmitter}"`;
+    return queryBody;
   }
 
   /**
