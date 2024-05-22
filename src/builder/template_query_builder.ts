@@ -120,7 +120,7 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
     return config;
   }
 
-  needPagination(apiResponse: unknown): number {
+  needPagination(apiResponse: unknown): {paginationStart: number, paginationSize: number}  {
     // TODO check for biothings pending, use smarter post method (also do config properly to use new parameter)
     if (
       this.APIEdge.query_operation.method === "post" &&
@@ -128,7 +128,7 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
     ) {
       if ((apiResponse as BiothingsResponse).max_total > this.start + 1000) {
         this.hasNext = true;
-        return this.start + 1000;
+        return {paginationStart: this.start + 1000, paginationSize: 1000};
       }
     } else if (
       this.APIEdge.query_operation.method === "get" &&
@@ -140,12 +140,26 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
       ) {
         if (this.start + (apiResponse as BiothingsResponse).hits.length < 10000) {
           this.hasNext = true;
-          return this.start + 1000;
+          return {paginationStart: this.start + 1000, paginationSize: 1000};
+        }
+      }
+    }
+    if (
+      this.APIEdge.query_operation.method === "get" &&
+      this.APIEdge.association.api_name === "Monarch API"
+    ) {
+      if (
+        (apiResponse as any).total >
+        this.start + (apiResponse as any).items.length
+      ) {
+        if (this.start + (apiResponse as any).items.length < 10000) {
+          this.hasNext = true;
+          return {paginationStart: this.start + 500, paginationSize: 500};
         }
       }
     }
     this.hasNext = false;
-    return 0;
+    return {paginationStart: 0, paginationSize: 0};
   }
 
   getNext(): AxiosRequestConfig {
@@ -156,7 +170,15 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
     ) {
       this.start = this.start + 1000;
       config.params.from = this.start;
-    } else {
+    } 
+    else if (
+      this.APIEdge.query_operation.method === "get" &&
+      this.APIEdge.association.api_name === "Monarch API"
+    ) {
+      this.start = this.start + 500;
+      config.params.offset = this.start;
+    }
+    else {
       this.start = Math.min(this.start + 1000, 9999);
       config.params.from = this.start;
       if (config.params.size + this.start > 10000) {
