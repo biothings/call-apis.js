@@ -119,7 +119,7 @@ export default class APIQueryPool {
           "ERROR",
           null,
           `${(
-            error as Error
+            (error as Error).stack
           ).toString()} while configuring query. Query dump: ${JSON.stringify(
             query,
           )}`,
@@ -223,12 +223,12 @@ export default class APIQueryPool {
         edge: query.APIEdge,
       };
 
-      const queryNeedsPagination = query.needPagination(
+      const {paginationStart: queryNeedsPagination, paginationSize} = query.needPagination(
         unTransformedHits.response,
       );
       if (queryNeedsPagination) {
         const log = `Query requires pagination, will re-query to window ${queryNeedsPagination}-${
-          queryNeedsPagination + 1000
+          queryNeedsPagination + paginationSize
         }: ${query.APIEdge.query_operation.server} (${nInputs} ID${
           nInputs > 1 ? "s" : ""
         })`;

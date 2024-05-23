@@ -106,7 +106,7 @@ export default class QueryBuilder extends BaseQueryBuilder {
     return config;
   }
 
-  needPagination(apiResponse: unknown): number {
+  needPagination(apiResponse: unknown): {paginationStart: number, paginationSize: number}  {
     if (
       this.APIEdge.query_operation.method === "get" &&
       this.APIEdge.tags.includes("biothings")
@@ -117,12 +117,12 @@ export default class QueryBuilder extends BaseQueryBuilder {
       ) {
         if (this.start + (apiResponse as BiothingsResponse).hits.length < 10000) {
           this.hasNext = true;
-          return this.start + 1000;
+          return {paginationStart: this.start + 1000, paginationSize: 1000};
         }
       }
     }
     this.hasNext = false;
-    return 0;
+    return {paginationStart: 0, paginationSize: 0};
   }
 
   getNext(): AxiosRequestConfig {

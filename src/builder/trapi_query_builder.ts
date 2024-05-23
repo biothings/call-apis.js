@@ -104,9 +104,9 @@ export default class TRAPIQueryBuilder extends BaseQueryBuilder {
     return config;
   }
 
-  needPagination(apiResponse: TrapiResponse): number {
+  needPagination(apiResponse: TrapiResponse): {paginationStart: number, paginationSize: number}  {
     this.hasNext = false;
-    return 0;
+    return {paginationStart: 0, paginationSize: 0};
   }
 
   getNext(): AxiosRequestConfig {
