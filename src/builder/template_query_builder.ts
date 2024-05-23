@@ -37,8 +37,12 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
   /**
    * Construct input based on method and inputSeparator
    */
-  _getInput(APIEdge: APIEdge): string | string[] {
-    return APIEdge.input as string | string[];
+  _getInput(APIEdge: APIEdge): TemplatedInput {
+    let baseInput = APIEdge.input as TemplatedInput;
+    if (this.APIEdge.query_operation.paginated) {
+      (baseInput as any).start = this.start;
+    }
+    return baseInput;
   }
 
   /**
@@ -120,9 +124,28 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
     return config;
   }
 
+  // util for pagination
+  _getDescendantProp(obj: any, desc: string): any {
+    let arr = desc.split(".");
+    for (let i = 0; i < arr.length; i++) {
+      obj = obj?.[arr[i]];
+    }
+    return obj;
+  }
+
   needPagination(apiResponse: unknown): {paginationStart: number, paginationSize: number}  {
+    if (this.APIEdge.query_operation.paginated) {
+      let resCount = this._getDescendantProp(apiResponse, this.APIEdge.query_operation.paginationData.countField);
+      if (Array.isArray(resCount)) resCount = resCount.length;
+      let resTotal = this._getDescendantProp(apiResponse, this.APIEdge.query_operation.paginationData.totalField);
+      let paginationSize = this.APIEdge.query_operation.paginationData.pageSize;
+      if (resTotal > this.start + resCount) {
+        this.hasNext = true;
+        return {paginationStart: this.start + paginationSize, paginationSize};
+      }
+    }
     // TODO check for biothings pending, use smarter post method (also do config properly to use new parameter)
-    if (
+    else if (
       this.APIEdge.query_operation.method === "post" &&
       this.APIEdge.tags.includes("biothings")
     ) {
@@ -143,8 +166,7 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
           return {paginationStart: this.start + 1000, paginationSize: 1000};
         }
       }
-    }
-    if (
+    } else if (
       this.APIEdge.query_operation.method === "get" &&
       this.APIEdge.association.api_name === "Monarch API"
     ) {
@@ -163,6 +185,11 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
   }
 
   getNext(): AxiosRequestConfig {
+    if (this.APIEdge.query_operation.paginated) {
+      this.start += this.APIEdge.query_operation.paginationData.pageSize;
+      this.config = this.constructAxiosRequestConfig();
+      return this.config;
+    }
     const config = this.constructAxiosRequestConfig();
     if (
       this.APIEdge.query_operation.method === "post" &&
