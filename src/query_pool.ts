@@ -57,6 +57,7 @@ export default class APIQueryPool {
     query: BaseQueryBuilder,
     unavailableAPIs: UnavailableAPITracker,
     logs: StampedLog[],
+    abortSignal?: AbortSignal
   ): {
     queryConfig: AxiosRequestConfig;
     nInputs: number;
@@ -105,6 +106,7 @@ export default class APIQueryPool {
       queryConfig.timeout = this._getTimeout(
         query.APIEdge.association.smartapi.id,
       );
+      queryConfig.signal = abortSignal;
 
       return {
         queryConfig,
@@ -137,9 +139,10 @@ export default class APIQueryPool {
       records?: Record[],
       followUp?: BaseQueryBuilder[],
     ) => Promise<void>,
+    abortSignal?: AbortSignal
   ) {
     // Check if pool has been stopped due to limit hit (save some computation)
-    if (this.stop) {
+    if (this.stop || abortSignal?.aborted) {
       await finish();
       return;
     }
@@ -154,6 +157,7 @@ export default class APIQueryPool {
       query,
       unavailableAPIs,
       logs,
+      abortSignal
     );
 
     if (!queryConfigAttempt) {
@@ -189,7 +193,7 @@ export default class APIQueryPool {
           return (
             axiosRetry.isNetworkOrIdempotentRequestError(err) ||
             err.response?.status >= 500
-          );
+          ) && !(abortSignal?.aborted);
         },
       });
 
