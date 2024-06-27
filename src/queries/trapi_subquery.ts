@@ -1,29 +1,29 @@
 import type { APIEdge } from "../types";
 import { TrapiQuery, TrapiResponse } from "@biothings-explorer/types";
 import { AxiosRequestConfig, Method } from "axios";
-import BaseQueryBuilder from "./base_query_builder";
+import Subquery from "./subquery";
 
 /**
  * Build API queries serving as input for Axios library based on BTE Edge info
  */
-export default class TRAPIQueryBuilder extends BaseQueryBuilder {
+export default class TrapiSubquery extends Subquery {
   start: number;
   hasNext: boolean;
   APIEdge: APIEdge;
   originalSubmitter: string;
 
-  _getUrl(APIEdge: APIEdge, input: string | string[]): string {
-    let server = APIEdge.query_operation.server;
+  get url(): string {
+    let server = this.APIEdge.query_operation.server;
     if (server.endsWith("/")) {
       server = server.substring(0, server.length - 1);
     }
-    let path = APIEdge.query_operation.path;
-    if (Array.isArray(APIEdge.query_operation.path_params)) {
-      APIEdge.query_operation.path_params.map(param => {
-        const val = String(APIEdge.query_operation.params[param]);
+    let path = this.APIEdge.query_operation.path;
+    if (Array.isArray(this.APIEdge.query_operation.path_params)) {
+      this.APIEdge.query_operation.path_params.map(param => {
+        const val = String(this.APIEdge.query_operation.params[param]);
         path = path
           .replace("{" + param + "}", val)
-          .replace("{inputs[0]}", String(input));
+          .replace("{inputs[0]}", String(this.input));
       });
     }
     return server + path;
@@ -31,8 +31,8 @@ export default class TRAPIQueryBuilder extends BaseQueryBuilder {
   /**
    * Construct input based on method and inputSeparator
    */
-  _getInput(APIEdge: APIEdge): string[] {
-    return APIEdge.input as string[];
+  get input(): string[] {
+    return this.APIEdge.input as string[];
   }
 
   addSubmitter(submitter: string): void {
@@ -42,31 +42,31 @@ export default class TRAPIQueryBuilder extends BaseQueryBuilder {
   /**
    * Construct TRAPI request body
    */
-  _getRequestBody(APIEdge: APIEdge, input: string | string[]): TrapiQuery {
+  get requestBody(): TrapiQuery {
     const queryBody: TrapiQuery = {
       message: {
         query_graph: {
           nodes: {
             n0: {
-              ids: Array.isArray(input) ? input : [input],
-              categories: ["biolink:" + APIEdge.association.input_type],
+              ids: Array.isArray(this.input) ? this.input : [this.input],
+              categories: ["biolink:" + this.APIEdge.association.input_type],
             },
             n1: {
-              categories: ["biolink:" + APIEdge.association.output_type],
+              categories: ["biolink:" + this.APIEdge.association.output_type],
             },
           },
           edges: {
             e01: {
               subject: "n0",
               object: "n1",
-              predicates: ["biolink:" + APIEdge.association.predicate],
+              predicates: ["biolink:" + this.APIEdge.association.predicate],
             },
           },
         },
       },
       submitter: "infores:bte",
     };
-    const qualifierConstraints = APIEdge.reasoner_edge?.getQualifierConstraints?.();
+    const qualifierConstraints = this.APIEdge.reasoner_edge?.getQualifierConstraints?.();
     if (qualifierConstraints) {
       queryBody.message.query_graph.edges.e01.qualifier_constraints =
         qualifierConstraints;
@@ -91,10 +91,9 @@ export default class TRAPIQueryBuilder extends BaseQueryBuilder {
    * Construct the request config for Axios reqeust.
    */
   constructAxiosRequestConfig(): AxiosRequestConfig {
-    const input = this._getInput(this.APIEdge);
     const config = {
-      url: this._getUrl(this.APIEdge, input),
-      data: this._getRequestBody(this.APIEdge, input),
+      url: this.url,
+      data: this.requestBody,
       method: this.APIEdge.query_operation.method as Method,
       headers: {
         "Content-Type": "application/json",

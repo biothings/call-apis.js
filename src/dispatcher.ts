@@ -1,5 +1,5 @@
 import { Record } from "@biothings-explorer/api-response-transform";
-import BaseQueryBuilder from "./builder/base_query_builder";
+import Subquery from "./queries/subquery";
 import APIQueryPool from "./query_pool";
 import APIQueryQueue from "./query_queue";
 import { QueryHandlerOptions, UnavailableAPITracker } from "./types";
@@ -28,7 +28,7 @@ export default class SubQueryDispatcher {
   logs: StampedLog[];
   qEdgeID: string;
   constructor(
-    queries: BaseQueryBuilder[],
+    queries: Subquery[],
     redisClient: RedisClient,
     unavailableAPIs: UnavailableAPITracker,
     options: QueryHandlerOptions = {},
@@ -95,7 +95,7 @@ export default class SubQueryDispatcher {
   async onQueryComplete(
     logs: StampedLog[],
     records?: Record[],
-    followUp?: BaseQueryBuilder[],
+    followUp?: Subquery[],
   ): Promise<void> {
     if (this.done) return;
     if (logs) this.logs.push(...logs);

@@ -1,13 +1,13 @@
-import BaseQueryBuilder from "./builder/base_query_builder";
+import Subquery from "./queries/subquery";
 import RateCounter from "./rate_limiter";
 import { RedisClient } from "@biothings-explorer/utils";
 import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
 
 export default class APIQueryQueue {
-  queue: BaseQueryBuilder[];
+  queue: Subquery[];
   rateCounter: RateCounter;
-  constructor(queries: BaseQueryBuilder[], redisClient?: RedisClient) {
+  constructor(queries: Subquery[], redisClient?: RedisClient) {
     this.queue = [...queries];
     this.rateCounter = new RateCounter(redisClient);
   }
@@ -20,12 +20,12 @@ export default class APIQueryQueue {
     return this.queue.length === 0;
   }
 
-  add(query: BaseQueryBuilder | BaseQueryBuilder[]) {
+  add(query: Subquery | Subquery[]) {
     if (!Array.isArray(query)) query = [query];
     this.queue.unshift(...query);
   }
 
-  async getNext(): Promise<BaseQueryBuilder> {
+  async getNext(): Promise<Subquery> {
     const query = this.queue.pop();
     if (!query) return;
     const queryDelayed = query.delayUntil && query.delayUntil >= new Date();
