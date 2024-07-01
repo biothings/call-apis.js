@@ -1,14 +1,23 @@
-import APIQueryDispatcher from "../../src/index";
+import { SubqueryRelay, constructQueries } from "../../src/index";
 import { RedisClient } from "@biothings-explorer/utils";
 import fs from "fs";
 import path from "path";
 import axios from "axios";
 
 import MetaKG from "@biothings-explorer/smartapi-kg";
+import { Record } from "@biothings-explorer/types";
 const meta_kg = new MetaKG();
 meta_kg.constructMetaKGSync();
 
 jest.mock("axios");
+
+function runQuery(edges, opts): Promise<{ records: any[], logs: any[] }> {
+  const queries = constructQueries(edges, opts);
+  const relay = new SubqueryRelay();
+  return new Promise(resolve => {
+    relay.subscribe(queries, opts, x => resolve(x));
+  })
+}
 
 describe("Integration test", () => {
   describe("Integration test using mygene.info gene to biological process association", () => {
@@ -29,9 +38,8 @@ describe("Integration test", () => {
       axios.mockResolvedValue({ data: JSON.parse(fs.readFileSync(result_path, { encoding: "utf8" })) });
     });
     test("check response", async () => {
-      const query = new APIQueryDispatcher([edge], {}, { redisClient: { clientEnabled: false } } as unknown as RedisClient);
-      const res = await query.query();
-      expect([...res.reduce((set, record) => set.add(record.recordHash), new Set())]).toHaveLength(28);
+      const res = await runQuery([edge], {});
+      expect([...res.records.reduce((set, record) => set.add(new Record(record.frozenRecord).recordHash), new Set())]).toHaveLength(28);
     });
   });
 
@@ -43,9 +51,8 @@ describe("Integration test", () => {
       edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
     });
     test("check response", async () => {
-      const query = new APIQueryDispatcher([edge], {}, { redisClient: { clientEnabled: false } } as unknown as RedisClient);
-      const res = await query.query(false);
-      expect(res).toHaveLength(3762);
+      const res = await runQuery([edge], {});
+      expect(res.records).toHaveLength(3762);
     });
   });
 
@@ -57,10 +64,9 @@ describe("Integration test", () => {
       edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
     });
     test("check response", async () => {
-      const query = new APIQueryDispatcher([edge], {}, { redisClient: { clientEnabled: false } } as unknown as RedisClient);
-      const res = await query.query(false);
-      expect(res).toHaveLength(0);
-      expect(query.logs.some(log => (log.level === "ERROR" ? true : false))).toBeTruthy();
+      const res = await runQuery([edge], {});
+      expect(res.records).toHaveLength(0);
+      expect(res.logs.some(log => (log.level === "ERROR" ? true : false))).toBeTruthy();
     });
   });
 
@@ -82,12 +88,11 @@ describe("Integration test", () => {
       axios.mockResolvedValue({ data: JSON.parse(fs.readFileSync(post_result_path, { encoding: "utf8" })) });
     });
     test("check response", async () => {
-      const query = new APIQueryDispatcher(edges, {}, { redisClient: { clientEnabled: false } } as unknown as RedisClient);
-      const res = await query.query(false);
+      const res = await runQuery(edges, {});
       const mydisease_res = await axios.get(
         "http://mydisease.info/v1/disease/MONDO:0002494?fields=mondo.children&dotfield=true",
       );
-      expect(res.length).toEqual(mydisease_res.data["mondo.children"].length);
+      expect(res.records.length).toEqual(mydisease_res.data["mondo.children"].length);
     });
   });
 });

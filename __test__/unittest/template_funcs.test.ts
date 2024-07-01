@@ -1,5 +1,5 @@
 import nunjucks from "nunjucks";
-import nunjucksConfig from "../../src/builder/nunjucks_config";
+import nunjucksConfig from "../../src/queries/nunjucks_config";
 const env = nunjucks.configure({ autoescape: false });
 nunjucksConfig(env);
 
