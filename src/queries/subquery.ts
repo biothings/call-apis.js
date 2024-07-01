@@ -47,9 +47,18 @@ export default class Subquery {
   }
 
   get url(): string {
-    return (
-      this.APIEdge.query_operation.server + this.APIEdge.query_operation.path
-    );
+    let server = this.APIEdge.query_operation.server;
+    if (server.endsWith("/")) {
+      server = server.substring(0, server.length - 1);
+    }
+    let path = this.APIEdge.query_operation.path;
+    if (Array.isArray(this.APIEdge.query_operation.path_params)) {
+      this.APIEdge.query_operation.path_params.map(param => {
+        const val = String(this.APIEdge.query_operation.params[param]);
+        path = path.replace("{" + param + "}", val).replace("{inputs[0]}", this.input as string);
+      });
+    }
+    return server + path;
   }
 
   /**

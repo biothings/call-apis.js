@@ -2,23 +2,20 @@
  * @jest-environment node
  */
 
-import qb from "../../src/builder/template_query_builder";
-import path from "path";
-import fs from "fs";
+import Subquery from "../../src/queries/subquery";
 
 describe("test query builder class", () => {
   describe("test _getUrl function", () => {
     test("test if server url has a trailing slash", () => {
       const edge = {
         query_operation: {
-          server: "https://google.com/",
+          server: "https://google.com",
           path: "/query",
         },
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getUrl(edge, "hello");
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const sq = new Subquery(edge);
+      const res = sq.url;
       expect(res).toBe("https://google.com/query");
     });
 
@@ -29,10 +26,9 @@ describe("test query builder class", () => {
           path: "/query",
         },
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getUrl(edge, "hello");
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const sq = new Subquery(edge);
+      const res = sq.url;
       expect(res).toBe("https://google.com/query");
     });
 
@@ -48,10 +44,9 @@ describe("test query builder class", () => {
           },
         },
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getUrl(edge, "hello");
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const sq = new Subquery(edge);
+      const res = sq.url;
       expect(res).toBe("https://google.com/1017/query");
     });
 
@@ -62,29 +57,16 @@ describe("test query builder class", () => {
           path: "/{geneid}/{output}/query",
           path_params: ["geneid", "output"],
           params: {
-            geneid: "{{queryInputs}}",
+            geneid: "{inputs[0]}",
             output: "json",
           },
         },
+        input: "hello"
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getUrl(edge, { queryInputs: "hello" });
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const sq = new Subquery(edge);
+      const res = sq.url;
       expect(res).toBe("https://google.com/hello/json/query");
-    });
-
-    test("if _getUrl nunjucks templates are filled", () => {
-      const edge_path = path.resolve(__dirname, "../data/multi_input_edge.json");
-      const edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
-      const builder = new qb(edge);
-      const res = builder._getUrl(edge, {
-        specialpath: "/querytest",
-        id: "MONDO:0005252",
-        fields: ["subject", "association"],
-        queryInputs: ["abc", "def"],
-      });
-      expect(res).toEqual("https://biothings.ncats.io/text_mining_co_occurrence_kp/querytest");
     });
   });
 
@@ -96,10 +78,9 @@ describe("test query builder class", () => {
           supportBatch: true,
         },
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getInput(edge);
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const sq = new Subquery(edge);
+      const res = sq.input;
       expect(res).toEqual(edge.input);
     });
 
@@ -110,11 +91,10 @@ describe("test query builder class", () => {
           supportBatch: true,
         },
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getInput(edge);
-      expect(res).toEqual(["kevin", "xin"]);
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const sq = new Subquery(edge);
+      const res = sq.input;
+      expect(res).toEqual("kevin,xin");
     });
 
     test("Test if API does not supports batch, and one input provided", () => {
@@ -124,10 +104,9 @@ describe("test query builder class", () => {
           supportBatch: false,
         },
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getInput(edge);
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const sq = new Subquery(edge);
+      const res = sq.input;
       expect(res).toEqual(edge.input);
     });
   });
@@ -139,15 +118,15 @@ describe("test query builder class", () => {
           server: "https://google.com",
           path: "/{geneid}/query",
           params: {
-            geneid: "{{queryInputs}}",
+            geneid: "{inputs[0]}",
             output: "json",
           },
         },
+        input: "1017"
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getParams(edge, { queryInputs: "1017" });
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const builder = new Subquery(edge);
+      const res = builder.params;
       expect(res).toHaveProperty("geneid");
       expect(res.geneid).toEqual("1017");
     });
@@ -163,11 +142,11 @@ describe("test query builder class", () => {
             output: "json",
           },
         },
+        input: "1017"
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getParams(edge, "1017");
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const builder = new Subquery(edge);
+      const res = builder.params;
       expect(res).not.toHaveProperty("geneid");
       expect(res.output).toEqual("json");
     });
@@ -180,14 +159,14 @@ describe("test query builder class", () => {
           path_params: ["geneid"],
           params: {
             geneid: "hello",
-            output: "{{queryInputs}}",
+            output: "{inputs[0]}",
           },
         },
+        input: "1017"
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getParams(edge, { queryInputs: "1017" });
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const builder = new Subquery(edge);
+      const res = builder.params;
       expect(res).not.toHaveProperty("geneid");
       expect(res.output).toEqual("1017");
     });
@@ -203,30 +182,12 @@ describe("test query builder class", () => {
             output: 1,
           },
         },
+        input: "1017"
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getParams(edge, "1017");
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const builder = new Subquery(edge);
+      const res = builder.params;
       expect(res.output).toEqual(1);
-    });
-
-    test("if _getParams nunjucks templates are filled", () => {
-      const edge_path = path.resolve(__dirname, "../data/multi_input_edge.json");
-      const edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
-
-      const builder = new qb(edge);
-      const res = builder._getParams(edge, {
-        specialpath: "/querytest",
-        id: "MONDO:0005252",
-        fields: ["subject", "association"],
-        queryInputs: ["abc", "def"],
-      });
-      expect(res).toEqual({
-        fields: "subject,association",
-        q: 'object.MONDO:"MONDO:0005252" AND subject.type:SmallMolecule',
-        size: 1000,
-      });
     });
   });
 
@@ -242,11 +203,11 @@ describe("test query builder class", () => {
             output: 1,
           },
         },
+        input: "1017"
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getRequestBody(edge, "1017");
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const builder = new Subquery(edge);
+      const res = builder.requestBody;
       expect(res).toBeUndefined;
     });
 
@@ -262,11 +223,11 @@ describe("test query builder class", () => {
             },
           },
         },
+        input: "1017"
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getRequestBody(edge, "1017");
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const builder = new Subquery(edge);
+      const res = builder.requestBody;
       expect(res).toEqual("geneid=hello&output=1");
     });
 
@@ -278,50 +239,41 @@ describe("test query builder class", () => {
           request_body: {
             body: {
               geneid: "hello",
-              output: "{{queryInputs}}",
+              output: "{inputs[0]}",
             },
           },
         },
+        input: "1017"
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const res = builder._getRequestBody(edge, { queryInputs: "1017" });
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const builder = new Subquery(edge);
+      const res = builder.requestBody;
       expect(res).toEqual("geneid=hello&output=1017");
-    });
-
-    test("if nunjucks _getRequestBody templates are filled", () => {
-      const edge_path = path.resolve(__dirname, "../data/multi_input_edge.json");
-      const edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
-
-      const builder = new qb(edge);
-      const res = builder._getRequestBody(edge, {
-        specialpath: "/querytest",
-        id: "MONDO:0005252",
-        fields: ["subject", "association"],
-        queryInputs: ["abc", "def"],
-      });
-      expect(res).toEqual("q=MONDO:0005252&fields=subject,association");
     });
   });
 
   describe("test constructAxiosRequestConfig function", () => {
     test("test constructAxiosRequestConfig function", () => {
       const edge = {
-        input: { queryInputs: ["1017"] },
+        input: "1017",
         query_operation: {
           server: "https://google.com",
           path: "/{geneid}/query",
           path_params: ["geneid"],
           params: {
-            geneid: "{{queryInputs}}",
+            geneid: "{inputs[0]}",
             output: "json",
           },
           method: "get",
         },
+        association: {
+          smartapi: {
+            id: "dummy"
+          }
+        }
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const builder = new Subquery(edge, {});
       const res = builder.constructAxiosRequestConfig();
       expect(res.url).toEqual("https://google.com/1017/query");
       expect(res.params).not.toHaveProperty("geneid");
@@ -343,9 +295,9 @@ describe("test query builder class", () => {
         total: 1000,
         hits: new Array(400),
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      const res = builder.needPagination(response);
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const builder = new Subquery(edge);
+      const res = builder.needsPagination(response);
       expect(res).toBeFalsy();
     });
 
@@ -353,7 +305,6 @@ describe("test query builder class", () => {
       const edge = {
         query_operation: {
           method: "post",
-          server: "mygene.info",
         },
         tags: ["translator", "biothings"],
       };
@@ -361,9 +312,9 @@ describe("test query builder class", () => {
         total: 1000,
         hits: new Array(400),
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      const res = builder.needPagination(response);
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const builder = new Subquery(edge);
+      const res = builder.needsPagination(response);
       expect(res).toBeFalsy();
     });
 
@@ -378,9 +329,9 @@ describe("test query builder class", () => {
         total: 1000,
         hits: new Array(400),
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      const res = builder.needPagination(response);
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const builder = new Subquery(edge);
+      const res = builder.needsPagination(response);
       expect(res).toBeTruthy();
     });
 
@@ -395,9 +346,9 @@ describe("test query builder class", () => {
         total: 1000,
         hits: new Array(1000),
       };
-      // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
-      const res = builder.needPagination(response);
+      // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
+      const builder = new Subquery(edge);
+      const res = builder.needsPagination(response);
       expect(res).toBeFalsy();
     });
   });

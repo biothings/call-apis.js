@@ -3,7 +3,7 @@
  */
 
 import { default as axios } from "axios";
-import APIQueryDispatcher from "../../src/index";
+import SubQueryDispatcher from "../../src/dispatcher";
 // jest.mock('@biothings-explorer/api-response-transform', () => {
 //     // Works and lets you check for constructor calls:
 //     return jest.fn().mockImplementation((res) => {
@@ -52,9 +52,9 @@ describe("Test query class", () => {
           },
         },
       ];
-      const caller = new APIQueryDispatcher([]);
+      const caller = new SubQueryDispatcher();
       // @ts-expect-error partial data to test specific functionality
-      const annotatedResult = await caller._annotate(res);
+      const annotatedResult = await caller.annotate(res);
       expect(annotatedResult).toHaveLength(2);
     });
 
@@ -85,9 +85,9 @@ describe("Test query class", () => {
           },
         },
       ];
-      const caller = new APIQueryDispatcher([]);
+      const caller = new SubQueryDispatcher();
       // @ts-expect-error partial data to test specific functionality
-      const annotatedResult = await caller._annotate(res, false);
+      const annotatedResult = await caller.annotate(res, false);
       expect(annotatedResult).toEqual(res);
     });
   });
