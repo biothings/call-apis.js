@@ -1,7 +1,6 @@
-import type { APIEdge } from "../types";
-import { TrapiQuery, TrapiResponse } from "@biothings-explorer/types";
+import { APIEdge, TrapiQuery, TrapiResponse } from "@biothings-explorer/types";
 import { AxiosRequestConfig, Method } from "axios";
-import Subquery from "./subquery";
+import Subquery, { FrozenSubquery } from "./subquery";
 
 /**
  * Build API queries serving as input for Axios library based on BTE Edge info
@@ -118,5 +117,16 @@ export default class TrapiSubquery extends Subquery {
       return this.constructAxiosRequestConfig();
     }
     return this.getNext();
+  }
+
+  freeze(): FrozenSubquery {
+    return {
+      type: "trapi",
+      start: this.start,
+      hasNext: this.hasNext,
+      delayUntil: this.delayUntil,
+      APIEdge: this.APIEdge,
+      options: this.options,
+    };
   }
 }

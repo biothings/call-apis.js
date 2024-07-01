@@ -5,7 +5,7 @@ import nunjucks from "nunjucks";
 import nunjucksConfig from "./nunjucks_config";
 import { BiothingsResponse, QueryParams, TemplatedInput } from "../types";
 import { AxiosRequestConfig } from "axios";
-import Subquery from "./subquery";
+import Subquery, { FrozenSubquery } from "./subquery";
 const env = nunjucks.configure({ autoescape: false });
 nunjucksConfig(env);
 
@@ -141,5 +141,17 @@ export default class TemplateSubquery extends Subquery {
     }
     this.config = config;
     return config;
+  }
+
+  
+  freeze(): FrozenSubquery {
+    return {
+      type: "template",
+      start: this.start,
+      hasNext: this.hasNext,
+      delayUntil: this.delayUntil,
+      APIEdge: this.APIEdge,
+      options: this.options,
+    };
   }
 }

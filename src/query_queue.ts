@@ -1,14 +1,20 @@
+import { QueryHandlerOptions } from "@biothings-explorer/types";
 import Subquery from "./queries/subquery";
 import RateCounter from "./rate_limiter";
-import { RedisClient } from "@biothings-explorer/utils";
+import { redisClient } from "@biothings-explorer/utils";
 import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
 
+export interface SubqueryBundle {
+  query: Subquery;
+  options: QueryHandlerOptions;
+}
+
 export default class APIQueryQueue {
-  queue: Subquery[];
+  queue: SubqueryBundle[];
   rateCounter: RateCounter;
-  constructor(queries: Subquery[], redisClient?: RedisClient) {
-    this.queue = [...queries];
+  constructor() {
+    this.queue = [];
     this.rateCounter = new RateCounter(redisClient);
   }
 
@@ -20,14 +26,14 @@ export default class APIQueryQueue {
     return this.queue.length === 0;
   }
 
-  add(query: Subquery | Subquery[]) {
-    if (!Array.isArray(query)) query = [query];
-    this.queue.unshift(...query);
+  add(query: Subquery, options: QueryHandlerOptions) {
+    this.queue.unshift({ query, options });
   }
 
-  async getNext(): Promise<Subquery> {
-    const query = this.queue.pop();
-    if (!query) return;
+  async getNext(): Promise<SubqueryBundle> {
+    const next = this.queue.pop();
+    if (!next) return;
+    const { query, options } = next;
     const queryDelayed = query.delayUntil && query.delayUntil >= new Date();
     if ((await this.rateCounter.atLimit(query)) || queryDelayed) {
       debug(
@@ -36,13 +42,13 @@ export default class APIQueryQueue {
           `rate-limited or delayed, will-retry after rest of sub-query queue`,
         ].join(" "),
       );
-      this.queue.unshift(query);
+      this.queue.unshift({ query, options });
       return new Promise(resolve => {
         setImmediate(async () => {
           resolve(await this.getNext());
         });
       });
     }
-    return query;
+    return { query, options };
   }
 }

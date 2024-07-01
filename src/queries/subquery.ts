@@ -1,13 +1,29 @@
 import { AxiosRequestConfig, Method } from "axios";
 import {
   QueryParams,
-  APIEdge,
-  BatchAPIEdge,
-  NonBatchAPIEdge,
   BiothingsResponse,
   TemplatedInput,
 } from "../types";
-import { QueryHandlerOptions } from "@biothings-explorer/types";
+import { QueryHandlerOptions, QEdge, QEdgeInfo, APIDefinition, APIEdge, NonBatchAPIEdge, BatchAPIEdge } from "@biothings-explorer/types";
+import crypto from "crypto";
+import stringify from "json-stable-stringify";
+
+const SUBQUERY_DEFAULT_TIMEOUT = parseInt(
+  process.env.SUBQUERY_DEFAULT_TIMEOUT ?? "50000",
+);
+
+export interface FrozenAPIEdge extends Omit<APIEdge, "reasoner_edge"> {
+  reasoner_edge: QEdgeInfo;
+}
+
+export interface FrozenSubquery {
+  type: string;
+  start: number;
+  hasNext: boolean;
+  delayUntil: Date;
+  APIEdge: FrozenAPIEdge;
+  options: QueryHandlerOptions;
+}
 
 /**
  * Build API queries serving as input for Axios library based on BTE Edge info
@@ -95,6 +111,14 @@ export default class Subquery {
     }
   }
 
+  get timeout(): number {
+    const apiID = this.APIEdge.association.smartapi.id;
+    const timeout =
+      this.options.apiList?.include.find(
+        (api: APIDefinition) => api.id === apiID,
+      )?.timeout ?? SUBQUERY_DEFAULT_TIMEOUT;
+    return timeout;
+  }
 
   /**
    * Construct the request config for Axios reqeust.
@@ -105,6 +129,7 @@ export default class Subquery {
       params: this.params,
       data: this.requestBody,
       method: this.APIEdge.query_operation.method as Method,
+      timeout: this.timeout,
     };
     this.config = config;
     return config;
@@ -146,5 +171,45 @@ export default class Subquery {
       return this.getNext();
     }
     return this.constructAxiosRequestConfig();
+  }
+
+  get hash(): string {
+    return crypto
+      .createHash("md5")
+      .update(stringify(this.constructAxiosRequestConfig()))
+      .digest("hex");
+  }
+
+  freeze(): FrozenSubquery {
+    return {
+      type: "base",
+      start: this.start,
+      hasNext: this.hasNext,
+      delayUntil: this.delayUntil,
+      options: this.options,
+      APIEdge: {
+        ...this.APIEdge,
+        reasoner_edge: this.APIEdge.reasoner_edge.freeze(),
+      },
+    };
+  }
+
+  static async unfreeze(frozenSubquery: FrozenSubquery): Promise<Subquery> {
+    const { default: template } = await import("./template_subquery");
+    const { default: trapi } = await import("./trapi_subquery");
+    const mapping = {
+      base: Subquery,
+      template,
+      trapi,
+    };
+    const apiEdge: APIEdge = {
+      ...frozenSubquery.APIEdge,
+      reasoner_edge: new QEdge(frozenSubquery.APIEdge.reasoner_edge),
+    };
+    const subquery = new mapping[frozenSubquery.type](apiEdge, frozenSubquery.options);
+    subquery.start = frozenSubquery.start;
+    subquery.hasNext = frozenSubquery.hasNext;
+    subquery.delayUntil = frozenSubquery.delayUntil;
+    return subquery;
   }
 }
