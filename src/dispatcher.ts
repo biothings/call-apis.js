@@ -191,7 +191,8 @@ export default class SubQueryDispatcher {
     } else {
       res = await resolveSRI(groupedCuries);
       attributes = await getAttributes(groupedCuries);
-    }records.map(record => {
+    }
+    records.map(record => {
       if (record && record !== undefined) {
         record.object.normalizedInfo = res[
           record.object.original

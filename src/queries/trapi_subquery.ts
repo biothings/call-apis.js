@@ -9,7 +9,6 @@ export default class TrapiSubquery extends Subquery {
   start: number;
   hasNext: boolean;
   APIEdge: APIEdge;
-  originalSubmitter: string;
 
   get url(): string {
     let server = this.APIEdge.query_operation.server;
@@ -32,10 +31,6 @@ export default class TrapiSubquery extends Subquery {
    */
   get input(): string[] {
     return this.APIEdge.input as string[];
-  }
-
-  addSubmitter(submitter: string): void {
-    this.originalSubmitter = submitter;
   }
 
   /**
@@ -81,8 +76,8 @@ export default class TrapiSubquery extends Subquery {
     };
     if (process.env.INSTANCE_ENV)
       queryBody.submitter += `; bte-${xmaturityMap[process.env.INSTANCE_ENV]}`;
-    if (this.originalSubmitter)
-      queryBody.submitter += `; subquery for client "${this.originalSubmitter}"`;
+    if (this.options.submitter)
+      queryBody.submitter += `; subquery for client "${this.options.submitter}"`;
     return queryBody;
   }
 
@@ -110,13 +105,6 @@ export default class TrapiSubquery extends Subquery {
   getNext(): AxiosRequestConfig {
     const config = this.constructAxiosRequestConfig();
     return config;
-  }
-
-  getConfig(): AxiosRequestConfig {
-    if (this.hasNext === false) {
-      return this.constructAxiosRequestConfig();
-    }
-    return this.getNext();
   }
 
   freeze(): FrozenSubquery {
