@@ -1,10 +1,5 @@
 import { AxiosRequestConfig, Method } from "axios";
-import {
-  QueryParams,
-  BiothingsResponse,
-  TemplatedInput,
-} from "../types";
-import { QueryHandlerOptions, QEdge, QEdgeInfo, APIDefinition, APIEdge, NonBatchAPIEdge, BatchAPIEdge } from "@biothings-explorer/types";
+import { QueryHandlerOptions, QEdge, QEdgeInfo, APIDefinition, APIEdge, NonBatchAPIEdge, BatchAPIEdge, QueryParams, BiothingsResponse, TemplatedInput } from "@biothings-explorer/types";
 import crypto from "crypto";
 import stringify from "json-stable-stringify";
 

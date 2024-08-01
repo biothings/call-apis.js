@@ -3,7 +3,7 @@
  */
 import nunjucks from "nunjucks";
 import nunjucksConfig from "./nunjucks_config";
-import { BiothingsResponse, QueryParams, TemplatedInput } from "../types";
+import { BiothingsResponse, QueryParams, TemplatedInput } from "@biothings-explorer/types";
 import { AxiosRequestConfig } from "axios";
 import Subquery, { FrozenSubquery } from "./subquery";
 const env = nunjucks.configure({ autoescape: false });

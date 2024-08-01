@@ -2,14 +2,7 @@ import { Record } from "@biothings-explorer/types";
 import Subquery from "./queries/subquery";
 import APIQueryPool from "./query_pool";
 import APIQueryQueue from "./query_queue";
-import {
-  LogEntry,
-  StampedLog,
-  Telemetry,
-  RedisClient,
-  SerializableLog, 
-  cacheContent
-} from "@biothings-explorer/utils";
+import { SerializableLog, cacheContent } from "@biothings-explorer/utils";
 import Debug from "debug";
 import { ResolvableBioEntity, ResolverOutput, SRIBioEntity, SRIResolverOutput, generateInvalidBioentities, getAttributes, resolveSRI } from "biomedical_id_resolver";
 import { QueryHandlerOptions } from "@biothings-explorer/types";

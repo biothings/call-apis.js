@@ -1,26 +1,16 @@
-import { LogEntry, StampedLog, RedisClient, SerializableLog } from "@biothings-explorer/utils";
+import { SerializableLog } from "@biothings-explorer/utils";
 import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
 import subqueryFactory from "./queries/subquery_factory";
-import TRAPISubquery from "./queries/trapi_subquery";
 import SubQueryDispatcher from "./dispatcher";
 import {
   Record,
   RecordPackage,
 } from "@biothings-explorer/types";
-import {
-  ResolverOutput,
-  SRIResolverOutput,
-  generateInvalidBioentities,
-  getAttributes,
-  resolveSRI,
-  ResolvableBioEntity,
-} from "biomedical_id_resolver";
 import Subquery from "./queries/subquery";
 import async from "async";
 import { APIEdge, QueryHandlerOptions } from "@biothings-explorer/types";
 
-export * from "./types";
 export { default as Subquery, FrozenSubquery } from "./queries/subquery";
 
 const subqueryDispatcher = new SubQueryDispatcher();
