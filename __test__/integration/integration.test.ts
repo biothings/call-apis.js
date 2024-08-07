@@ -1,22 +1,36 @@
-import { SubqueryRelay, constructQueries } from "../../src/index";
+import { SubqueryRelay, SubqueryResults, constructQueries } from "../../src/index";
 import { RedisClient } from "@biothings-explorer/utils";
 import fs from "fs";
 import path from "path";
 import axios from "axios";
 
 import MetaKG from "@biothings-explorer/smartapi-kg";
-import { Record } from "@biothings-explorer/types";
+import { APIEdge, QueryHandlerOptions, Record } from "@biothings-explorer/types";
 const meta_kg = new MetaKG();
 meta_kg.constructMetaKGSync();
 
 jest.mock("axios");
 
-function runQuery(edges, opts): Promise<{ records: any[], logs: any[] }> {
+function runQuery(edges: APIEdge[], opts: QueryHandlerOptions): Promise<{ records: Record[], logs: any[] }> {
   const queries = constructQueries(edges, opts);
+  const totalCount = queries.length;
+  const response: { records: Record[], logs: any[] } = { records: [], logs: [] };
+  let currentCount = 0;
   const relay = new SubqueryRelay();
   return new Promise(resolve => {
-    relay.subscribe(queries, opts, x => resolve(x));
-  })
+    relay.subscribe(queries, opts, x => {
+      const [associations, ...frozenRecords] = x.records;
+      frozenRecords.forEach((record: any) => {
+        const association = associations[record.association];
+        response.records.push(new Record(record, undefined, association, undefined));
+      });
+      x.logs.forEach(log => response.logs.push(log));
+      currentCount += 1;
+      if (currentCount >= totalCount) {
+        resolve(response);
+      }
+    });
+  });
 }
 
 describe("Integration test", () => {
@@ -39,7 +53,7 @@ describe("Integration test", () => {
     });
     test("check response", async () => {
       const res = await runQuery([edge], {});
-      expect([...res.records.reduce((set, record) => set.add(new Record(record.frozenRecord).recordHash), new Set())]).toHaveLength(28);
+      expect([...res.records.reduce((set, record) => set.add(record.recordHash), new Set())]).toHaveLength(28);
     });
   });
 
