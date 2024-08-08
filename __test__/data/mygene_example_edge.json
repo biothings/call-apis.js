@@ -30,7 +30,8 @@
     "smartapi": {},
     "x-translator": {
       "component": "KP",
-      "team": ["Service Provider"]
+      "team": ["Service Provider"],
+      "infores": "infores:mygene-info"
     }
   },
   "response_mapping": {

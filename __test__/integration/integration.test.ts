@@ -88,10 +88,19 @@ describe("Integration test", () => {
     let edges;
 
     beforeEach(() => {
-      edges = meta_kg.filter({ api_name: "MyDisease.info API", predicate: "superclass_of" });
-      edges.map(op => (op.input = ["MONDO:0002494"]));
+      edges = meta_kg.filter({ api_name: "MyDisease.info API", predicate: "superclass_of" }).map(e => ({
+        ...e,
+        input: { queryInputs: "MONDO:0002494" },
+        input_resolved_identifiers: {},
+        original_input: { "MONDO:0002494": "MONDO:0002494" }
+      }));
 
       // mocking API calls
+      const normalized_info_path = path.resolve(__dirname, "../data/api_results/mydisease_normalized_nodes.json");
+      (axios.post as jest.Mock).mockResolvedValue({
+        data: JSON.parse(fs.readFileSync(normalized_info_path, { encoding: "utf8" })),
+      });
+
       const get_result_path = path.resolve(__dirname, "../data/api_results/mydisease_get_result.json");
       (axios.get as jest.Mock).mockResolvedValue({
         data: JSON.parse(fs.readFileSync(get_result_path, { encoding: "utf8" })),
