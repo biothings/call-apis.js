@@ -3,6 +3,7 @@
  */
 
 import TRAPIQueryBuilder from "../../src/builder/trapi_query_builder";
+import { QueryHandlerOptions } from "../../src/types";
 
 describe("test trapi query builder class", () => {
   describe("test getConfig function", () => {
@@ -19,8 +20,9 @@ describe("test trapi query builder class", () => {
         },
         input: ["123", "456"],
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new TRAPIQueryBuilder(edge);
+      const builder = new TRAPIQueryBuilder(edge, queryHandlerOptions);
       const res = builder.getConfig();
       expect(res).toHaveProperty("url", "https://google.com/query");
       expect(res.data.message.query_graph.nodes.n0.ids).toEqual(["123", "456"]);

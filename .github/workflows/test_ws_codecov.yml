@@ -13,10 +13,20 @@ jobs:
       id: branch-name
       uses: tj-actions/branch-names@v7.0.7
 
-    - uses: actions/checkout@v3
+    - name: Checkout to specific branch
+      uses: actions/checkout@v3
+      id: specific-checkout
+      continue-on-error: true
       with:
         repository: biothings/biothings_explorer
         ref: ${{ steps.branch-name.outputs.current_branch }}
+
+    - name: Checkout to main if above failed
+      if: steps.specific-checkout.outcome == 'failure'
+      uses: actions/checkout@v3
+      with:
+        repository: biothings/biothings_explorer
+        ref: main
 
     - name: Use Node.js 18.x
       uses: actions/setup-node@v3
