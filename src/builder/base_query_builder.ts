@@ -85,9 +85,9 @@ export default class BaseQueryBuilder {
     return config;
   }
 
-  needPagination(apiResponse: unknown): number {
+  needPagination(apiResponse: unknown): {paginationStart: number, paginationSize: number} {
     // implemented in subclasses
-    return 0;
+    return {paginationSize: 0, paginationStart: 0};
   }
 
   getNext(): AxiosRequestConfig {
