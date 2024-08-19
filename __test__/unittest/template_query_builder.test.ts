@@ -5,6 +5,7 @@
 import qb from "../../src/builder/template_query_builder";
 import path from "path";
 import fs from "fs";
+import { QueryHandlerOptions } from "../../src/types";
 
 describe("test query builder class", () => {
   describe("test _getUrl function", () => {
@@ -15,8 +16,9 @@ describe("test query builder class", () => {
           path: "/query",
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getUrl(edge, "hello");
       expect(res).toBe("https://google.com/query");
@@ -29,8 +31,9 @@ describe("test query builder class", () => {
           path: "/query",
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getUrl(edge, "hello");
       expect(res).toBe("https://google.com/query");
@@ -48,8 +51,9 @@ describe("test query builder class", () => {
           },
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getUrl(edge, "hello");
       expect(res).toBe("https://google.com/1017/query");
@@ -67,8 +71,9 @@ describe("test query builder class", () => {
           },
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getUrl(edge, { queryInputs: "hello" });
       expect(res).toBe("https://google.com/hello/json/query");
@@ -77,7 +82,8 @@ describe("test query builder class", () => {
     test("if _getUrl nunjucks templates are filled", () => {
       const edge_path = path.resolve(__dirname, "../data/multi_input_edge.json");
       const edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
-      const builder = new qb(edge);
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
+      const builder = new qb(edge, queryHandlerOptions);
       const res = builder._getUrl(edge, {
         specialpath: "/querytest",
         id: "MONDO:0005252",
@@ -96,8 +102,9 @@ describe("test query builder class", () => {
           supportBatch: true,
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getInput(edge);
       expect(res).toEqual(edge.input);
@@ -110,8 +117,9 @@ describe("test query builder class", () => {
           supportBatch: true,
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getInput(edge);
       expect(res).toEqual(["kevin", "xin"]);
@@ -124,8 +132,9 @@ describe("test query builder class", () => {
           supportBatch: false,
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getInput(edge);
       expect(res).toEqual(edge.input);
@@ -144,8 +153,9 @@ describe("test query builder class", () => {
           },
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getParams(edge, { queryInputs: "1017" });
       expect(res).toHaveProperty("geneid");
@@ -164,8 +174,9 @@ describe("test query builder class", () => {
           },
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getParams(edge, "1017");
       expect(res).not.toHaveProperty("geneid");
@@ -184,8 +195,9 @@ describe("test query builder class", () => {
           },
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getParams(edge, { queryInputs: "1017" });
       expect(res).not.toHaveProperty("geneid");
@@ -204,8 +216,9 @@ describe("test query builder class", () => {
           },
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getParams(edge, "1017");
       expect(res.output).toEqual(1);
@@ -215,7 +228,8 @@ describe("test query builder class", () => {
       const edge_path = path.resolve(__dirname, "../data/multi_input_edge.json");
       const edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
 
-      const builder = new qb(edge);
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
+      const builder = new qb(edge, queryHandlerOptions);
       const res = builder._getParams(edge, {
         specialpath: "/querytest",
         id: "MONDO:0005252",
@@ -243,8 +257,9 @@ describe("test query builder class", () => {
           },
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getRequestBody(edge, "1017");
       expect(res).toBeUndefined;
@@ -263,8 +278,9 @@ describe("test query builder class", () => {
           },
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getRequestBody(edge, "1017");
       expect(res).toEqual("geneid=hello&output=1");
@@ -283,8 +299,9 @@ describe("test query builder class", () => {
           },
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const res = builder._getRequestBody(edge, { queryInputs: "1017" });
       expect(res).toEqual("geneid=hello&output=1017");
@@ -294,7 +311,8 @@ describe("test query builder class", () => {
       const edge_path = path.resolve(__dirname, "../data/multi_input_edge.json");
       const edge = JSON.parse(fs.readFileSync(edge_path, { encoding: "utf8" }));
 
-      const builder = new qb(edge);
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
+      const builder = new qb(edge, queryHandlerOptions);
       const res = builder._getRequestBody(edge, {
         specialpath: "/querytest",
         id: "MONDO:0005252",
@@ -320,8 +338,9 @@ describe("test query builder class", () => {
           method: "get",
         },
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       const res = builder.constructAxiosRequestConfig();
       expect(res.url).toEqual("https://google.com/1017/query");
       expect(res.params).not.toHaveProperty("geneid");
@@ -343,8 +362,9 @@ describe("test query builder class", () => {
         total: 1000,
         hits: new Array(400),
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       const res = builder.needPagination(response);
       expect(res).toBeFalsy();
     });
@@ -361,8 +381,9 @@ describe("test query builder class", () => {
         total: 1000,
         hits: new Array(400),
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       const res = builder.needPagination(response);
       expect(res).toBeFalsy();
     });
@@ -378,8 +399,9 @@ describe("test query builder class", () => {
         total: 1000,
         hits: new Array(400),
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       const res = builder.needPagination(response);
       expect(res).toBeTruthy();
     });
@@ -395,8 +417,9 @@ describe("test query builder class", () => {
         total: 1000,
         hits: new Array(1000),
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new qb(edge);
+      const builder = new qb(edge, queryHandlerOptions);
       const res = builder.needPagination(response);
       expect(res).toBeFalsy();
     });
