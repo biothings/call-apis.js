@@ -299,7 +299,10 @@ describe("test query builder class", () => {
       // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
       const builder = new qb(edge);
       const res = builder.needPagination(response);
-      expect(res).toBeFalsy();
+      expect(res).toMatchObject({
+        paginationStart: 0,
+        paginationSize: 0
+      });
     });
 
     test("biothings tagged api with post method should return false", () => {
@@ -316,7 +319,10 @@ describe("test query builder class", () => {
       // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
       const builder = new qb(edge);
       const res = builder.needPagination(response);
-      expect(res).toBeFalsy();
+      expect(res).toMatchObject({
+        paginationStart: 0,
+        paginationSize: 0
+      });
     });
 
     test("biothings tagged api with get method and needs pagniation should return true", () => {
@@ -333,7 +339,10 @@ describe("test query builder class", () => {
       // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
       const builder = new qb(edge);
       const res = builder.needPagination(response);
-      expect(res).toBeTruthy();
+      expect(res).not.toMatchObject({
+        paginationStart: 0,
+        paginationSize: 0
+      });
     });
 
     test("biothings tagged api with get method and doesn't need pagniation should return false", () => {
@@ -350,7 +359,10 @@ describe("test query builder class", () => {
       // @ts-expect-error TODO: change after APIEdge split from query_graph_handler
       const builder = new qb(edge);
       const res = builder.needPagination(response);
-      expect(res).toBeFalsy();
+      expect(res).toMatchObject({
+        paginationStart: 0,
+        paginationSize: 0
+      });
     });
   });
 });
