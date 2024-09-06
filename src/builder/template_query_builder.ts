@@ -37,8 +37,12 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
   /**
    * Construct input based on method and inputSeparator
    */
-  _getInput(APIEdge: APIEdge): string | string[] {
-    return APIEdge.input as string | string[];
+  _getInput(APIEdge: APIEdge): TemplatedInput {
+    let baseInput = APIEdge.input as TemplatedInput;
+    if (this.APIEdge.query_operation.paginated) {
+      (baseInput as any).start = this.start;
+    }
+    return baseInput;
   }
 
   /**
@@ -120,15 +124,34 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
     return config;
   }
 
-  needPagination(apiResponse: unknown): number {
+  // util for pagination
+  _getDescendantProp(obj: any, desc: string): any {
+    let arr = desc.split(".");
+    for (let i = 0; i < arr.length; i++) {
+      obj = obj?.[arr[i]];
+    }
+    return obj;
+  }
+
+  needPagination(apiResponse: unknown): {paginationStart: number, paginationSize: number}  {
+    if (this.APIEdge.query_operation.paginated) {
+      let resCount = this._getDescendantProp(apiResponse, this.APIEdge.query_operation.paginationData.countField);
+      if (Array.isArray(resCount)) resCount = resCount.length;
+      let resTotal = this._getDescendantProp(apiResponse, this.APIEdge.query_operation.paginationData.totalField);
+      let paginationSize = this.APIEdge.query_operation.paginationData.pageSize;
+      if (resTotal > this.start + resCount) {
+        this.hasNext = true;
+        return {paginationStart: this.start + paginationSize, paginationSize};
+      }
+    }
     // TODO check for biothings pending, use smarter post method (also do config properly to use new parameter)
-    if (
+    else if (
       this.APIEdge.query_operation.method === "post" &&
       this.APIEdge.tags.includes("biothings")
     ) {
       if ((apiResponse as BiothingsResponse).max_total > this.start + 1000) {
         this.hasNext = true;
-        return this.start + 1000;
+        return {paginationStart: this.start + 1000, paginationSize: 1000};
       }
     } else if (
       this.APIEdge.query_operation.method === "get" &&
@@ -140,15 +163,34 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
       ) {
         if (this.start + (apiResponse as BiothingsResponse).hits.length < 10000) {
           this.hasNext = true;
-          return this.start + 1000;
+          return {paginationStart: this.start + 1000, paginationSize: 1000};
+        }
+      }
+    } else if (
+      this.APIEdge.query_operation.method === "get" &&
+      this.APIEdge.association != null &&  // abstract comparison for null and undefined
+      this.APIEdge.association.api_name === "Monarch API"
+    ) {
+      if (
+        (apiResponse as any).total >
+        this.start + (apiResponse as any).items.length
+      ) {
+        if (this.start + (apiResponse as any).items.length < 10000) {
+          this.hasNext = true;
+          return {paginationStart: this.start + 500, paginationSize: 500};
         }
       }
     }
     this.hasNext = false;
-    return 0;
+    return {paginationStart: 0, paginationSize: 0};
   }
 
   getNext(): AxiosRequestConfig {
+    if (this.APIEdge.query_operation.paginated) {
+      this.start += this.APIEdge.query_operation.paginationData.pageSize;
+      this.config = this.constructAxiosRequestConfig();
+      return this.config;
+    }
     const config = this.constructAxiosRequestConfig();
     if (
       this.APIEdge.query_operation.method === "post" &&
@@ -156,7 +198,15 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
     ) {
       this.start = this.start + 1000;
       config.params.from = this.start;
-    } else {
+    } 
+    else if (
+      this.APIEdge.query_operation.method === "get" &&
+      this.APIEdge.association.api_name === "Monarch API"
+    ) {
+      this.start = this.start + 500;
+      config.params.offset = this.start;
+    }
+    else {
       this.start = Math.min(this.start + 1000, 9999);
       config.params.from = this.start;
       if (config.params.size + this.start > 10000) {
