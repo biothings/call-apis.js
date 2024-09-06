@@ -48,7 +48,7 @@ export default class SubQueryDispatcher {
     this.logs = [];
   }
 
-  async execute(): Promise<{ records: Record[]; logs: StampedLog[] }> {
+  async execute(abortSignal?: AbortSignal): Promise<{ records: Record[]; logs: StampedLog[] }> {
     const promise: Promise<{ records: Record[]; logs: StampedLog[] }> =
       new Promise(resolve => {
         this.complete = ({
@@ -60,12 +60,12 @@ export default class SubQueryDispatcher {
         }) => resolve({ records, logs });
       });
     for (let i = 0; i < this.pool.size; i++) {
-      await this.queryPool();
+      await this.queryPool(abortSignal);
     }
     return promise;
   }
 
-  async queryPool(): Promise<void> {
+  async queryPool(abortSignal?: AbortSignal): Promise<void> {
     const query = await this.queue.getNext();
     if (!query) return;
 
@@ -74,8 +74,9 @@ export default class SubQueryDispatcher {
       query,
       this.unavailableAPIs,
       async (logs, records, followUp) => {
-        await this.onQueryComplete(logs, records, followUp);
+        await this.onQueryComplete(logs, records, followUp, abortSignal);
       },
+      abortSignal
     );
   }
 
@@ -96,6 +97,7 @@ export default class SubQueryDispatcher {
     logs: StampedLog[],
     records?: Record[],
     followUp?: BaseQueryBuilder[],
+    abortSignal?: AbortSignal
   ): Promise<void> {
     if (this.done) return;
     if (logs) this.logs.push(...logs);
@@ -158,6 +160,6 @@ export default class SubQueryDispatcher {
       });
       return;
     }
-    await this.queryPool();
+    await this.queryPool(abortSignal);
   }
 }
