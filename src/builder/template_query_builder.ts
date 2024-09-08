@@ -168,6 +168,7 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
       }
     } else if (
       this.APIEdge.query_operation.method === "get" &&
+      this.APIEdge.association != null &&  // abstract comparison for null and undefined
       this.APIEdge.association.api_name === "Monarch API"
     ) {
       if (
