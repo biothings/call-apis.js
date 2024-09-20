@@ -139,7 +139,7 @@ export default class Subquery {
     return config;
   }
 
-  needsPagination(apiResponse: unknown): number {
+  needsPagination(apiResponse: unknown): {paginationStart: number, paginationSize: number}  {
     if (
       this.APIEdge.query_operation.method === "get" &&
       this.APIEdge.tags.includes("biothings")
@@ -148,15 +148,14 @@ export default class Subquery {
         (apiResponse as BiothingsResponse).total >
         this.start + (apiResponse as BiothingsResponse).hits.length
       ) {
-        if (
-          this.start + (apiResponse as BiothingsResponse).hits.length <
-          10000
-        ) {
+        if (this.start + (apiResponse as BiothingsResponse).hits.length < 10000) {
           this.hasNext = true;
-          return this.start + 1000;
+          return {paginationStart: this.start + 1000, paginationSize: 1000};
         }
       }
     }
+    this.hasNext = false;
+    return {paginationStart: 0, paginationSize: 0};
   }
 
   getNext(): AxiosRequestConfig {

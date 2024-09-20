@@ -19,6 +19,7 @@ describe("test trapi query builder class", () => {
         },
         input: ["123", "456"],
       };
+      const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
       const sq = new TrapiSubquery(edge, {});
       const res = sq.getConfig();

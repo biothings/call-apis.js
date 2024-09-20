@@ -29,6 +29,7 @@
     "api_name": "MyGene.info API",
     "smartapi": {},
     "x-translator": {
+      "infores": "infores:mygene-info",
       "component": "KP",
       "team": ["Service Provider"],
       "infores": "infores:mygene-info"
