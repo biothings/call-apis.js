@@ -1,0 +1,141 @@
+{
+    "MONDO:0002494": {
+        "id": {
+            "identifier": "MONDO:0002494",
+            "label": "substance-related disorder"
+        },
+        "equivalent_identifiers": [{
+            "identifier": "MONDO:0002494",
+            "label": "substance-related disorder"
+        }, {
+            "identifier": "DOID:303",
+            "label": "substance-related disorder"
+        }, {
+            "identifier": "UMLS:C0236969",
+            "label": "Substance-Related Disorders"
+        }, {
+            "identifier": "MESH:D019966",
+            "label": "Substance-Related Disorders"
+        }, {
+            "identifier": "NCIT:C92203",
+            "label": "Substance-Related Disorder"
+        }],
+        "type": ["biolink:Disease", "biolink:DiseaseOrPhenotypicFeature", "biolink:BiologicalEntity", "biolink:ThingWithTaxon", "biolink:NamedThing"],
+        "information_content": 74.2
+    },
+    "MONDO:0002491": {
+        "id": {
+            "identifier": "MONDO:0002491",
+            "label": "substance abuse"
+        },
+        "equivalent_identifiers": [{
+            "identifier": "MONDO:0002491",
+            "label": "substance abuse"
+        }, {
+            "identifier": "DOID:302",
+            "label": "substance abuse"
+        }, {
+            "identifier": "UMLS:C0013146",
+            "label": "Drug abuse"
+        }, {
+            "identifier": "UMLS:C0740858",
+            "label": "Substance Abuse Problems"
+        }, {
+            "identifier": "MEDDRA:10013654"
+        }, {
+            "identifier": "MEDDRA:10013655"
+        }, {
+            "identifier": "MEDDRA:10066169"
+        }, {
+            "identifier": "NCIT:C16522",
+            "label": "Drug Abuse"
+        }, {
+            "identifier": "SNOMEDCT:26416006"
+        }, {
+            "identifier": "SNOMEDCT:66214007"
+        }],
+        "type": ["biolink:Disease", "biolink:DiseaseOrPhenotypicFeature", "biolink:BiologicalEntity", "biolink:ThingWithTaxon", "biolink:NamedThing"],
+        "information_content": 85.5
+    },
+    "MONDO:0004938": {
+        "id": {
+            "identifier": "MONDO:0004938",
+            "label": "substance dependence"
+        },
+        "equivalent_identifiers": [{
+            "identifier": "MONDO:0004938",
+            "label": "substance dependence"
+        }, {
+            "identifier": "DOID:9973",
+            "label": "substance dependence"
+        }, {
+            "identifier": "UMLS:C0439857",
+            "label": "Dependence"
+        }, {
+            "identifier": "MEDDRA:10012335"
+        }, {
+            "identifier": "NCIT:C35458",
+            "label": "Dependence"
+        }, {
+            "identifier": "SNOMEDCT:103326000"
+        }, {
+            "identifier": "SNOMEDCT:2403008"
+        }, {
+            "identifier": "SNOMEDCT:255338002"
+        }],
+        "type": ["biolink:Disease", "biolink:DiseaseOrPhenotypicFeature", "biolink:BiologicalEntity", "biolink:ThingWithTaxon", "biolink:NamedThing"],
+        "information_content": 80.9
+    },
+    "MONDO:0005567": {
+        "id": {
+            "identifier": "MONDO:0005567",
+            "label": "substance withdrawal syndrome"
+        },
+        "equivalent_identifiers": [{
+            "identifier": "MONDO:0005567",
+            "label": "substance withdrawal syndrome"
+        }, {
+            "identifier": "DOID:0060001",
+            "label": "withdrawal disorder"
+        }, {
+            "identifier": "UMLS:C0038587",
+            "label": "Substance Withdrawal Syndrome"
+        }, {
+            "identifier": "MESH:D013375",
+            "label": "Substance Withdrawal Syndrome"
+        }, {
+            "identifier": "MEDDRA:10042854"
+        }, {
+            "identifier": "MEDDRA:10048010"
+        }, {
+            "identifier": "NCIT:C35046",
+            "label": "Substance Withdrawal Syndrome"
+        }, {
+            "identifier": "SNOMEDCT:1254795002"
+        }, {
+            "identifier": "SNOMEDCT:363101005"
+        }],
+        "type": ["biolink:Disease", "biolink:DiseaseOrPhenotypicFeature", "biolink:BiologicalEntity", "biolink:ThingWithTaxon", "biolink:NamedThing"],
+        "information_content": 85.5
+    },
+    "MONDO:0021698": {
+        "id": {
+            "identifier": "MONDO:0021698",
+            "label": "alcohol-related disorders"
+        },
+        "equivalent_identifiers": [{
+            "identifier": "MONDO:0021698",
+            "label": "alcohol-related disorders"
+        }, {
+            "identifier": "UMLS:C0236664",
+            "label": "Alcohol Related Disorders"
+        }, {
+            "identifier": "MESH:D019973",
+            "label": "Alcohol-Related Disorders"
+        }, {
+            "identifier": "SNOMEDCT:29212009"
+        }],
+        "type": ["biolink:Disease", "biolink:DiseaseOrPhenotypicFeature", "biolink:BiologicalEntity", "biolink:ThingWithTaxon", "biolink:NamedThing"],
+        "information_content": 79.6
+    }
+}

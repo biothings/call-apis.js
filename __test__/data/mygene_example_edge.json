@@ -31,7 +31,8 @@
     "x-translator": {
       "infores": "infores:mygene-info",
       "component": "KP",
-      "team": ["Service Provider"]
+      "team": ["Service Provider"],
+      "infores": "infores:mygene-info"
     }
   },
   "response_mapping": {

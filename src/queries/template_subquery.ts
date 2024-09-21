@@ -2,32 +2,26 @@
  * Build API queries serving as input for Axios library based on BTE Edge info
  */
 import nunjucks from "nunjucks";
-import type { APIEdge, TemplatedInput } from "../types";
-import BaseQueryBuilder from "./base_query_builder";
 import nunjucksConfig from "./nunjucks_config";
-import { BiothingsResponse, QueryParams } from "../types";
-import { AxiosRequestConfig, Method } from "axios";
+import { BiothingsResponse, QueryParams, TemplatedInput } from "@biothings-explorer/types";
+import { AxiosRequestConfig } from "axios";
+import Subquery, { FrozenSubquery } from "./subquery";
 const env = nunjucks.configure({ autoescape: false });
 nunjucksConfig(env);
 
-export default class TemplateQueryBuilder extends BaseQueryBuilder {
-  getUrl(): string {
-    return this.APIEdge.query_operation.server + this.APIEdge.query_operation.path;
-  }
-
-  _getUrl(APIEdge: APIEdge, input: string | string[] | TemplatedInput): string {
-    let server = APIEdge.query_operation.server;
+export default class TemplateSubquery extends Subquery {
+  get url(): string {
+    let server = this.APIEdge.query_operation.server;
     if (server.endsWith("/")) {
       server = server.substring(0, server.length - 1);
     }
-    let path = APIEdge.query_operation.path;
-    if (Array.isArray(APIEdge.query_operation.path_params)) {
-      APIEdge.query_operation.path_params.map(param => {
-        const val = String(APIEdge.query_operation.params[param]);
-        // cast input to any because nunjucks typing is a little broken
+    let path = this.APIEdge.query_operation.path;
+    if (Array.isArray(this.APIEdge.query_operation.path_params)) {
+      this.APIEdge.query_operation.path_params.map(param => {
+        const val = String(this.APIEdge.query_operation.params[param]);
         path = nunjucks.renderString(
           path.replace("{" + param + "}", val),
-          input as any,
+          this.input as any,
         );
       });
     }
@@ -37,8 +31,8 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
   /**
    * Construct input based on method and inputSeparator
    */
-  _getInput(APIEdge: APIEdge): TemplatedInput {
-    let baseInput = APIEdge.input as TemplatedInput;
+  get input(): TemplatedInput {
+    let baseInput = this.APIEdge.input as TemplatedInput;
     if (this.APIEdge.query_operation.paginated) {
       (baseInput as any).start = this.start;
     }
@@ -48,7 +42,7 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
   /**
    * Construct parameters for API calls
    */
-  _getParams(APIEdge: APIEdge, input: string | string[] | TemplatedInput): QueryParams {
+  get params(): QueryParams {
     const params: QueryParams = {};
     if (
       this.APIEdge.query_operation.method === "post" &&
@@ -56,21 +50,20 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
     ) {
       params.with_total = true;
     }
-    Object.keys(APIEdge.query_operation.params).map(param => {
+    Object.keys(this.APIEdge.query_operation.params).map(param => {
       if (
-        Array.isArray(APIEdge.query_operation.path_params) &&
-        APIEdge.query_operation.path_params.includes(param)
+        Array.isArray(this.APIEdge.query_operation.path_params) &&
+        this.APIEdge.query_operation.path_params.includes(param)
       ) {
         return;
       }
-      if (typeof APIEdge.query_operation.params[param] === "string") {
-        // cast input to any because nunjucks typing is a little broken
+      if (typeof this.APIEdge.query_operation.params[param] === "string") {
         params[param] = nunjucks.renderString(
-          String(APIEdge.query_operation.params[param]),
-          input as any,
+          String(this.APIEdge.query_operation.params[param]),
+          this.input as TemplatedInput,
         );
       } else {
-        params[param] = APIEdge.query_operation.params[param];
+        params[param] = this.APIEdge.query_operation.params[param];
       }
     });
     return params;
@@ -79,27 +72,22 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
   /**
    * Construct request body for API calls
    */
-  _getRequestBody(
-    APIEdge: APIEdge,
-    input: string | string[] | TemplatedInput,
-  ): unknown {
+  get requestBody(): unknown {
     if (
-      APIEdge.query_operation.request_body !== undefined &&
-      "body" in APIEdge.query_operation.request_body
+      this.APIEdge.query_operation.request_body !== undefined &&
+      "body" in this.APIEdge.query_operation.request_body
     ) {
-      const body = APIEdge.query_operation.request_body.body;
+      const body = this.APIEdge.query_operation.request_body.body;
       let data: unknown;
-      if (APIEdge.query_operation.requestBodyType === "object") {
-        // cast input to any because nunjucks typing is a little broken
-        data = JSON.parse(nunjucks.renderString(body, input as any));
+      if (this.APIEdge.query_operation.requestBodyType === "object") {
+        data = JSON.parse(nunjucks.renderString(body, this.input as TemplatedInput));
       } else {
         data = Object.keys(body).reduce((accumulator, key) => {
-          // cast input to any because nunjucks typing is a little broken
           return (
             accumulator +
             key +
             "=" +
-            nunjucks.renderString(body[key].toString(), input as any) +
+            nunjucks.renderString(body[key].toString(), this.input as TemplatedInput) +
             "&"
           );
         }, "");
@@ -107,21 +95,6 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
       }
       return data;
     }
-  }
-
-  /**
-   * Construct the request config for Axios reqeust.
-   */
-  constructAxiosRequestConfig(): AxiosRequestConfig {
-    const input = this._getInput(this.APIEdge);
-    const config = {
-      url: this._getUrl(this.APIEdge, input),
-      params: this._getParams(this.APIEdge, input),
-      data: this._getRequestBody(this.APIEdge, input),
-      method: this.APIEdge.query_operation.method as Method,
-    };
-    this.config = config;
-    return config;
   }
 
   // util for pagination
@@ -133,7 +106,7 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
     return obj;
   }
 
-  needPagination(apiResponse: unknown): {paginationStart: number, paginationSize: number}  {
+  needsPagination(apiResponse: unknown): {paginationStart: number, paginationSize: number}  {
     if (this.APIEdge.query_operation.paginated) {
       let resCount = this._getDescendantProp(apiResponse, this.APIEdge.query_operation.paginationData.countField);
       if (Array.isArray(resCount)) resCount = resCount.length;
@@ -185,6 +158,7 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
     return {paginationStart: 0, paginationSize: 0};
   }
 
+
   getNext(): AxiosRequestConfig {
     if (this.APIEdge.query_operation.paginated) {
       this.start += this.APIEdge.query_operation.paginationData.pageSize;
@@ -216,11 +190,15 @@ export default class TemplateQueryBuilder extends BaseQueryBuilder {
     this.config = config;
     return config;
   }
-
-  getConfig(): AxiosRequestConfig {
-    if (this.hasNext === false) {
-      return this.constructAxiosRequestConfig();
-    }
-    return this.getNext();
+  
+  freeze(): FrozenSubquery {
+    return {
+      type: "template",
+      start: this.start,
+      hasNext: this.hasNext,
+      delayUntil: this.delayUntil,
+      APIEdge: this.APIEdge,
+      options: this.options,
+    };
   }
 }

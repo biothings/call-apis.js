@@ -1,4 +1,4 @@
-import BaseQueryBuilder from "./builder/base_query_builder";
+import Subquery from "./queries/subquery";
 import { RedisClient } from "@biothings-explorer/utils";
 import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
@@ -19,7 +19,7 @@ export default class RateCounter {
     this.usage = {};
   }
 
-  async atLimit(query: BaseQueryBuilder): Promise<boolean> {
+  async atLimit(query: Subquery): Promise<boolean> {
     const apiKey = `APIUsageCount:${query.APIEdge.association.api_name}`;
     const limit =
       query.APIEdge.association["x-trapi"]?.rate_limit ?? DEFAULT_RATE_LIMIT;
@@ -43,7 +43,7 @@ export default class RateCounter {
     return parseInt(usage) >= limit;
   }
 
-  async count(query: BaseQueryBuilder): Promise<void> {
+  async count(query: Subquery): Promise<void> {
     const apiKey = `APIUsageCount:${query.APIEdge.association.api_name}`;
     if (this.redisClient.clientEnabled) {
       try {

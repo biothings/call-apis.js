@@ -2,8 +2,7 @@
  * @jest-environment node
  */
 
-import TRAPIQueryBuilder from "../../src/builder/trapi_query_builder";
-import { QueryHandlerOptions } from "../../src/types";
+import TrapiSubquery from "../../src/queries/trapi_subquery";
 
 describe("test trapi query builder class", () => {
   describe("test getConfig function", () => {
@@ -22,8 +21,8 @@ describe("test trapi query builder class", () => {
       };
       const queryHandlerOptions: QueryHandlerOptions = {caching: false};
       // @ts-expect-error TODO: change after extracting APIEdge from query_graph_handler
-      const builder = new TRAPIQueryBuilder(edge, queryHandlerOptions);
-      const res = builder.getConfig();
+      const sq = new TrapiSubquery(edge, {});
+      const res = sq.getConfig();
       expect(res).toHaveProperty("url", "https://google.com/query");
       expect(res.data.message.query_graph.nodes.n0.ids).toEqual(["123", "456"]);
       expect(res.data.message.query_graph.nodes.n0.categories).toContain("biolink:Pathway");
