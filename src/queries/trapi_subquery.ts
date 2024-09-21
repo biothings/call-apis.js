@@ -97,7 +97,7 @@ export default class TrapiSubquery extends Subquery {
     return config;
   }
 
-  needPagination(apiResponse: TrapiResponse): {paginationStart: number, paginationSize: number}  {
+  needsPagination(apiResponse: TrapiResponse): {paginationStart: number, paginationSize: number}  {
     this.hasNext = false;
     return {paginationStart: 0, paginationSize: 0};
   }
