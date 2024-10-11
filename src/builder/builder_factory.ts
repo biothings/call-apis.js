@@ -3,7 +3,8 @@ import TRAPIQueryBuilder from "./trapi_query_builder";
 import TemplateQueryBuilder from "./template_query_builder";
 import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
-import type { APIEdge, QueryHandlerOptions } from "../types";
+import type { APIEdge } from "../types";
+import { QueryHandlerOptions } from "@biothings-explorer/types";
 
 function builderFactory(
   APIEdge: APIEdge,

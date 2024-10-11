@@ -3,7 +3,7 @@
  */
 
 import TRAPIQueryBuilder from "../../src/builder/trapi_query_builder";
-import { QueryHandlerOptions } from "../../src/types";
+import { QueryHandlerOptions } from "@biothings-explorer/types";
 
 describe("test trapi query builder class", () => {
   describe("test getConfig function", () => {
