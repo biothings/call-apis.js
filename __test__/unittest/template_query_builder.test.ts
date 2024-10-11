@@ -5,7 +5,7 @@
 import qb from "../../src/builder/template_query_builder";
 import path from "path";
 import fs from "fs";
-import { QueryHandlerOptions } from "../../src/types";
+import { QueryHandlerOptions } from "@biothings-explorer/types";
 
 describe("test query builder class", () => {
   describe("test _getUrl function", () => {

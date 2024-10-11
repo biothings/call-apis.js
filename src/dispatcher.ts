@@ -2,7 +2,8 @@ import { Record } from "@biothings-explorer/api-response-transform";
 import BaseQueryBuilder from "./builder/base_query_builder";
 import APIQueryPool from "./query_pool";
 import APIQueryQueue from "./query_queue";
-import { QueryHandlerOptions, UnavailableAPITracker } from "./types";
+import { UnavailableAPITracker } from "./types";
+import { QueryHandlerOptions } from "@biothings-explorer/types";
 import {
   LogEntry,
   StampedLog,
@@ -48,7 +49,7 @@ export default class SubQueryDispatcher {
     this.logs = [];
   }
 
-  async execute(): Promise<{ records: Record[]; logs: StampedLog[] }> {
+  async execute(abortSignal?: AbortSignal): Promise<{ records: Record[]; logs: StampedLog[] }> {
     const promise: Promise<{ records: Record[]; logs: StampedLog[] }> =
       new Promise(resolve => {
         this.complete = ({
@@ -60,12 +61,12 @@ export default class SubQueryDispatcher {
         }) => resolve({ records, logs });
       });
     for (let i = 0; i < this.pool.size; i++) {
-      await this.queryPool();
+      await this.queryPool(abortSignal);
     }
     return promise;
   }
 
-  async queryPool(): Promise<void> {
+  async queryPool(abortSignal?: AbortSignal): Promise<void> {
     const query = await this.queue.getNext();
     if (!query) return;
 
@@ -74,8 +75,9 @@ export default class SubQueryDispatcher {
       query,
       this.unavailableAPIs,
       async (logs, records, followUp) => {
-        await this.onQueryComplete(logs, records, followUp);
+        await this.onQueryComplete(logs, records, followUp, abortSignal);
       },
+      abortSignal
     );
   }
 
@@ -83,7 +85,7 @@ export default class SubQueryDispatcher {
     return (
       (this.maxRecords > 0 && this.totalRecords >= this.maxRecords) ||
       (this.globalMaxRecords > 0 &&
-        global.queryInformation?.totalRecords > this.globalMaxRecords)
+        global.queryInformation?.totalRecords?.[this.options.handlerIndex ?? 0] > this.globalMaxRecords)
     );
   }
 
@@ -96,15 +98,20 @@ export default class SubQueryDispatcher {
     logs: StampedLog[],
     records?: Record[],
     followUp?: BaseQueryBuilder[],
+    abortSignal?: AbortSignal
   ): Promise<void> {
     if (this.done) return;
     if (logs) this.logs.push(...logs);
+    const globalRecordsIndex = this.options.handlerIndex ?? 0;
     if (records) {
       this.records.push(...records);
 
-      const globalRecords = global.queryInformation?.totalRecords;
+      const globalRecords = global.queryInformation?.totalRecords?.[globalRecordsIndex];
       if (global.queryInformation) {
-        global.queryInformation.totalRecords = globalRecords
+        if (!global.queryInformation.totalRecords) {
+          global.queryInformation.totalRecords = {}
+        }
+        global.queryInformation.totalRecords[globalRecordsIndex] = globalRecords
           ? globalRecords + records.length
           : records.length;
       }
@@ -118,7 +125,7 @@ export default class SubQueryDispatcher {
       if (this.checkMaxRecords()) {
         const stoppedOnGlobalMax =
           this.globalMaxRecords > 0 &&
-          global.queryInformation?.totalRecords >= this.globalMaxRecords;
+          global.queryInformation?.totalRecords?.[globalRecordsIndex] >= this.globalMaxRecords;
         let message = [
           `Qedge ${this.qEdgeID}`,
           `obtained ${this.records.length} records,`,
@@ -133,7 +140,7 @@ export default class SubQueryDispatcher {
           message = message.slice(0, 2);
           message.push(
             ...[
-              `totalling ${global.queryInformation.totalRecords} for this query.`,
+              `totalling ${global.queryInformation.totalRecords?.[globalRecordsIndex]} for this query.`,
               `This exceeds the per-query maximum of ${this.globalMaxRecords}.`,
               `For stability purposes, this query is terminated.`,
               `Please consider refining your query further.`,
@@ -158,6 +165,6 @@ export default class SubQueryDispatcher {
       });
       return;
     }
-    await this.queryPool();
+    await this.queryPool(abortSignal);
   }
 }

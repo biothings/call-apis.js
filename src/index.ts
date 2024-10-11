@@ -1,5 +1,6 @@
 import { LogEntry, StampedLog, RedisClient } from "@biothings-explorer/utils";
-import { APIEdge, QueryHandlerOptions, UnavailableAPITracker } from "./types";
+import { APIEdge, UnavailableAPITracker } from "./types";
+import { QueryHandlerOptions } from "@biothings-explorer/types";
 import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
 import queryBuilder from "./builder/builder_factory";
@@ -81,6 +82,7 @@ export default class APIQueryDispatcher {
   async _annotate(
     records: Record[],
     resolveOutputIDs = true,
+    abortSignal?: AbortSignal
   ): Promise<Record[]> {
     const groupedCuries = this._groupCuriesBySemanticType(records);
     let res: SRIResolverOutput | ResolverOutput;
@@ -88,8 +90,8 @@ export default class APIQueryDispatcher {
     if (resolveOutputIDs === false) {
       res = generateInvalidBioentities(groupedCuries);
     } else {
-      res = await resolveSRI(groupedCuries);
-      attributes = await getAttributes(groupedCuries);
+      res = await resolveSRI(groupedCuries, abortSignal);
+      attributes = await getAttributes(groupedCuries, abortSignal);
     }
     records.map(record => {
       if (record && record !== undefined) {
@@ -128,6 +130,7 @@ export default class APIQueryDispatcher {
   async query(
     resolveOutputIDs = true,
     unavailableAPIs: UnavailableAPITracker = {},
+    abortSignal?: AbortSignal
   ): Promise<Record[]> {
     // Used for temporarily storing a message to log via both debug and TRAPI logs
     let message: string;
@@ -150,7 +153,7 @@ export default class APIQueryDispatcher {
       unavailableAPIs,
       this.options,
     );
-    const { records, logs } = await subQueryDispatcher.execute();
+    const { records, logs } = await subQueryDispatcher.execute(abortSignal);
     this.logs.push(...logs);
     // Occurs when globalMaxRecords hit, requiring query termination
     if (!records) return undefined;
@@ -168,8 +171,10 @@ export default class APIQueryDispatcher {
     debug(message);
     this.logs.push(new LogEntry("DEBUG", null, message).getLog());
 
+    if (abortSignal?.aborted) return [];
+
     debug("Start to use id resolver module to annotate output ids.");
-    const annotatedRecords = await this._annotate(records, resolveOutputIDs);
+    const annotatedRecords = await this._annotate(records, resolveOutputIDs, abortSignal);
     debug("id annotation completes");
     debug(`qEdge queries complete in ${timeElapsed}${timeUnits}`);
     this.logs.push(
