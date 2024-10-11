@@ -3,17 +3,14 @@ import Transformer, {
   Record,
 } from "@biothings-explorer/api-response-transform";
 import BaseQueryBuilder from "./builder/base_query_builder";
-import {
-  APIDefinition,
-  QueryHandlerOptions,
-  UnavailableAPITracker,
-} from "./types";
+import { UnavailableAPITracker } from "./types";
 import os from "os";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import Debug from "debug";
 const debug = Debug("bte:call-apis:query");
 import { Telemetry, LogEntry, StampedLog } from "@biothings-explorer/utils";
 import axiosRetry from "axios-retry";
+import { QueryHandlerOptions, APIDefinition } from "@biothings-explorer/types";
 
 const SUBQUERY_DEFAULT_TIMEOUT = parseInt(
   process.env.SUBQUERY_DEFAULT_TIMEOUT ?? "50000",
@@ -57,7 +54,7 @@ export default class APIQueryPool {
     query: BaseQueryBuilder,
     unavailableAPIs: UnavailableAPITracker,
     logs: StampedLog[],
-    abortSignal?: AbortSignal
+    abortSignal?: AbortSignal,
   ): {
     queryConfig: AxiosRequestConfig;
     nInputs: number;
@@ -72,9 +69,8 @@ export default class APIQueryPool {
       queryConfig = query.getConfig();
       // Skip if query API has been marked unavailable
       if (unavailableAPIs[query.APIEdge.query_operation.server]?.skip) {
-        unavailableAPIs[
-          query.APIEdge.query_operation.server
-        ].skippedQueries += 1;
+        unavailableAPIs[query.APIEdge.query_operation.server].skippedQueries +=
+          1;
         return undefined;
       }
       if (Array.isArray(query.APIEdge.input)) {
@@ -121,8 +117,8 @@ export default class APIQueryPool {
           "ERROR",
           null,
           `${(
-            (error as Error).stack
-          ).toString()} while configuring query. Query dump: ${JSON.stringify(
+            error as Error
+          ).stack.toString()} while configuring query. Query dump: ${JSON.stringify(
             query,
           )}`,
         ).getLog(),
@@ -139,7 +135,7 @@ export default class APIQueryPool {
       records?: Record[],
       followUp?: BaseQueryBuilder[],
     ) => Promise<void>,
-    abortSignal?: AbortSignal
+    abortSignal?: AbortSignal,
   ) {
     // Check if pool has been stopped due to limit hit (save some computation)
     if (this.stop || abortSignal?.aborted) {
@@ -157,7 +153,7 @@ export default class APIQueryPool {
       query,
       unavailableAPIs,
       logs,
-      abortSignal
+      abortSignal,
     );
 
     if (!queryConfigAttempt) {
@@ -191,9 +187,10 @@ export default class APIQueryPool {
         retryDelay: axiosRetry.exponentialDelay,
         retryCondition: err => {
           return (
-            axiosRetry.isNetworkOrIdempotentRequestError(err) ||
-            err.response?.status >= 500
-          ) && !(abortSignal?.aborted);
+            (axiosRetry.isNetworkOrIdempotentRequestError(err) ||
+              err.response?.status >= 500) &&
+            !abortSignal?.aborted
+          );
         },
       });
 
@@ -227,20 +224,16 @@ export default class APIQueryPool {
         edge: query.APIEdge,
       };
 
-      const {paginationStart: queryNeedsPagination, paginationSize} = query.needPagination(
-        unTransformedHits.response,
-      );
+      const { paginationStart: queryNeedsPagination, paginationSize } =
+        query.needPagination(unTransformedHits.response);
       if (queryNeedsPagination) {
-        const log = `Query requires pagination, will re-query to window ${queryNeedsPagination}-${
-          queryNeedsPagination + paginationSize
-        }: ${query.APIEdge.query_operation.server} (${nInputs} ID${
-          nInputs > 1 ? "s" : ""
-        })`;
+        const log = `Query requires pagination, will re-query to window ${queryNeedsPagination}-${queryNeedsPagination + paginationSize
+          }: ${query.APIEdge.query_operation.server} (${nInputs} ID${nInputs > 1 ? "s" : ""
+          })`;
         debug(log);
         if (queryNeedsPagination >= 9000) {
-          const log = `Biothings query reaches 10,000 max: ${
-            query.APIEdge.query_operation.server
-          } (${nInputs} ID${nInputs > 1 ? "s" : ""})`;
+          const log = `Biothings query reaches 10,000 max: ${query.APIEdge.query_operation.server
+            } (${nInputs} ID${nInputs > 1 ? "s" : ""})`;
           debug(log);
           logs.push(new LogEntry("WARNING", null, log).getLog());
         }
@@ -263,8 +256,13 @@ export default class APIQueryPool {
       transformSpan.finish();
 
       if (global.queryInformation?.queryGraph) {
-        const globalRecords = global.queryInformation.totalRecords;
-        global.queryInformation.totalRecords = globalRecords
+        const globalRecordsIndex = this.options.handlerIndex ?? 0;
+        const globalRecords =
+          global.queryInformation?.totalRecords?.[globalRecordsIndex];
+        if (!global.queryInformation.totalRecords) {
+          global.queryInformation.totalRecords = {}
+        }
+        global.queryInformation.totalRecords[globalRecordsIndex] = globalRecords
           ? globalRecords + transformedRecords.length
           : transformedRecords.length;
       }

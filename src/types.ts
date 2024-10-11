@@ -110,21 +110,6 @@ export interface APIList {
   exclude: APIDefinition[];
 }
 
-export interface QueryHandlerOptions {
-  provenanceUsesServiceProvider?: boolean;
-  smartAPIID?: string;
-  teamName?: string;
-  enableIDResolution?: boolean;
-  // TODO: type instances of `any`
-  apiList?: APIList;
-  schema?: any; // might be hard to type -- it's the entire TRAPI schema IIRC
-  dryrun?: boolean;
-  resolveOutputIDs?: boolean;
-  submitter?: string;
-  caching?: boolean; // from request url query values
-  EDGE_ATTRIBUTES_USED_IN_RECORD_HASH?: string[];
-}
-
 export interface UnavailableAPITracker {
   [server: string]: { skip: boolean; skippedQueries: number };
 }

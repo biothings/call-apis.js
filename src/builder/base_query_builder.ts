@@ -1,5 +1,6 @@
 import { AxiosRequestConfig, Method } from "axios";
-import { QueryParams, APIEdge, QueryHandlerOptions } from "../types";
+import { QueryParams, APIEdge } from "../types";
+import { QueryHandlerOptions } from "@biothings-explorer/types";
 
 /**
  * Build API queries serving as input for Axios library based on BTE Edge info
