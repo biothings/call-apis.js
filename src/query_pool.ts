@@ -255,17 +255,6 @@ export default class APIQueryPool {
       );
       transformSpan.finish();
 
-      if (global.queryInformation?.queryGraph) {
-        const globalRecordsIndex = this.options.handlerIndex ?? 0;
-        const globalRecords =
-          global.queryInformation?.totalRecords?.[globalRecordsIndex];
-        if (!global.queryInformation.totalRecords) {
-          global.queryInformation.totalRecords = {}
-        }
-        global.queryInformation.totalRecords[globalRecordsIndex] = globalRecords
-          ? globalRecords + transformedRecords.length
-          : transformedRecords.length;
-      }
       const log_msg = [
         `Successful ${queryConfig.method.toUpperCase()}`,
         query.APIEdge.query_operation.server,
