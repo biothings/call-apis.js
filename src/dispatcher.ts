@@ -43,7 +43,7 @@ export default class SubQueryDispatcher {
     this.records = [];
     this.currentlyDispatched = 0;
     this.maxRecords = parseInt(process.env.MAX_RECORDS_PER_EDGE) || 50000;
-    this.globalMaxRecords = parseInt(process.env.MAX_RECORDS_TOTAL) || 100000;
+    this.globalMaxRecords = parseInt(process.env.MAX_RECORDS_TOTAL) || 75000;
     this.totalRecords = 0;
     this.done = false;
     this.logs = [];
