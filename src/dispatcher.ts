@@ -10,7 +10,7 @@ import {
   Telemetry,
   RedisClient,
 } from "@biothings-explorer/utils";
-import Debug from "debug";
+import { Debug } from "@biothings-explorer/utils";
 const debug = Debug("bte:call-apis:query");
 
 export default class SubQueryDispatcher {

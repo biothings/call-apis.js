@@ -1,7 +1,7 @@
 import { LogEntry, StampedLog, RedisClient } from "@biothings-explorer/utils";
 import { APIEdge, UnavailableAPITracker } from "./types";
 import { QueryHandlerOptions } from "@biothings-explorer/types";
-import Debug from "debug";
+import { Debug } from "@biothings-explorer/utils";
 const debug = Debug("bte:call-apis:query");
 import queryBuilder from "./builder/builder_factory";
 import TRAPIQueryBuilder from "./builder/trapi_query_builder";

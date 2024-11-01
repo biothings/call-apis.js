@@ -1,6 +1,6 @@
 import BaseQueryBuilder from "./builder/base_query_builder";
 import { RedisClient } from "@biothings-explorer/utils";
-import Debug from "debug";
+import { Debug } from "@biothings-explorer/utils";
 const debug = Debug("bte:call-apis:query");
 
 // Default rate limit of 100 queries per second, which shouldn't ever be reached

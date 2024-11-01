@@ -6,7 +6,7 @@ import BaseQueryBuilder from "./builder/base_query_builder";
 import { UnavailableAPITracker } from "./types";
 import os from "os";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import Debug from "debug";
+import { Debug } from "@biothings-explorer/utils";
 const debug = Debug("bte:call-apis:query");
 import { Telemetry, LogEntry, StampedLog } from "@biothings-explorer/utils";
 import axiosRetry from "axios-retry";

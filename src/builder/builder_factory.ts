@@ -1,7 +1,7 @@
 import QueryBuilder from "./query_builder";
 import TRAPIQueryBuilder from "./trapi_query_builder";
 import TemplateQueryBuilder from "./template_query_builder";
-import Debug from "debug";
+import { Debug } from "@biothings-explorer/utils";
 const debug = Debug("bte:call-apis:query");
 import type { APIEdge } from "../types";
 import { QueryHandlerOptions } from "@biothings-explorer/types";

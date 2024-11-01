@@ -1,7 +1,7 @@
 import BaseQueryBuilder from "./builder/base_query_builder";
 import RateCounter from "./rate_limiter";
 import { RedisClient } from "@biothings-explorer/utils";
-import Debug from "debug";
+import { Debug } from "@biothings-explorer/utils";
 const debug = Debug("bte:call-apis:query");
 
 export default class APIQueryQueue {
